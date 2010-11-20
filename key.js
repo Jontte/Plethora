@@ -4,14 +4,15 @@ var KEY_LEFT = 37;
 var KEY_RIGHT = 39;
 var KEY_UP = 38;
 var KEY_DOWN = 40;
+var KEY_SPACE = 32;
 
 var Key = {
 	_key : {},
 
 	// Filter unwanted keypress events
 	_shouldFilter : function(keycode){
-		// It handles PgUp(33), PgDn(34), End(35), Home(36), Left(37), Up(38), Right(39), Down(40)
-		var ar=new Array(33,34,35,36,37,38,39,40);
+		// It handles PgUp(33), PgDn(34), End(35), Home(36), Left(37), Up(38), Right(39), Down(40), Spacebar(32)
+		var ar=new Array(33,34,35,36,37,38,39,40,32);
 		for(var i=0;i<ar.length;i++) {
 			if(keycode == ar[i])
 			{

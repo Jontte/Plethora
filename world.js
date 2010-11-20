@@ -59,6 +59,7 @@ World = {
 			dpos : [o2.pos[0]-o1.pos[0],o2.pos[1]-o1.pos[1],[o2.pos[2]-o1.pos[2]]]
 		};
 		World._links.push(lnk);
+		return lnk;
 	},
 	removeLink: function(o1, o2)
 	{
@@ -79,7 +80,7 @@ World = {
 
 		World._objects.sort(function(a,b){
 			return (a.pos[0]+a.pos[1]+a.pos[2]*0.95) - (b.pos[0]+b.pos[1]+b.pos[2]*0.95);
-		});
+		});;
 
 		for(var i = 0; i < World._objects.length; i++)
 		{
@@ -125,6 +126,7 @@ World = {
 			focus[0] = 320-(f.pos[0]-f.pos[1])*16;
 			focus[1] = 240-(f.pos[0]+f.pos[1]-2*f.pos[2])*8;
 		}
+
 		draw(obj.tiles.g, focus[0]+(obj.pos[0]-obj.pos[1])*16, focus[1]+(obj.pos[0]+obj.pos[1]-2*obj.pos[2])*8, fx, fy);
 	},
 
@@ -147,22 +149,38 @@ World = {
 			{
 				var obj = World._control;
 				var d = 0.01;
+				var movement = [0,0];
 				if(Key.get(KEY_LEFT)){ 
-				  obj.force[0] -= d;
-				  obj.force[1] += d;
+				  movement[0] -= d;
+				  movement[1] += d;
 				}
 				if(Key.get(KEY_RIGHT)){ 
-				  obj.force[0] += d;
-				  obj.force[1] -= d;
+				  movement[0] += d;
+				  movement[1] -= d;
 				}
 				if(Key.get(KEY_UP)){ 
-				  obj.force[0] -= d;
-				  obj.force[1] -= d;
+				  movement[0] -= d;
+				  movement[1] -= d;
 				}
 				if(Key.get(KEY_DOWN)){ 
-				  obj.force[0] += d;
-				  obj.force[1] += d;
+				  movement[0] += d;
+				  movement[1] += d;
 				}
+
+				obj.force[0] += movement[0] - obj.vel[0]/12;
+				obj.force[1] += movement[1] - obj.vel[1]/12;
+
+				if(Key.get(KEY_LEFT) && Key.get(KEY_UP))
+					obj.direction = WEST;
+				else if(Key.get(KEY_UP) && Key.get(KEY_RIGHT))
+					obj.direction = NORTH;
+				else if(Key.get(KEY_RIGHT) && Key.get(KEY_DOWN))
+					obj.direction = EAST;
+				else if(Key.get(KEY_DOWN) && Key.get(KEY_LEFT))
+					obj.direction = SOUTH;
+				if(obj.canjump == undefined)obj.canjump = false;
+				if(Key.get(KEY_SPACE) && obj.canjump)
+				  obj.force[2] += 0.2;
 			}
 
 			// Sweep-line the objects
@@ -209,8 +227,14 @@ World = {
 						
 						if(o1.static == true && o2.static == true)
 							continue;
+						if(o1.sensor == true && o2.sensor == true)
+							continue;
 						var colldata = World._collide(o1, o2);
-						if(colldata != false)
+						if(o1.collision_callback)
+							o1.collision_callback(o2);
+						if(o2.collision_callback)
+							o2.collision_callback(o1);
+						if(colldata != false && o1.sensor != true && o2.sensor != true)
 						{
 							var normal = colldata[0];
 							var displacement = colldata[1];
@@ -337,7 +361,7 @@ World = {
 	// Collide two objects
 	// return free axii for collision response and amount of displacement
 	// or false if no collision
-	// for example [[0,0,1], 0.1] means the two objects have penetrated 0.1 units and will have to be moved outwards eachother in the z axis
+	// for example [[0,0,1], 0.1] means the two objects have penetrated 0.1 units and will have to be moved outwards eachother on the z axis
 	_collide : function(o1, o2)
 	{
 		// Z-check first:
