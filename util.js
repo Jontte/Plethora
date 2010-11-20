@@ -41,3 +41,8 @@ function draw(obj, x, y, frame)
 	);
 }
 
+function debug(text)
+{
+	var elem = document.getElementById('debug');
+	elem.innerHTML += text + "<br>\n";
+}
