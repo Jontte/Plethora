@@ -56,7 +56,8 @@ var Graphics = {
 	GroundRugged : {t: 0, g:[1,9]},
 	GroundPlain : {t: 0, g: [5,9]},
 	Lift : {t: ANIMATED, g: [[0,6],[1,6],[2,6],[3,6],[4,6],[5,6],[6,6],[7,6],[8,6],[9,6]]},
-	Water: {t: ANIMATED_RANDOM, g: [[2,0],[3,0]]}
+	Water: {t: ANIMATED_RANDOM, g: [[2,0],[3,0]]},
+	BarrelWooden: {t: 0, g: [2,1], c: {s: "cylinder", r: 0.40, h: 1}}
 };
 
 function initialize()
@@ -75,22 +76,36 @@ function game_start()
 {
 	setTimeout(game_loop, 50);
 
-	for(var x = 0; x < 5; x++)
-	for(var y = 0; y < 5; y++)
+	for(var x = 0; x < 10; x++)
+	for(var y = 0; y < 10; y++)
 	{
-		var obj = World.createObject(Graphics.Water, x, y, 0);
+		var d = ((x-4.5)*(x-4.5)+(y-4.5)*(y-4.5));
+
+		var obj = World.createObject(
+			(d > 4*4)?Graphics.Water:Graphics.GroundRugged, [x, y, 0]);
 		obj.frameMaxTicks = 5;
+
+		if(d < 2*2)
+		{
+			World.createObject(Graphics.GroundRugged, [x, y, 1]);
+		}
+	}
+
+	for(var i = 0; i < 2; i++)
+	{
+		World.createObject(Graphics.BarrelWooden, [5, 5, 3+i*4]).static = false;
 	}
 }
 
 function game_loop()
 {
-	setTimeout(game_loop, 200);
+	setTimeout(game_loop, 50);
 
 	// Clear screen
-	//Graphics.ctx.fillStyle = "rgb(96,160,255)";  
-	//Graphics.ctx.fillRect (0, 0, 640, 480);  
+	Graphics.ctx.fillStyle = "rgb(96,160,255)";  
+	Graphics.ctx.fillRect (0, 0, 640, 480);  
 
+	World.physicsStep();
 	World.render();
 }
 
