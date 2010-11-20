@@ -8,6 +8,7 @@ World = {
 	_physicsIterations: 4,
 	_objects: new Array(),
 	_control: null,
+	_links: new Array(),
 	addKeyboardControl : function(obj)
 	{
 		World._control = obj;
@@ -41,6 +42,30 @@ World = {
 
 		World._objects.push(obj);
 		return obj;
+	},
+	linkObjects: function(o1, o2, maxforce)
+	{
+		// Negative maxforce = unbreakable link
+		if(maxforce == undefined)maxforce = -1;
+		var lnk = {
+			o1 : o1,
+			o2 : o2,
+			maxforce : maxforce,
+			dpos : [o2.pos[0]-o1.pos[0],o2.pos[1]-o1.pos[1],[o2.pos[2]-o1.pos[2]]]
+		};
+		World._links.push(lnk);
+	},
+	removeLink: function(o1, o2)
+	{
+		for(var i = 0; i < World._links.length; i++)
+		{
+			var l = World._links[i];
+			if(l.o1 = o1 && l.o2 == o2)
+			{
+				delete World._links[i];
+				i--;
+			}
+		}
 	},
 	render : function()
 	{
@@ -229,6 +254,40 @@ World = {
 					// Add object to buffer 
 					objectbuffer[p.id] = p;	
 				}
+			}
+			// process links
+			for(var i = 0; i < World._links.length; i++)
+			{
+				var l = World._links[i];
+				var error = [
+					 l.dpos[0]-(l.o2.pos[0]-l.o1.pos[0]),
+					 l.dpos[1]-(l.o2.pos[1]-l.o1.pos[1]),
+					 l.dpos[2]-(l.o2.pos[2]-l.o1.pos[2])
+				];
+				var d = 0.55;
+				/*l.o1.force[0] -= error[0]*d;
+				l.o1.force[1] -= error[1]*d;
+				l.o1.force[2] -= error[2]*d;
+				l.o2.force[0] += error[0]*d;
+				l.o2.force[1] += error[1]*d;
+				l.o2.force[2] += error[2]*d;*/
+				// mean their velocities and correct positions
+				l.o1.pos[0] -= error[0]*d;
+				l.o1.pos[1] -= error[1]*d;
+				l.o1.pos[2] -= error[2]*d;
+				l.o2.pos[0] += error[0]*d;
+				l.o2.pos[1] += error[1]*d;
+				l.o2.pos[2] += error[2]*d;
+
+				var meanvel = [
+					 (l.o1.vel[0]+l.o2.vel[0])/2,
+					 (l.o1.vel[1]+l.o2.vel[1])/2,
+					 (l.o1.vel[2]+l.o2.vel[2])/2
+				];
+
+				l.o1.vel[0] = l.o2.vel[0] = meanvel[0];
+				l.o1.vel[1] = l.o2.vel[1] = meanvel[1];
+				l.o1.vel[2] = l.o2.vel[2] = meanvel[2];
 			}
 			// euler integrate
 			for(var i = 0; i < World._objects.length; i++)

@@ -106,6 +106,8 @@ function game_start()
 	player.frameMaxTicks=5;
 	playerhead.frameMaxTicks=5;
 
+	World.linkObjects(player, playerhead);
+
 	World.addKeyboardControl(player);
 }
 
