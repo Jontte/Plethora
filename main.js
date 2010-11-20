@@ -58,7 +58,8 @@ var Graphics = {
 	Lift : {t: ANIMATED,g: [[0,6],[1,6],[2,6],[3,6],[4,6],[5,6],[6,6],[7,6],[8,6],[9,6]]},
 	Water: {t: ANIMATED_RANDOM, g: [[2,0],[3,0]]},
 	BarrelWooden: {t: 0, g: [2,1], c: {s: "cylinder", r: 0.40, h: 1}},
-	Crate: {t: 0, g: [3,1]}
+	Crate: {t: 0, g: [3,1]},
+	Duck: {t: 0, g: [5,1], c: {s: "cylinder", r: 0.3, h: 0.7}}
 };
 
 function initialize()
@@ -123,13 +124,27 @@ function game_start()
 		  obj.static = true;
 		prev = obj;
 	}
-	for(var i = 0; i < 40; i++)
+	for(var i = 0; i < 50; i++)
 	{
 		var obj = World.createObject(Graphics.Crate, [10, 9-i, 0]);
 		obj.static = false;
 		World.linkObjects(obj, prev);
 		prev = obj;
 	}
+	var foo = prev;
+	for(var x = 0; x < 5; x++)
+	for(var y = 0; y < 5; y++)
+	{
+		var obj = World.createObject(Graphics.GroundRugged, [11+x, -36-y, 0]);
+		obj.static = false;
+		World.linkObjects(obj, prev);
+		prev = obj;
+		if(x==4&&y==4)
+		  World.linkObjects(obj,foo);
+	}
+
+
+	World.createObject(Graphics.Duck, [13,-38,1]).static = false;
 }
 
 function game_loop()

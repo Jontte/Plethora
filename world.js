@@ -78,7 +78,7 @@ World = {
 		// Sort all objects by depth before rendering
 
 		World._objects.sort(function(a,b){
-			return (a.pos[0]+a.pos[1]+a.pos[2]/2) - (b.pos[0]+b.pos[1]+b.pos[2]/2);
+			return (a.pos[0]+a.pos[1]+a.pos[2]*0.95) - (b.pos[0]+b.pos[1]+b.pos[2]*0.95);
 		});
 
 		for(var i = 0; i < World._objects.length; i++)
@@ -221,6 +221,18 @@ World = {
 							var d = dx*dx+dy*dy+dz*dz;
 							d = Math.sqrt(d);
 
+							// A precaution that will allow us to bend in any possible
+							// direction in case the forces would get too high
+							if(d < 0.0001)
+							{
+								var dx = (o2.pos[0]-o1.pos[0]);
+								var dy = (o2.pos[1]-o1.pos[1]);
+								var dz = (o2.pos[2]-o1.pos[2]);
+								var d = dx*dx+dy*dy+dz*dz;
+								d = Math.sqrt(d);
+							}
+							if(d < 0.0001)
+							  d = 0.0001;
 							dx /= d;
 							dy /= d;
 							dz /= d;
@@ -339,7 +351,7 @@ World = {
 			 Math.abs((o1.pos[2]+o1.tiles.c.h)-o2.pos[2]),
 			 Math.abs(o1.pos[2]-(o2.pos[2]+o2.tiles.c.h))
 		);
-		var topdown_treshold = 0.1;
+		var topdown_treshold = 0.2;
 		// XY-check:
 
 		if(o1.tiles.c.s == 'cylinder' && o2.tiles.c.s == 'cylinder')
