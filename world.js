@@ -126,68 +126,108 @@ World = {
 				}
 			}
 
-			// start with O(n^2)
+			// Sweep-line the objects
+
+			var proxyarray = new Array();
+
 			for(var i = 0; i < World._objects.length; i++)
-			for(var a = i+1; a < World._objects.length; a++)
 			{
-				var o1 = World._objects[i];
-				var o2 = World._objects[a];
-				if(o1.static == true && o2.static == true)
-					continue;
-				var colldata = World._collide(o1, o2);
-				if(colldata != false)
+				var obj = World._objects[i];
+				proxyarray.push({
+					begin: true,
+					d: obj.pos[0] + obj.pos[1] + obj.pos[2] - 0.8, // 1.6 is about sqrt(3)/2
+					obj: obj,
+					id: i
+				});
+				proxyarray.push({
+					begin: false,
+					d: obj.pos[0] + obj.pos[1] + obj.pos[2] + 0.8,
+					obj: obj,
+					id: i
+				});
+			}
+			proxyarray.sort(function(a,b){
+				return a.d - b.d;
+			});
+
+			var objectbuffer = [];
+			for(var i = 0; i < proxyarray.length; i++)
+			{
+				var p = proxyarray[i];
+				if(p.begin == false)
 				{
-					var normal = colldata[0];
-					var displacement = colldata[1];
+					// Remove object from buffer
+					delete objectbuffer[p.id];
+				}
+				else
+				{
+					var o1 = p.obj;
+					for(var other in objectbuffer)
+					{
+						if(!objectbuffer.hasOwnProperty(other))continue;
+						
+						var o2 = objectbuffer[other].obj;
+						
+						if(o1.static == true && o2.static == true)
+							continue;
+						var colldata = World._collide(o1, o2);
+						if(colldata != false)
+						{
+							var normal = colldata[0];
+							var displacement = colldata[1];
 
-					var dx = (o2.pos[0]-o1.pos[0])*normal[0];
-					var dy = (o2.pos[1]-o1.pos[1])*normal[1];
-					var dz = (o2.pos[2]-o1.pos[2])*normal[2];
-					var d = dx*dx+dy*dy+dz*dz;
-					d = Math.sqrt(d);
+							var dx = (o2.pos[0]-o1.pos[0])*normal[0];
+							var dy = (o2.pos[1]-o1.pos[1])*normal[1];
+							var dz = (o2.pos[2]-o1.pos[2])*normal[2];
+							var d = dx*dx+dy*dy+dz*dz;
+							d = Math.sqrt(d);
 
-					dx /= d;
-					dy /= d;
-					dz /= d;
+							dx /= d;
+							dy /= d;
+							dz /= d;
 
-					dx *= displacement;
-					dy *= displacement;
-					dz *= displacement;
+							dx *= displacement;
+							dy *= displacement;
+							dz *= displacement;
 
-					o1.force[0] -= dx;
-					o1.force[1] -= dy;
-					o1.force[2] -= dz;
-					o2.force[0] += dx;
-					o2.force[1] += dy;
-					o2.force[2] += dz;
+							o1.force[0] -= dx;
+							o1.force[1] -= dy;
+							o1.force[2] -= dz;
+							o2.force[0] += dx;
+							o2.force[1] += dy;
+							o2.force[2] += dz;
 
-					if(o1.static == true)
-					  o1.mass = 1e99;
-					if(o2.static == true)
-					  o2.mass = 1e99;
+							if(o1.static == true)
+							  o1.mass = 1e99;
+							if(o2.static == true)
+							  o2.mass = 1e99;
 
-					var mean = [
-						 o1.vel[0]*o1.mass + o2.vel[0]*o2.mass,
-						 o1.vel[1]*o1.mass + o2.vel[1]*o2.mass,
-						 o1.vel[2]*o1.mass + o2.vel[2]*o2.mass
-						 ];
+							var mean = [
+								 o1.vel[0]*o1.mass + o2.vel[0]*o2.mass,
+								 o1.vel[1]*o1.mass + o2.vel[1]*o2.mass,
+								 o1.vel[2]*o1.mass + o2.vel[2]*o2.mass
+								 ];
 
-					mean[0] /= o1.mass + o2.mass;
-					mean[1] /= o1.mass + o2.mass;
-					mean[2] /= o1.mass + o2.mass;
+							mean[0] /= o1.mass + o2.mass;
+							mean[1] /= o1.mass + o2.mass;
+							mean[2] /= o1.mass + o2.mass;
 
-					if(normal[0]>0){
-						o1.vel[0] = mean[0];
-						o2.vel[0] = mean[0];
+							if(normal[0]>0){
+								o1.vel[0] = mean[0];
+								o2.vel[0] = mean[0];
+							}
+							if(normal[1]>0){
+								o1.vel[1] = mean[1];
+								o2.vel[1] = mean[1];
+							}
+							if(normal[2]>0){
+								o1.vel[2] = mean[2];
+								o2.vel[2] = mean[2];
+							}
+						}
 					}
-					if(normal[1]>0){
-						o1.vel[1] = mean[1];
-						o2.vel[1] = mean[1];
-					}
-					if(normal[2]>0){
-						o1.vel[2] = mean[2];
-						o2.vel[2] = mean[2];
-					}
+					// Add object to buffer 
+					objectbuffer[p.id] = p;	
 				}
 			}
 			// euler integrate
