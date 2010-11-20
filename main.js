@@ -57,7 +57,8 @@ var Graphics = {
 	GroundPlain : {t: 0, g: [5,9]},
 	Lift : {t: ANIMATED,g: [[0,6],[1,6],[2,6],[3,6],[4,6],[5,6],[6,6],[7,6],[8,6],[9,6]]},
 	Water: {t: ANIMATED_RANDOM, g: [[2,0],[3,0]]},
-	BarrelWooden: {t: 0, g: [2,1], c: {s: "cylinder", r: 0.40, h: 1}}
+	BarrelWooden: {t: 0, g: [2,1], c: {s: "cylinder", r: 0.40, h: 1}},
+	Crate: {t: 0, g: [3,1]}
 };
 
 function initialize()
@@ -108,7 +109,27 @@ function game_start()
 
 	World.linkObjects(player, playerhead);
 
-	World.addKeyboardControl(player);
+	World.setKeyboardControl(player);
+	World.setCameraFocus(player);
+
+	var prev = null;
+	for(var i = 0; i < 11; i++)
+	{
+		var obj = World.createObject(Graphics.Crate, [i, 10, 0]);
+		obj.static = false;
+		if(prev != null)
+			World.linkObjects(obj, prev);
+		else
+		  obj.static = true;
+		prev = obj;
+	}
+	for(var i = 0; i < 40; i++)
+	{
+		var obj = World.createObject(Graphics.Crate, [10, 9-i, 0]);
+		obj.static = false;
+		World.linkObjects(obj, prev);
+		prev = obj;
+	}
 }
 
 function game_loop()

@@ -8,10 +8,15 @@ World = {
 	_physicsIterations: 4,
 	_objects: new Array(),
 	_control: null,
+	_cameraFocus: null,
 	_links: new Array(),
-	addKeyboardControl : function(obj)
+	setKeyboardControl : function(obj)
 	{
 		World._control = obj;
+	},
+	setCameraFocus : function(obj)
+	{
+		World._cameraFocus = obj;
 	},
 	loadFrom : function(url)
 	{
@@ -73,7 +78,7 @@ World = {
 		// Sort all objects by depth before rendering
 
 		World._objects.sort(function(a,b){
-			return (a.pos[0]+a.pos[1]+a.pos[2]*2) - (b.pos[0]+b.pos[1]+b.pos[2]*2);
+			return (a.pos[0]+a.pos[1]+a.pos[2]/2) - (b.pos[0]+b.pos[1]+b.pos[2]/2);
 		});
 
 		for(var i = 0; i < World._objects.length; i++)
@@ -111,7 +116,16 @@ World = {
 		var fx = g[0];
 		var fy = g[1];
 
-		draw(obj.tiles.g, 320+(obj.pos[0]-obj.pos[1])*16, 240+(obj.pos[0]+obj.pos[1]-2*obj.pos[2])*8, fx, fy);
+		var focus = [
+			320,240 
+		];
+		if(World._cameraFocus != null)
+		{
+			var f = World._cameraFocus;
+			focus[0] = 320-(f.pos[0]-f.pos[1])*16;
+			focus[1] = 240-(f.pos[0]+f.pos[1]-2*f.pos[2])*8;
+		}
+		draw(obj.tiles.g, focus[0]+(obj.pos[0]-obj.pos[1])*16, focus[1]+(obj.pos[0]+obj.pos[1]-2*obj.pos[2])*8, fx, fy);
 	},
 
 	physicsStep : function()
@@ -264,20 +278,21 @@ World = {
 					 l.dpos[1]-(l.o2.pos[1]-l.o1.pos[1]),
 					 l.dpos[2]-(l.o2.pos[2]-l.o1.pos[2])
 				];
-				var d = 0.55;
-				/*l.o1.force[0] -= error[0]*d;
+				var d = 0.50;
+				l.o1.force[0] -= error[0]*d;
 				l.o1.force[1] -= error[1]*d;
 				l.o1.force[2] -= error[2]*d;
 				l.o2.force[0] += error[0]*d;
 				l.o2.force[1] += error[1]*d;
-				l.o2.force[2] += error[2]*d;*/
+				l.o2.force[2] += error[2]*d;
 				// mean their velocities and correct positions
+				/*
 				l.o1.pos[0] -= error[0]*d;
 				l.o1.pos[1] -= error[1]*d;
 				l.o1.pos[2] -= error[2]*d;
 				l.o2.pos[0] += error[0]*d;
 				l.o2.pos[1] += error[1]*d;
-				l.o2.pos[2] += error[2]*d;
+				l.o2.pos[2] += error[2]*d;*/
 
 				var meanvel = [
 					 (l.o1.vel[0]+l.o2.vel[0])/2,
@@ -345,35 +360,58 @@ World = {
 			var box = (o1.tiles.c.s=='cylinder')?o2:o1;
 			var cyl = (o1.tiles.c.s=='cylinder')?o1:o2;
 
+			var dx = box.pos[0]-cyl.pos[0];
+			var dy = box.pos[1]-cyl.pos[1];
+			var dist = box.tiles.c.l/2 + cyl.tiles.c.r;
 			// check sides
-			if((Math.abs(box.pos[0]-cyl.pos[0]) < (box.tiles.c.l/2+cyl.tiles.c.r)) && 
-			  (Math.abs(box.pos[1]-cyl.pos[1]) < (box.tiles.c.l/2+cyl.tiles.c.r)))
+			if((Math.abs(dx) < dist) && 
+			  (Math.abs(dy) < dist))
 			{
 				if(topdown_distance < topdown_treshold)
 				  return [[0,0,1], topdown_distance];
-				return [1,1,0];
+
+				if(Math.abs(dx) > Math.abs(dy))
+					return [[1,0,0], dist-Math.abs(dx)];
+				else 
+					return [[0,1,0], dist-Math.abs(dy)];
 			}
-			var dx = 0;
-			var dy = 0;
 			var d = 0;
 
 			// check corners
-			dx = (box.pos[0]-box.l/2-cyl.pos[0]);
-			dy = (box.pos[1]-box.l/2-cyl.pos[1]);
-			d = cyl.r*cyl.r-dx*dx+dy*dy;
-			if(d > 0) return (topdown_distance<topdown_treshold)?[[0,0,1], topdown_distance]:[[1,1,0], sqrt(d)];
-			dx = (box.pos[0]+box.l/2-cyl.pos[0]);
-			dy = (box.pos[1]-box.l/2-cyl.pos[1]);
-			d = cyl.r*cyl.r-dx*dx+dy*dy;
-			if(d > 0) return (topdown_distance<topdown_treshold)?[[0,0,1], topdown_distance]:[[1,1,0], sqrt(d)];
-			dx = (box.pos[0]-box.l/2-cyl.pos[0]);
-			dy = (box.pos[1]+box.l/2-cyl.pos[1]);
-			d = cyl.r*cyl.r-dx*dx+dy*dy;
-			if(d > 0) return (topdown_distance<topdown_treshold)?[[0,0,1], topdown_distance]:[[1,1,0], sqrt(d)];
-			dx = (box.pos[0]+box.l/2-cyl.pos[0]);
-			dy = (box.pos[1]+box.l/2-cyl.pos[1]);
-			d = cyl.r*cyl.r-dx*dx+dy*dy;
-			if(d > 0) return (topdown_distance<topdown_treshold)?[[0,0,1], topdown_distance]:[[1,1,0], sqrt(d)];
+			dx = (box.pos[0]-box.tiles.c.l/2-cyl.pos[0]);
+			dy = (box.pos[1]-box.tiles.c.l/2-cyl.pos[1]);
+			dist = Math.sqrt(dx*dx+dy*dy);
+			d = cyl.tiles.c.r - dist;
+			if(d > 0) return (topdown_distance<topdown_treshold)?[[0,0,1], topdown_distance]:[[1,1,0], d];
+			dx = (box.pos[0]+box.tiles.c.l/2-cyl.pos[0]);
+			dy = (box.pos[1]-box.tiles.c.l/2-cyl.pos[1]);
+			dist = Math.sqrt(dx*dx+dy*dy);
+			d = cyl.tiles.c.r - dist;
+			if(d > 0) return (topdown_distance<topdown_treshold)?[[0,0,1], topdown_distance]:[[1,1,0], d];
+			dx = (box.pos[0]-box.tiles.c.l/2-cyl.pos[0]);
+			dy = (box.pos[1]+box.tiles.c.l/2-cyl.pos[1]);
+			dist = Math.sqrt(dx*dx+dy*dy);
+			d = cyl.tiles.c.r - dist;
+			if(d > 0) return (topdown_distance<topdown_treshold)?[[0,0,1], topdown_distance]:[[1,1,0], d];
+			dx = (box.pos[0]+box.tiles.c.l/2-cyl.pos[0]);
+			dy = (box.pos[1]+box.tiles.c.l/2-cyl.pos[1]);
+			dist = Math.sqrt(dx*dx+dy*dy);
+			d = cyl.tiles.c.r - dist;
+			if(d > 0) return (topdown_distance<topdown_treshold)?[[0,0,1], topdown_distance]:[[1,1,0], d];
+		}
+		else if(o1.tiles.c.s == 'box' && o2.tiles.c.s == 'box')
+		{
+			var dx = o2.pos[0]-o1.pos[0];
+			var dy = o2.pos[1]-o1.pos[1];
+			var length = o1.tiles.c.l/2+o2.tiles.c.l/2;
+			
+			if(Math.abs(dx) < length && Math.abs(dy) < length)
+			{
+				if(Math.abs(dx) > Math.abs(dy))
+					return (topdown_distance<topdown_treshold)?[[0,0,1], topdown_distance]:[[1,1,0],length-Math.abs(dx)];
+				else
+					return (topdown_distance<topdown_treshold)?[[0,0,1], topdown_distance]:[[1,1,0],length-Math.abs(dy)];
+			}
 		}
 		else {
 			debug('Unhandled collision for: ' + o1.tiles.c.s + ' vs ' + o2.tiles.c.s);
