@@ -114,7 +114,7 @@ function game_start()
 	Game.player.head.frameMaxTicks=5;
 
 	Game.player.shadow = World.createObject(Graphics.Shadow, [6,6,5]);
-	//Game.player.shadow.sensor = true;
+	Game.player.shadow.sensor = true;
 	Game.player.shadow.static = false;
 
 	Game.player.shadowlink = World.linkObjects(Game.player, Game.player.shadow);
@@ -123,7 +123,6 @@ function game_start()
 	Game.player.shadow.collision_callback = function(o){
 		var self = Game.player.shadow;
 		if(o == Game.player)return;
-
 	};
 
 	World.setKeyboardControl(Game.player);
