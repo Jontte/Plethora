@@ -45,18 +45,25 @@ function initialize()
 	var canvas = document.getElementById('canvas');  
 	Graphics.ctx = canvas.getContext('2d');
 
+	// Start registering keyboard input
+	Key.register();
+
 	Graphics.tileset = new Image();
 	Graphics.tileset.onload = game_start;
 	Graphics.tileset.src = Config.graphics;
 }
 function game_start()
 {
-	setTimeout(game_loop, 100);
+	setTimeout(game_loop, 50);
 }
 
 function game_loop()
 {
-	setTimeout(game_loop, 100);
+	setTimeout(game_loop, 50);
+
+	// Clear screen
+	Graphics.ctx.fillStyle = "rgb(96,160,255)";  
+	Graphics.ctx.fillRect (0, 0, 640, 480);  
 
 	for(var y = 0 ; y < 10; y++) 
 	for(var x = 0 ; x < 10; x++) 
