@@ -7,6 +7,11 @@
 World = {
 	_physicsIterations: 4,
 	_objects: new Array(),
+	_control: null,
+	addKeyboardControl : function(obj)
+	{
+		World._control = obj;
+	},
 	loadFrom : function(url)
 	{
 			
@@ -53,14 +58,13 @@ World = {
 	},
 	drawSingleObject : function(obj)
 	{
-		var framedata = null;
 		var g = obj.tiles.g;
-		if(obj.tiles.t & DIRECTED)
+		if((obj.tiles.t & DIRECTED))
 		{
-			framedata = obj.direction;
-			g = obj.tiles.g[obj.direction];
+			g = g[obj.direction];
 		}
-		if(obj.tiles.t & ANIMATED || obj.tiles.t & ANIMATED_RANDOM)
+		
+		if((obj.tiles.t & ANIMATED) || (obj.tiles.t & ANIMATED_RANDOM))
 		{
 			// Increment frame tick counter
 			obj.frameTick ++;
@@ -76,14 +80,13 @@ World = {
 					obj.frame = (obj.frame+1) % g.length;
 				}
 			}
-
-			if(framedata == null)
-				framedata = obj.frame;
-			else
-				framedata = [framedata, obj.frame];
+			g = g[obj.frame];
 		}
 
-		draw(obj.tiles.g, 320+(obj.pos[0]-obj.pos[1])*16, 240+(obj.pos[0]+obj.pos[1]-2*obj.pos[2])*8, framedata);
+		var fx = g[0];
+		var fy = g[1];
+
+		draw(obj.tiles.g, 320+(obj.pos[0]-obj.pos[1])*16, 240+(obj.pos[0]+obj.pos[1]-2*obj.pos[2])*8, fx, fy);
 	},
 
 	physicsStep : function()
@@ -99,6 +102,29 @@ World = {
 					(obj.static)?0 : (-0.00981*obj.mass/World._physicsIterations)
 				];
 			}
+			
+			// Keyboard controlled object gets some force
+			if(World._control != null)
+			{
+				var obj = World._control;
+				var d = 0.01;
+				if(Key.get(KEY_LEFT)){ 
+				  obj.force[0] -= d;
+				  obj.force[1] += d;
+				}
+				if(Key.get(KEY_RIGHT)){ 
+				  obj.force[0] += d;
+				  obj.force[1] -= d;
+				}
+				if(Key.get(KEY_UP)){ 
+				  obj.force[0] -= d;
+				  obj.force[1] -= d;
+				}
+				if(Key.get(KEY_DOWN)){ 
+				  obj.force[0] += d;
+				  obj.force[1] += d;
+				}
+			}
 
 			// start with O(n^2)
 			for(var i = 0; i < World._objects.length; i++)
@@ -108,9 +134,12 @@ World = {
 				var o2 = World._objects[a];
 				if(o1.static == true && o2.static == true)
 					continue;
-				var normal = World._collide(o1, o2);
-				if(normal != false)
+				var colldata = World._collide(o1, o2);
+				if(colldata != false)
 				{
+					var normal = colldata[0];
+					var displacement = colldata[1];
+
 					var dx = (o2.pos[0]-o1.pos[0])*normal[0];
 					var dy = (o2.pos[1]-o1.pos[1])*normal[1];
 					var dz = (o2.pos[2]-o1.pos[2])*normal[2];
@@ -121,9 +150,9 @@ World = {
 					dy /= d;
 					dz /= d;
 
-					dx *= 0.025;
-					dy *= 0.025;
-					dz *= 0.025;
+					dx *= displacement;
+					dy *= displacement;
+					dz *= displacement;
 
 					o1.force[0] -= dx;
 					o1.force[1] -= dy;
@@ -147,12 +176,18 @@ World = {
 					mean[1] /= o1.mass + o2.mass;
 					mean[2] /= o1.mass + o2.mass;
 
-					o1.vel[0] = mean[0];
-					o1.vel[1] = mean[1];
-					o1.vel[2] = mean[2];
-					o2.vel[0] = mean[0];
-					o2.vel[1] = mean[1];
-					o2.vel[2] = mean[2];
+					if(normal[0]>0){
+						o1.vel[0] = mean[0];
+						o2.vel[0] = mean[0];
+					}
+					if(normal[1]>0){
+						o1.vel[1] = mean[1];
+						o2.vel[1] = mean[1];
+					}
+					if(normal[2]>0){
+						o1.vel[2] = mean[2];
+						o2.vel[2] = mean[2];
+					}
 				}
 			}
 			// euler integrate
@@ -173,7 +208,10 @@ World = {
 			}
 		}
 	},
-	// Collide two objects, return normal vector of collision or false if no collision
+	// Collide two objects
+	// return free axii for collision response and amount of displacement
+	// or false if no collision
+	// for example [[0,0,1], 0.1] means the two objects have penetrated 0.1 units and will have to be moved outwards eachother in the z axis
 	_collide : function(o1, o2)
 	{
 		// Z-check first:
@@ -198,8 +236,8 @@ World = {
 			if(Math.sqrt(d) < (o1.tiles.c.r + o2.tiles.c.r))
 			{
 				if(topdown_distance < topdown_treshold)
-				  return [0,0,1];
-				return [1,1,0];
+				  return [[0,0,1], topdown_distance];
+				return [[1,1,0], o1.tiles.c.r+o2.tiles.c.r-Math.sqrt(d)];
 			}
 		}
 		else if((o1.tiles.c.s == 'cylinder' && o2.tiles.c.s == 'box')
@@ -213,25 +251,30 @@ World = {
 			  (Math.abs(box.pos[1]-cyl.pos[1]) < (box.tiles.c.l/2+cyl.tiles.c.r)))
 			{
 				if(topdown_distance < topdown_treshold)
-				  return [0,0,1];
+				  return [[0,0,1], topdown_distance];
 				return [1,1,0];
 			}
 			var dx = 0;
 			var dy = 0;
+			var d = 0;
 
 			// check corners
 			dx = (box.pos[0]-box.l/2-cyl.pos[0]);
 			dy = (box.pos[1]-box.l/2-cyl.pos[1]);
-			if(dx*dx+dy*dy < cyl.r*cyl.r) return (topdown_distance<topdown_treshold)?[0,0,1]:[1,1,0];
+			d = cyl.r*cyl.r-dx*dx+dy*dy;
+			if(d > 0) return (topdown_distance<topdown_treshold)?[[0,0,1], topdown_distance]:[[1,1,0], sqrt(d)];
 			dx = (box.pos[0]+box.l/2-cyl.pos[0]);
 			dy = (box.pos[1]-box.l/2-cyl.pos[1]);
-			if(dx*dx+dy*dy < cyl.r*cyl.r) return (topdown_distance<topdown_treshold)?[0,0,1]:[1,1,0];
+			d = cyl.r*cyl.r-dx*dx+dy*dy;
+			if(d > 0) return (topdown_distance<topdown_treshold)?[[0,0,1], topdown_distance]:[[1,1,0], sqrt(d)];
 			dx = (box.pos[0]-box.l/2-cyl.pos[0]);
 			dy = (box.pos[1]+box.l/2-cyl.pos[1]);
-			if(dx*dx+dy*dy < cyl.r*cyl.r) return (topdown_distance<topdown_treshold)?[0,0,1]:[1,1,0];
+			d = cyl.r*cyl.r-dx*dx+dy*dy;
+			if(d > 0) return (topdown_distance<topdown_treshold)?[[0,0,1], topdown_distance]:[[1,1,0], sqrt(d)];
 			dx = (box.pos[0]+box.l/2-cyl.pos[0]);
 			dy = (box.pos[1]+box.l/2-cyl.pos[1]);
-			if(dx*dx+dy*dy < cyl.r*cyl.r) return (topdown_distance<topdown_treshold)?[0,0,1]:[1,1,0];
+			d = cyl.r*cyl.r-dx*dx+dy*dy;
+			if(d > 0) return (topdown_distance<topdown_treshold)?[[0,0,1], topdown_distance]:[[1,1,0], sqrt(d)];
 		}
 		else {
 			debug('Unhandled collision for: ' + o1.tiles.c.s + ' vs ' + o2.tiles.c.s);

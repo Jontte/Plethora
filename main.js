@@ -24,7 +24,7 @@ var ANIMATED_RANDOM = 4; // .. with random frame order
  */
 var Graphics = {
 	DudeTop :	{
-					t: DIRECTED & ANIMATED, // Animation type
+					t: DIRECTED | ANIMATED, // Animation type
 					g: [ // Tile indexes
 						[[0,3],[1,3],[2,3],[3,3]], // north
 						[[0,4],[1,4],[2,4],[3,4]], // east
@@ -38,7 +38,7 @@ var Graphics = {
 					} 
 				},
 	DudeBottom : {
-					t: DIRECTED & ANIMATED,
+					t: DIRECTED | ANIMATED,
 					g: [
 						[[4,3],[5,3],[6,3],[7,3]],
 						[[4,4],[5,4],[6,4],[7,4]],
@@ -47,7 +47,7 @@ var Graphics = {
 					],
 					c: {
 						s: "cylinder",
-						r: 0.25,
+						r: 0.45,
 						h: 1
 					} 
 				 },
@@ -55,7 +55,7 @@ var Graphics = {
 	HillPlain : {t: DIRECTED, g: [[4,8],[4,10],[4,9],[5,8]]},
 	GroundRugged : {t: 0, g:[1,9]},
 	GroundPlain : {t: 0, g: [5,9]},
-	Lift : {t: ANIMATED, g: [[0,6],[1,6],[2,6],[3,6],[4,6],[5,6],[6,6],[7,6],[8,6],[9,6]]},
+	Lift : {t: ANIMATED,g: [[0,6],[1,6],[2,6],[3,6],[4,6],[5,6],[6,6],[7,6],[8,6],[9,6]]},
 	Water: {t: ANIMATED_RANDOM, g: [[2,0],[3,0]]},
 	BarrelWooden: {t: 0, g: [2,1], c: {s: "cylinder", r: 0.40, h: 1}}
 };
@@ -94,7 +94,19 @@ function game_start()
 	for(var i = 0; i < 10; i++)
 	{
 		World.createObject(Graphics.BarrelWooden, [5, 5, 3+i*4]).static = false;
+		World.createObject(Graphics.BarrelWooden, [6, 5, 1+i]).static = false;
 	}
+
+	var player = World.createObject(Graphics.DudeBottom, [6,6,2]);
+	var playerhead = World.createObject(Graphics.DudeTop, [6,6,3]);
+
+	player.static = false;
+	playerhead.static = false;
+
+	player.frameMaxTicks=5;
+	playerhead.frameMaxTicks=5;
+
+	World.addKeyboardControl(player);
 }
 
 function game_loop()
