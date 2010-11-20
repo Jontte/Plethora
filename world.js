@@ -5,7 +5,7 @@
 
 
 World = {
-	_physicsIterations: 2,
+	_physicsIterations: 4,
 	_objects: new Array(),
 	loadFrom : function(url)
 	{
@@ -106,7 +106,7 @@ World = {
 			{
 				var o1 = World._objects[i];
 				var o2 = World._objects[a];
-				if(o1.static && o2.static)
+				if(o1.static == true && o2.static == true)
 					continue;
 				var normal = World._collide(o1, o2);
 				if(normal != false)
@@ -121,13 +121,9 @@ World = {
 					dy /= d;
 					dz /= d;
 
-					dx *= 0.1;
-					dy *= 0.1;
-					dz *= 0.1;
-
-					dx *= 1.0/d;
-					dy *= 1.0/d;
-					dz *= 1.0/d;
+					dx *= 0.025;
+					dy *= 0.025;
+					dz *= 0.025;
 
 					o1.force[0] -= dx;
 					o1.force[1] -= dy;
@@ -135,13 +131,35 @@ World = {
 					o2.force[0] += dx;
 					o2.force[1] += dy;
 					o2.force[2] += dz;
+
+					if(o1.static == true)
+					  o1.mass = 1e99;
+					if(o2.static == true)
+					  o2.mass = 1e99;
+
+					var mean = [
+						 o1.vel[0]*o1.mass + o2.vel[0]*o2.mass,
+						 o1.vel[1]*o1.mass + o2.vel[1]*o2.mass,
+						 o1.vel[2]*o1.mass + o2.vel[2]*o2.mass
+						 ];
+
+					mean[0] /= o1.mass + o2.mass;
+					mean[1] /= o1.mass + o2.mass;
+					mean[2] /= o1.mass + o2.mass;
+
+					o1.vel[0] = mean[0];
+					o1.vel[1] = mean[1];
+					o1.vel[2] = mean[2];
+					o2.vel[0] = mean[0];
+					o2.vel[1] = mean[1];
+					o2.vel[2] = mean[2];
 				}
 			}
 			// euler integrate
 			for(var i = 0; i < World._objects.length; i++)
 			{
 				var obj = World._objects[i];
-				if(obj.static)continue;
+				if(obj.static==true)continue;
 				obj.vel[0] += obj.force[0]/obj.mass;
 				obj.vel[1] += obj.force[1]/obj.mass;
 				obj.vel[2] += obj.force[2]/obj.mass;
@@ -191,8 +209,8 @@ World = {
 			var cyl = (o1.tiles.c.s=='cylinder')?o1:o2;
 
 			// check sides
-			if((Math.abs(box.pos[0]-cyl.pos[0]) < (box.l/2+cyl.r)) && 
-			  (Math.abs(box.pos[1]-cyl.pos[1]) < (box.l/2+cyl.r)))
+			if((Math.abs(box.pos[0]-cyl.pos[0]) < (box.tiles.c.l/2+cyl.tiles.c.r)) && 
+			  (Math.abs(box.pos[1]-cyl.pos[1]) < (box.tiles.c.l/2+cyl.tiles.c.r)))
 			{
 				if(topdown_distance < topdown_treshold)
 				  return [0,0,1];

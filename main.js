@@ -87,11 +87,11 @@ function game_start()
 
 		if(d < 2*2)
 		{
-			World.createObject(Graphics.GroundRugged, [x, y, 1]);
+			//World.createObject(Graphics.GroundRugged, [x, y, 1]);
 		}
 	}
 
-	for(var i = 0; i < 2; i++)
+	for(var i = 0; i < 10; i++)
 	{
 		World.createObject(Graphics.BarrelWooden, [5, 5, 3+i*4]).static = false;
 	}
