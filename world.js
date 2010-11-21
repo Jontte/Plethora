@@ -5,7 +5,7 @@
 
 
 World = {
-	_physicsIterations: 3,
+	_physicsIterations: 2,
 	_objects: new Array(),
 	_proxy: new Array, // broadphase sweep & prune proxy array
 	_links: new Array(),
@@ -186,8 +186,8 @@ World = {
 				  movement[1] += d;
 				}
 
-				obj.force[0] += movement[0] - obj.vel[0]/12;
-				obj.force[1] += movement[1] - obj.vel[1]/12;
+				obj.force[0] += movement[0] - obj.vel[0]/18;
+				obj.force[1] += movement[1] - obj.vel[1]/18;
 
 				if(Key.get(KEY_LEFT) && Key.get(KEY_UP))
 					obj.direction = WEST;
@@ -395,6 +395,12 @@ World = {
 			return false;
 		if(o1.pos[2] > o2.pos[2]+o2.tiles.c.h)
 			return false;
+
+		// Quick bb-check:
+		if(o1.pos[0]+1.1 < o2.pos[0]) return false;
+		if(o1.pos[0]-1.1 > o2.pos[0]) return false;
+		if(o1.pos[1]+1.1 < o2.pos[1]) return false;
+		if(o1.pos[1]-1.1 > o2.pos[1]) return false;
 
 		// Treshold for topdown contact :
 		var topdown_distance = Math.min(

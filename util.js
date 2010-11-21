@@ -11,16 +11,11 @@ function draw(obj, x, y, tilex, tiley)
 		Graphics.tileset, 
 		32*tilex, 32*tiley,	
 		32, 32,
-		x, y,
+		Math.floor(x), Math.floor(y),
 		32, 32
 	);
 }
 
-function debug(text)
-{
-	var elem = document.getElementById('debug');
-	elem.innerHTML += text + "<br>\n";
-}
 
 // Sort sortMe by using compare as the comparison function
 function insertionSort(sortMe, compare)

@@ -66,7 +66,11 @@ var Graphics = {
 function reset()
 {
 	World.reset();
-	
+	if(Config.timeout != undefined)
+	{
+		clearTimeout(Config.timeout);
+		delete Config.timeout;
+	}
 	// Select & load level
 	var levelname = document.getElementById('lselect').value;
 
@@ -95,17 +99,17 @@ function initialize()
 function game_start()
 {
 	// Load level here
-	setTimeout(game_loop, 50);
+	Config.timeout = setTimeout(game_loop, 50);
 }
 
 function game_loop()
 {
-	setTimeout(game_loop, 50);
+	Config.timeout = setTimeout(game_loop, 50);
 
 	// Clear screen
 	Graphics.ctx.fillStyle = "rgb(96,160,255)";  
 	Graphics.ctx.fillRect (0, 0, 640, 480);  
-
+	
 	World.render();
 	World.physicsStep();
 	
