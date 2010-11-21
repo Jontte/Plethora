@@ -8,9 +8,17 @@ World = {
 	_physicsIterations: 3,
 	_objects: new Array(),
 	_proxy: new Array, // broadphase sweep & prune proxy array
+	_links: new Array(),
 	_control: null,
 	_cameraFocus: null,
-	_links: new Array(),
+	reset : function()
+	{
+		World._objects = new Array();
+		World._proxy = new Array();
+		World._links = new Array();
+		World._control = null;
+		World._cameraFocus = null;
+	},
 	setKeyboardControl : function(obj)
 	{
 		World._control = obj;
@@ -468,7 +476,7 @@ World = {
 			}
 		}
 		else {
-			debug('Unhandled collision for: ' + o1.tiles.c.s + ' vs ' + o2.tiles.c.s);
+			console.log('Unhandled collision for: ' + o1.tiles.c.s + ' vs ' + o2.tiles.c.s);
 		}
 		return false;
 }

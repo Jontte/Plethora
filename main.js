@@ -1,4 +1,3 @@
-
 /*
  * Configurables
  */
@@ -63,10 +62,24 @@ var Graphics = {
 	Shadow: {t: 0, g: [8,1], c: {s: "cylinder", r: 0.51, h: 5}}
 };
 
-var Game = {
-	player: {}
-};
 
+function reset()
+{
+	World.reset();
+	
+	// Select & load level
+	var levelname = document.getElementById('lselect').value;
+
+	// Add level js file
+	var fileref=document.createElement('script');
+	fileref.setAttribute("type","text/javascript");
+	fileref.setAttribute("src", 'levels/'+levelname);
+
+	if (typeof fileref!="undefined")
+		document.getElementsByTagName("head")[0].appendChild(fileref);
+	else
+		alert('Error loading file!');
+}
 function initialize()
 {
 	var canvas = document.getElementById('canvas');  
@@ -81,75 +94,8 @@ function initialize()
 }
 function game_start()
 {
+	// Load level here
 	setTimeout(game_loop, 50);
-
-	for(var x = 0; x < 10; x++)
-	for(var y = 0; y < 10; y++)
-	{
-		var d = ((x-4.5)*(x-4.5)+(y-4.5)*(y-4.5));
-
-		var obj = World.createObject(
-			(d > 4*4)?Graphics.Water:Graphics.GroundRugged, [x, y, 0]);
-		obj.frameMaxTicks = 5;
-
-		if(d < 2*2)
-		{
-			//World.createObject(Graphics.GroundRugged, [x, y, 1]);
-		}
-	}
-
-	for(var i = 0; i < 10; i++)
-	{
-		World.createObject(Graphics.BarrelWooden, [5, 5, 1+i]).static = false;
-		World.createObject(Graphics.BarrelWooden, [6, 5, 1+i]).static = false;
-	}
-
-	Game.player = World.createObject(Graphics.DudeBottom, [6,6,1]);
-	Game.player.head = World.createObject(Graphics.DudeTop, [6,6,2]);
-
-	Game.player.static = false;
-	Game.player.head.static = false;
-
-	Game.player.frameMaxTicks=5;
-	Game.player.head.frameMaxTicks=5;
-
-	World.linkObjects(Game.player, Game.player.head);
-
-	World.setKeyboardControl(Game.player);
-	World.setCameraFocus(Game.player);
-
-	var prev = null;
-	for(var i = 0; i < 11; i++)
-	{
-		var obj = World.createObject(Graphics.Crate, [i, 10, 0]);
-		obj.static = false;
-		if(prev != null)
-			World.linkObjects(obj, prev);
-		else
-		  obj.static = true;
-		prev = obj;
-	}
-	for(var i = 0; i < 50; i++)
-	{
-		var obj = World.createObject(Graphics.Crate, [10, 9-i, 0]);
-		obj.static = false;
-		World.linkObjects(obj, prev);
-		prev = obj;
-	}
-	var foo = prev;
-	for(var x = 0; x < 5; x++)
-	for(var y = 0; y < 5; y++)
-	{
-		var obj = World.createObject(Graphics.GroundRugged, [11+x, -36-y, 0]);
-		obj.static = false;
-		World.linkObjects(obj, prev);
-		prev = obj;
-		if(x==4&&y==4)
-		  World.linkObjects(obj,foo);
-	}
-
-
-	World.createObject(Graphics.Duck, [13,-38,1]).static = false;
 }
 
 function game_loop()
@@ -162,9 +108,10 @@ function game_loop()
 
 	World.render();
 	World.physicsStep();
-
-	// Synch head movement to body movement
-	Game.player.head.direction = Game.player.direction;
+	
+	// User defined functions
+	if(level_loop != undefined)
+		level_loop();
 }
 
 

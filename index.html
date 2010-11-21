@@ -6,10 +6,13 @@
 		<script type="text/javascript" src="world.js"></script>
 		<script type="text/javascript" src="main.js"></script>
 	</head>
-	<body onload="initialize()">
+	<body onload="reset()">
 		<canvas id="canvas" width="640" height="480">
 			You browser doesn't support canvas. <a href="http://getfirefox.org/">Try getting a real browser from Mozilla: http://getfirefox.org/</a>
 		</canvas>
-		<span id="debug"></span>
+		<select name="Level selection" id="lselect" size="4" onchange="reset()">
+			<option value="testlevel.js" selected="true">Testlevel</option>
+			<option value="maze.js">Maze</option>
+		</select>
 	</body>
 </html>
