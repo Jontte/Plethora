@@ -4,6 +4,7 @@
 
 var Config = {
 	graphics : 'tileset.png',
+	gamestate : 'halt'
 };
 
 /* 
@@ -65,12 +66,15 @@ var Graphics = {
 
 function reset()
 {
-	World.reset();
-	if(Config.timeout != undefined)
+	if(Config.gamestate != 'halt')
 	{
-		clearTimeout(Config.timeout);
-		delete Config.timeout;
+		Config.gamestate = 'reset';
+		// Try again in 50ms
+		setTimeout(reset, 50);
+		return;
 	}
+
+	World.reset();
 	// Select & load level
 	var levelname = document.getElementById('lselect').value;
 
@@ -95,6 +99,8 @@ function initialize()
 	Graphics.tileset = new Image();
 	Graphics.tileset.onload = game_start;
 	Graphics.tileset.src = Config.graphics;
+	
+	Config.gamestate = 'online';
 }
 function game_start()
 {
@@ -104,7 +110,13 @@ function game_start()
 
 function game_loop()
 {
-	Config.timeout = setTimeout(game_loop, 50);
+	if(Config.gamestate == 'online')
+		setTimeout(game_loop, 50);
+	if(Config.gamestate == 'reset')
+	{
+		Config.gamestate = 'halt';
+		return;
+	}
 
 	// Clear screen
 	Graphics.ctx.fillStyle = "rgb(96,160,255)";  

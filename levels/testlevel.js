@@ -21,15 +21,12 @@ for(var y = 0; y < 10; y++)
 
 for(var i = 0; i < 10; i++)
 {
-	World.createObject(Graphics.BarrelWooden, [5, 5, 1+i]).static = false;
-	World.createObject(Graphics.BarrelWooden, [6, 5, 1+i]).static = false;
+	World.createObject(Graphics.BarrelWooden, [5, 5, 1+i], false);
+	World.createObject(Graphics.BarrelWooden, [6, 5, 1+i], false);
 }
 
-Game.player = World.createObject(Graphics.DudeBottom, [6,6,1]);
-Game.player.head = World.createObject(Graphics.DudeTop, [6,6,2]);
-
-Game.player.static = false;
-Game.player.head.static = false;
+Game.player = World.createObject(Graphics.DudeBottom, [6,6,1], false);
+Game.player.head = World.createObject(Graphics.DudeTop, [6,6,2], false);
 
 Game.player.frameMaxTicks=5;
 Game.player.head.frameMaxTicks=5;
@@ -42,18 +39,14 @@ World.setCameraFocus(Game.player);
 var prev = null;
 for(var i = 0; i < 11; i++)
 {
-	var obj = World.createObject(Graphics.Crate, [i, 10, 0]);
-	obj.static = false;
+	var obj = World.createObject(Graphics.Crate, [i, 10, 0], prev==null);
 	if(prev != null)
 		World.linkObjects(obj, prev);
-	else
-	  obj.static = true;
 	prev = obj;
 }
 for(var i = 0; i < 50; i++)
 {
-	var obj = World.createObject(Graphics.Crate, [10, 9-i, 0]);
-	obj.static = false;
+	var obj = World.createObject(Graphics.Crate, [10, 9-i, 0], false);
 	World.linkObjects(obj, prev);
 	prev = obj;
 }
@@ -61,15 +54,14 @@ var foo = prev;
 for(var x = 0; x < 5; x++)
 for(var y = 0; y < 5; y++)
 {
-	var obj = World.createObject(Graphics.GroundRugged, [11+x, -36-y, 0]);
-	obj.static = false;
+	var obj = World.createObject(Graphics.GroundRugged, [11+x, -36-y, 0], false);
 	World.linkObjects(obj, prev);
 	prev = obj;
 	if(x==4&&y==4)
 	  World.linkObjects(obj,foo);
 }
 
-World.createObject(Graphics.Duck, [13,-38,1]).static = false;
+World.createObject(Graphics.Duck, [13,-38,1], false);
 
 function level_loop()
 {

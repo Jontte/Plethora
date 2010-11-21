@@ -21,15 +21,12 @@ for(var y = 0; y < 20; y++)
 
 for(var i = 0; i < 10; i++)
 {
-	World.createObject(Graphics.BarrelWooden, [5, 5, 1+i]).static = false;
-	World.createObject(Graphics.BarrelWooden, [6, 5, 1+i]).static = false;
+	World.createObject(Graphics.BarrelWooden, [5, 5, 1+i], false);
+	World.createObject(Graphics.BarrelWooden, [6, 5, 1+i], false);
 }
 
-Game.player = World.createObject(Graphics.DudeBottom, [6,6,1]);
-Game.player.head = World.createObject(Graphics.DudeTop, [6,6,2]);
-
-Game.player.static = false;
-Game.player.head.static = false;
+Game.player = World.createObject(Graphics.DudeBottom, [6,6,1], false);
+Game.player.head = World.createObject(Graphics.DudeTop, [6,6,2], false);
 
 Game.player.frameMaxTicks=5;
 Game.player.head.frameMaxTicks=5;

@@ -8,6 +8,7 @@ World = {
 	_physicsIterations: 2,
 	_objects: new Array(),
 	_proxy: new Array, // broadphase sweep & prune proxy array
+	_tree: new KDTree(), // KD-Tree for static objects
 	_links: new Array(),
 	_control: null,
 	_cameraFocus: null,
@@ -18,6 +19,7 @@ World = {
 		World._links = new Array();
 		World._control = null;
 		World._cameraFocus = null;
+		World._tree.reset();
 	},
 	setKeyboardControl : function(obj)
 	{
@@ -35,8 +37,10 @@ World = {
 	{
 	
 	},
-	createObject : function(tiles, pos)
+	createObject : function(tiles, pos, static)
 	{
+		if(static==undefined)
+			static=true;
 		var obj = 
 		{
 			pos: pos,
@@ -44,7 +48,7 @@ World = {
 			mass: 1,
 			tiles: tiles,
 			direction: 0,
-			static: true, // partake in dynamics simulation if static=false
+			static: static, // partake in dynamics simulation if static=false
 			frame: 0, // current frame
 			frameTick: 0, // current tick
 			frameMaxTicks: 1, // ticks to reach until we switch to next frame (0 to disable animation)
@@ -55,16 +59,25 @@ World = {
 			tiles.c = {s:'box', h:1, l:1};
 
 		World._objects.push(obj);
-		World._proxy.push({
-			begin: true,
-			d: obj.pos[0] + obj.pos[1] + obj.pos[2] - 0.8, // 1.6 is about sqrt(3)/2
-			obj: obj
-		});
-		World._proxy.push({
-			begin: false,
-			d: obj.pos[0] + obj.pos[1] + obj.pos[2] + 0.8,
-			obj: obj
-		});
+
+		if(static==false)
+		{
+			// Moving objects use sweep&prune
+			World._proxy.push({
+				begin: true,
+				d: 0,
+				obj: obj
+			});
+			World._proxy.push({
+				begin: false,
+				d: 0,
+				obj: obj
+			});
+		}
+		else {
+			// Whereas static objects go to a large kd-tree
+			World._tree.insert({pos: pos, obj: obj});
+		}
 		return obj;
 	},
 	linkObjects: function(o1, o2, maxforce)
@@ -151,6 +164,8 @@ World = {
 
 	physicsStep : function()
 	{
+		World._tree.maybeOptimize();
+
 		for(var iter = 0; iter < World._physicsIterations; iter++)
 		{
 			// reset forces
@@ -186,8 +201,8 @@ World = {
 				  movement[1] += d;
 				}
 
-				obj.force[0] += movement[0] - obj.vel[0]/18;
-				obj.force[1] += movement[1] - obj.vel[1]/18;
+				obj.force[0] += movement[0] - obj.vel[0]/20;
+				obj.force[1] += movement[1] - obj.vel[1]/20;
 
 				if(Key.get(KEY_LEFT) && Key.get(KEY_UP))
 					obj.direction = WEST;
@@ -197,9 +212,8 @@ World = {
 					obj.direction = EAST;
 				else if(Key.get(KEY_DOWN) && Key.get(KEY_LEFT))
 					obj.direction = SOUTH;
-				if(obj.canjump == undefined)obj.canjump = false;
-				if(Key.get(KEY_SPACE) && obj.canjump)
-				  obj.force[2] += 0.2;
+				//if(Key.get(KEY_SPACE))
+				//  obj.force[2] += 0.2;
 			}
 
 			// Sweep-line the objects
@@ -221,6 +235,11 @@ World = {
 			insertionSort(World._proxy, function(a,b){
 				return a.d < b.d;
 			});
+			
+			/* 
+				This is the main body of the sweep & prune algorithm
+				We also collide to static objects stored in a kd-tree here
+			*/
 
 			var objectbuffer = [];
 			for(var i = 0; i < World._proxy.length; i++)
@@ -240,81 +259,19 @@ World = {
 						
 						var o2 = objectbuffer[other].obj;
 						
-						if(o1.static == true && o2.static == true)
-							continue;
 						if(o1.sensor == true && o2.sensor == true)
 							continue;
-						var colldata = World._collide(o1, o2);
-						if(colldata != false && o1.sensor != true && o2.sensor != true)
-						{
-
-							var normal = colldata[0];
-							var displacement = colldata[1];
-
-							var dx = (o2.pos[0]-o1.pos[0])*normal[0];
-							var dy = (o2.pos[1]-o1.pos[1])*normal[1];
-							var dz = (o2.pos[2]-o1.pos[2])*normal[2];
-							var d = dx*dx+dy*dy+dz*dz;
-							d = Math.sqrt(d);
-
-							// A precaution that will allow us to bend in any possible
-							// direction in case the forces would get too high
-							if(d < 0.0001)
-							{
-								var dx = (o2.pos[0]-o1.pos[0]);
-								var dy = (o2.pos[1]-o1.pos[1]);
-								var dz = (o2.pos[2]-o1.pos[2]);
-								var d = dx*dx+dy*dy+dz*dz;
-								d = Math.sqrt(d);
-							}
-							if(d < 0.0001)
-							  d = 0.0001;
-							dx /= d;
-							dy /= d;
-							dz /= d;
-
-							dx *= displacement;
-							dy *= displacement;
-							dz *= displacement;
-
-							o1.force[0] -= dx;
-							o1.force[1] -= dy;
-							o1.force[2] -= dz;
-							o2.force[0] += dx;
-							o2.force[1] += dy;
-							o2.force[2] += dz;
-
-							if(o1.static == true)
-							  o1.mass = 1e99;
-							if(o2.static == true)
-							  o2.mass = 1e99;
-
-							var mean = [
-								 o1.vel[0]*o1.mass + o2.vel[0]*o2.mass,
-								 o1.vel[1]*o1.mass + o2.vel[1]*o2.mass,
-								 o1.vel[2]*o1.mass + o2.vel[2]*o2.mass
-								 ];
-
-							mean[0] /= o1.mass + o2.mass;
-							mean[1] /= o1.mass + o2.mass;
-							mean[2] /= o1.mass + o2.mass;
-
-							if(normal[0]>0){
-								o1.vel[0] = mean[0];
-								o2.vel[0] = mean[0];
-							}
-							if(normal[1]>0){
-								o1.vel[1] = mean[1];
-								o2.vel[1] = mean[1];
-							}
-							if(normal[2]>0){
-								o1.vel[2] = mean[2];
-								o2.vel[2] = mean[2];
-							}
-						}
+						World._tryCollideAndResponse(o1,o2);
 					}
 					// Add object to buffer 
-					objectbuffer[p.obj.id] = p;	
+					objectbuffer[p.obj.id] = p;
+					
+					// Look for nearby static objects, collide
+					var statics = World._tree.getObjects(o1.pos, 2);
+					for(var a = 0; a < statics.length; a++)
+					{
+						World._tryCollideAndResponse(o1, statics[a].obj);
+					}
 				}
 			}
 			// process links
@@ -381,6 +338,77 @@ World = {
 				obj.vel[0] *= 0.95;
 				obj.vel[1] *= 0.95;
 				obj.vel[2] *= 0.95;
+			}
+		}
+	},
+	_tryCollideAndResponse : function(o1, o2)
+	{
+		var colldata = World._collide(o1, o2);
+		if(colldata != false && o1.sensor != true && o2.sensor != true)
+		{
+
+			var normal = colldata[0];
+			var displacement = colldata[1];
+
+			var dx = (o2.pos[0]-o1.pos[0])*normal[0];
+			var dy = (o2.pos[1]-o1.pos[1])*normal[1];
+			var dz = (o2.pos[2]-o1.pos[2])*normal[2];
+			var d = dx*dx+dy*dy+dz*dz;
+			d = Math.sqrt(d);
+
+			// A precaution that will allow us to bend in any possible
+			// direction in case the forces would get too high
+			if(d < 0.0001)
+			{
+				var dx = (o2.pos[0]-o1.pos[0]);
+				var dy = (o2.pos[1]-o1.pos[1]);
+				var dz = (o2.pos[2]-o1.pos[2]);
+				var d = dx*dx+dy*dy+dz*dz;
+				d = Math.sqrt(d);
+			}
+			if(d < 0.0001)
+			  d = 0.0001;
+			dx /= d;
+			dy /= d;
+			dz /= d;
+
+			dx *= displacement;
+			dy *= displacement;
+			dz *= displacement;
+
+			o1.force[0] -= dx;
+			o1.force[1] -= dy;
+			o1.force[2] -= dz;
+			o2.force[0] += dx;
+			o2.force[1] += dy;
+			o2.force[2] += dz;
+
+			if(o1.static == true)
+			  o1.mass = 1e99;
+			if(o2.static == true)
+			  o2.mass = 1e99;
+
+			var mean = [
+				 o1.vel[0]*o1.mass + o2.vel[0]*o2.mass,
+				 o1.vel[1]*o1.mass + o2.vel[1]*o2.mass,
+				 o1.vel[2]*o1.mass + o2.vel[2]*o2.mass
+				 ];
+
+			mean[0] /= o1.mass + o2.mass;
+			mean[1] /= o1.mass + o2.mass;
+			mean[2] /= o1.mass + o2.mass;
+
+			if(normal[0]>0){
+				o1.vel[0] = mean[0];
+				o2.vel[0] = mean[0];
+			}
+			if(normal[1]>0){
+				o1.vel[1] = mean[1];
+				o2.vel[1] = mean[1];
+			}
+			if(normal[2]>0){
+				o1.vel[2] = mean[2];
+				o2.vel[2] = mean[2];
 			}
 		}
 	},
