@@ -55,12 +55,14 @@ var Graphics = {
 	HillPlain : {t: DIRECTED, g: [[4,8],[4,10],[4,9],[5,8]]},
 	GroundRugged : {t: 0, g:[1,9]},
 	GroundPlain : {t: 0, g: [5,9]},
+	GroundBlock : {t: 0, g: [3,9]},
 	Lift : {t: ANIMATED,g: [[0,6],[1,6],[2,6],[3,6],[4,6],[5,6],[6,6],[7,6],[8,6],[9,6]]},
 	Water: {t: ANIMATED_RANDOM, g: [[2,0],[3,0]]},
 	BarrelWooden: {t: 0, g: [2,1], c: {s: "cylinder", r: 0.40, h: 1}},
 	Crate: {t: 0, g: [3,1]},
 	Duck: {t: 0, g: [5,1], c: {s: "cylinder", r: 0.3, h: 0.7}},
-	Shadow: {t: 0, g: [8,1], c: {s: "cylinder", r: 0.51, h: 5}}
+	Shadow: {t: 0, g: [8,1], c: {s: "cylinder", r: 0.51, h: 5}},
+	DarkBlock: {t: 0, g:[0,11], c: {s: 'box', l: 1, h: 0.5}}
 };
 
 

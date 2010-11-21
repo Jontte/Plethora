@@ -182,7 +182,7 @@ World = {
 			if(World._control != null)
 			{
 				var obj = World._control;
-				var d = 0.01;
+				var d = 0.02;
 				var movement = [0,0];
 				if(Key.get(KEY_LEFT)){ 
 				  movement[0] -= d;
