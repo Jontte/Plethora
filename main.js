@@ -60,7 +60,7 @@ var Graphics = {
 	BarrelWooden: {t: 0, g: [2,1], c: {s: "cylinder", r: 0.40, h: 1}},
 	Crate: {t: 0, g: [3,1]},
 	Duck: {t: 0, g: [5,1], c: {s: "cylinder", r: 0.3, h: 0.7}},
-	Shadow: {t: 0, g: [8,1], c: {s: "cylinder", r: 0.45, h: 0.2}}
+	Shadow: {t: 0, g: [8,1], c: {s: "cylinder", r: 0.51, h: 5}}
 };
 
 var Game = {
@@ -100,7 +100,7 @@ function game_start()
 
 	for(var i = 0; i < 10; i++)
 	{
-		World.createObject(Graphics.BarrelWooden, [5, 5, 3+i*4]).static = false;
+		World.createObject(Graphics.BarrelWooden, [5, 5, 1+i]).static = false;
 		World.createObject(Graphics.BarrelWooden, [6, 5, 1+i]).static = false;
 	}
 
@@ -113,17 +113,7 @@ function game_start()
 	Game.player.frameMaxTicks=5;
 	Game.player.head.frameMaxTicks=5;
 
-	Game.player.shadow = World.createObject(Graphics.Shadow, [6,6,5]);
-	Game.player.shadow.sensor = true;
-	Game.player.shadow.static = false;
-
-	Game.player.shadowlink = World.linkObjects(Game.player, Game.player.shadow);
 	World.linkObjects(Game.player, Game.player.head);
-
-	Game.player.shadow.collision_callback = function(o){
-		var self = Game.player.shadow;
-		if(o == Game.player)return;
-	};
 
 	World.setKeyboardControl(Game.player);
 	World.setCameraFocus(Game.player);
@@ -170,8 +160,8 @@ function game_loop()
 	Graphics.ctx.fillStyle = "rgb(96,160,255)";  
 	Graphics.ctx.fillRect (0, 0, 640, 480);  
 
-	World.physicsStep();
 	World.render();
+	World.physicsStep();
 
 	// Synch head movement to body movement
 	Game.player.head.direction = Game.player.direction;

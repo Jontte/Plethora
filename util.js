@@ -21,3 +21,16 @@ function debug(text)
 	var elem = document.getElementById('debug');
 	elem.innerHTML += text + "<br>\n";
 }
+
+// Sort sortMe by using compare as the comparison function
+function insertionSort(sortMe, compare)
+{
+	for (i=0; i<sortMe.length; i++) {
+		tmp = sortMe[i];
+		for (j=i-1; j>=0 && compare(tmp, sortMe[j]); j--) {
+			sortMe[j+1]=sortMe[j];
+		}
+		sortMe[j+1]=tmp;
+	}
+}
+

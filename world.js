@@ -5,8 +5,9 @@
 
 
 World = {
-	_physicsIterations: 4,
+	_physicsIterations: 3,
 	_objects: new Array(),
+	_proxy: new Array, // broadphase sweep & prune proxy array
 	_control: null,
 	_cameraFocus: null,
 	_links: new Array(),
@@ -46,6 +47,16 @@ World = {
 			tiles.c = {s:'box', h:1, l:1};
 
 		World._objects.push(obj);
+		World._proxy.push({
+			begin: true,
+			d: obj.pos[0] + obj.pos[1] + obj.pos[2] - 0.8, // 1.6 is about sqrt(3)/2
+			obj: obj
+		});
+		World._proxy.push({
+			begin: false,
+			d: obj.pos[0] + obj.pos[1] + obj.pos[2] + 0.8,
+			obj: obj
+		});
 		return obj;
 	},
 	linkObjects: function(o1, o2, maxforce)
@@ -184,37 +195,33 @@ World = {
 			}
 
 			// Sweep-line the objects
-
-			var proxyarray = new Array();
-
+			//
+			
+			// Each object is assigned an unique id for the duration of the loop
 			for(var i = 0; i < World._objects.length; i++)
 			{
-				var obj = World._objects[i];
-				proxyarray.push({
-					begin: true,
-					d: obj.pos[0] + obj.pos[1] + obj.pos[2] - 0.8, // 1.6 is about sqrt(3)/2
-					obj: obj,
-					id: i
-				});
-				proxyarray.push({
-					begin: false,
-					d: obj.pos[0] + obj.pos[1] + obj.pos[2] + 0.8,
-					obj: obj,
-					id: i
-				});
+				World._objects[i].id = i;
 			}
-			proxyarray.sort(function(a,b){
-				return a.d - b.d;
+			// Initialize proxy array
+			for(var i = 0 ; i < World._proxy.length; i++)
+			{
+				var p = World._proxy[i];
+				p.d = (p.obj.pos[0]+p.obj.pos[1]+p.obj.pos[2]) + ((p.begin==true)?-0.8:0.8);
+			}
+
+			// Sort it
+			insertionSort(World._proxy, function(a,b){
+				return a.d < b.d;
 			});
 
 			var objectbuffer = [];
-			for(var i = 0; i < proxyarray.length; i++)
+			for(var i = 0; i < World._proxy.length; i++)
 			{
-				var p = proxyarray[i];
+				var p = World._proxy[i];
 				if(p.begin == false)
 				{
 					// Remove object from buffer
-					delete objectbuffer[p.id];
+					delete objectbuffer[p.obj.id];
 				}
 				else
 				{
@@ -230,12 +237,9 @@ World = {
 						if(o1.sensor == true && o2.sensor == true)
 							continue;
 						var colldata = World._collide(o1, o2);
-						if(o1.collision_callback)
-							o1.collision_callback(o2);
-						if(o2.collision_callback)
-							o2.collision_callback(o1);
 						if(colldata != false && o1.sensor != true && o2.sensor != true)
 						{
+
 							var normal = colldata[0];
 							var displacement = colldata[1];
 
@@ -302,13 +306,27 @@ World = {
 						}
 					}
 					// Add object to buffer 
-					objectbuffer[p.id] = p;	
+					objectbuffer[p.obj.id] = p;	
 				}
 			}
 			// process links
 			for(var i = 0; i < World._links.length; i++)
 			{
 				var l = World._links[i];
+				if(l.o1.sensor == true)
+				{
+					l.o1.pos[0] = l.o2.pos[0] + l.dpos[0];
+					l.o1.pos[1] = l.o2.pos[1] + l.dpos[1];
+					l.o1.pos[2] = l.o2.pos[2] + l.dpos[2];
+					continue;
+				}
+				else if(l.o2.sensor == true)
+				{
+					l.o2.pos[0] = l.o1.pos[0] - l.dpos[0];
+					l.o2.pos[1] = l.o1.pos[1] - l.dpos[1];
+					l.o2.pos[2] = l.o1.pos[2] - l.dpos[2];
+					continue;
+				}
 				var error = [
 					 l.dpos[0]-(l.o2.pos[0]-l.o1.pos[0]),
 					 l.dpos[1]-(l.o2.pos[1]-l.o1.pos[1]),
@@ -352,9 +370,9 @@ World = {
 				obj.pos[1] += obj.vel[1]/World._physicsIterations;
 				obj.pos[2] += obj.vel[2]/World._physicsIterations;
 				
-				obj.vel[0] *= 0.99;
-				obj.vel[1] *= 0.99;
-				obj.vel[2] *= 0.99;
+				obj.vel[0] *= 0.95;
+				obj.vel[1] *= 0.95;
+				obj.vel[2] *= 0.95;
 			}
 		}
 	},
