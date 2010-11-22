@@ -33,7 +33,7 @@ var Graphics = {
 					],
 					c: { // Collision data (dfaults to solid 1x1x1 cube)
 						s: "cylinder", // Cylinder shape
-						r: 0.25, // Radius 
+						r: 0.4, // Radius 
 						h: 1 // Height
 					} 
 				},
@@ -47,7 +47,7 @@ var Graphics = {
 					],
 					c: {
 						s: "cylinder",
-						r: 0.45,
+						r: 0.4,
 						h: 1
 					} 
 				 },
@@ -60,7 +60,7 @@ var Graphics = {
 	Water: {t: ANIMATED_RANDOM, g: [[2,0],[3,0]]},
 	BarrelWooden: {t: 0, g: [2,1], c: {s: "cylinder", r: 0.40, h: 1}},
 	Crate: {t: 0, g: [3,1]},
-	Duck: {t: 0, g: [5,1], c: {s: "cylinder", r: 0.3, h: 0.7}},
+	Duck: {t: 0, g: [5,1], c: {s: "cylinder", r: 0.2, h: 0.5}},
 	Shadow: {t: 0, g: [8,1], c: {s: "cylinder", r: 0.51, h: 5}},
 	DarkBlock: {t: 0, g:[0,11], c: {s: 'box', l: 1, h: 0.5}}
 };
@@ -83,7 +83,7 @@ function reset()
 	// Add level js file
 	var fileref=document.createElement('script');
 	fileref.setAttribute("type","text/javascript");
-	fileref.setAttribute("src", 'levels/'+levelname);
+	fileref.setAttribute("src", 'levels/'+levelname+'?invalidate_cache='+(new Date()).getTime());
 
 	if (typeof fileref!="undefined")
 		document.getElementsByTagName("head")[0].appendChild(fileref);
@@ -94,6 +94,7 @@ function initialize()
 {
 	var canvas = document.getElementById('canvas');  
 	Graphics.ctx = canvas.getContext('2d');
+	Graphics.ctx.fillStyle = "rgb(96,160,255)";  
 
 	// Start registering keyboard input
 	Key.register();
@@ -121,7 +122,6 @@ function game_loop()
 	}
 
 	// Clear screen
-	Graphics.ctx.fillStyle = "rgb(96,160,255)";  
 	Graphics.ctx.fillRect (0, 0, 640, 480);  
 	
 	World.render();

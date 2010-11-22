@@ -5,26 +5,25 @@ var Game = {
 
 
 var grid = [];
+var w = 20;
+var h = 20;
 
-for(var x = 0; x < 17; x++)
+for(var x = 0; x < w*2+1; x++)
 {
 	grid.push([]);
-for(var y = 0; y < 17; y++)
+for(var y = 0; y < w*2+1; y++)
 {
-	var val = !(x>=13&&x<16&&y>=13&&y<16);
+	var val = true;
 
-	if(y==12&&x==14)
+	if(y==2&&x==1)
 		val = false;
-	if(x==12&&y==14)
+	if(x==1&&y==2)
 		val = false;
 
 	grid[grid.length-1].push(val);
-	var obj = World.createObject(Graphics.GroundBlock, [x, y, 0]);
 }
 }
 
-var w = 8;
-var h = 8;
 
 function isset(g, x, y)
 {
@@ -49,8 +48,8 @@ while(true)
 	var px=-1;
 	var py=-1;
 	// find first nonvisited square
-	for(var x = 0; x < 8; x++) 
-	for(var y = 0; y < 8; y++) 
+	for(var x = 0; x < w; x++) 
+	for(var y = 0; y < h; y++) 
 	{
 		if(isset(grid,x,y))
 		{
@@ -101,22 +100,28 @@ while(true)
 }
 
 
-for(var x = 0; x < 17; x++)
-for(var y = 0; y < 17; y++)
+for(var x = 0; x < w*2+1; x++)
+for(var y = 0; y < h*2+1; y++)
 {
 	if(grid[x][y])
 	{
 		var obj = World.createObject(Graphics.DarkBlock, [x, y, 1]);
 	}
+	else
+	{
+		var obj = World.createObject(Graphics.GroundBlock, [x, y, 0]);
+	}
 }
 
-Game.player = World.createObject(Graphics.DudeBottom, [14,14,1], false);
-Game.player.head = World.createObject(Graphics.DudeTop, [14,14,2], false);
+Game.player = World.createObject(Graphics.DudeBottom, [1,1,1], false);
+Game.player.head = World.createObject(Graphics.DudeTop, [1,1,2], false);
 
 Game.player.frameMaxTicks=5;
 Game.player.head.frameMaxTicks=5;
 
 World.linkObjects(Game.player, Game.player.head);
+
+var duck = World.createObject(Graphics.Duck, [w*2-1,h*2-1,2], false);
 
 World.setKeyboardControl(Game.player);
 World.setCameraFocus(Game.player);

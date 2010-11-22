@@ -50,15 +50,12 @@ for(var i = 0; i < 50; i++)
 	World.linkObjects(obj, prev);
 	prev = obj;
 }
-var foo = prev;
 for(var x = 0; x < 5; x++)
 for(var y = 0; y < 5; y++)
 {
 	var obj = World.createObject(Graphics.GroundRugged, [11+x, -36-y, 0], false);
 	World.linkObjects(obj, prev);
 	prev = obj;
-	if(x==4&&y==4)
-	  World.linkObjects(obj,foo);
 }
 
 World.createObject(Graphics.Duck, [13,-38,1], false);

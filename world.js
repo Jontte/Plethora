@@ -5,13 +5,14 @@
 
 
 World = {
-	_physicsIterations: 2,
+	_physicsIterations: 4,
 	_objects: new Array(),
 	_proxy: new Array, // broadphase sweep & prune proxy array
 	_tree: new KDTree(), // KD-Tree for static objects
 	_links: new Array(),
 	_control: null,
 	_cameraFocus: null,
+	_cameraPos: [0,0,0],
 	reset : function()
 	{
 		World._objects = new Array();
@@ -107,6 +108,40 @@ World = {
 	},
 	render : function()
 	{
+		// Update camera position
+		if(World._cameraFocus != null)
+		{
+			World._cameraPos[0] = World._cameraFocus.pos[0];
+			World._cameraPos[1] = World._cameraFocus.pos[1];
+			World._cameraPos[2] = World._cameraFocus.pos[2];
+			
+			// Update world sky color based on new camera position
+			var r,g,b;
+			var h = World._cameraPos[2];
+			// Color at zero height
+			var midpoint = [96,127,255];
+
+			var edges = [-100, 100];
+			if(h > 0) {
+				if(h>edges[1])h=edges[1];
+				r = midpoint[0]+(255-midpoint[0])*(h/edges[1]);
+				g = midpoint[1]+(255-midpoint[1])*(h/edges[1]);
+				b = midpoint[2]+(255-midpoint[2])*(h/edges[1]);
+			}
+			else {
+				if(h<edges[0])h=edges[0];
+				r = midpoint[0]+(0-midpoint[0])*(h/edges[0]);
+				g = midpoint[1]+(0-midpoint[1])*(h/edges[0]);
+				b = midpoint[2]+(0-midpoint[2])*(h/edges[0]);
+			}
+			r=Math.floor(r);
+			g=Math.floor(g);
+			b=Math.floor(b);
+
+			// Change sky color
+			Graphics.ctx.fillStyle = 'rgb('+r+','+g+','+b+')';
+		}
+
 		// Drawing order is important
 		// Sort all objects by depth before rendering
 
@@ -146,20 +181,12 @@ World = {
 			g = g[obj.frame];
 		}
 
-		var fx = g[0];
-		var fy = g[1];
-
 		var focus = [
-			320,240 
+			320-(World._cameraPos[0]-World._cameraPos[1])*16,
+			240-(World._cameraPos[0]+World._cameraPos[1]-2*World._cameraPos[2])*8
 		];
-		if(World._cameraFocus != null)
-		{
-			var f = World._cameraFocus;
-			focus[0] = 320-(f.pos[0]-f.pos[1])*16;
-			focus[1] = 240-(f.pos[0]+f.pos[1]-2*f.pos[2])*8;
-		}
 
-		draw(obj.tiles.g, focus[0]+(obj.pos[0]-obj.pos[1])*16, focus[1]+(obj.pos[0]+obj.pos[1]-2*obj.pos[2])*8, fx, fy);
+		draw(obj.tiles.g, focus[0]+(obj.pos[0]-obj.pos[1])*16, focus[1]+(obj.pos[0]+obj.pos[1]-2*obj.pos[2])*8, g[0],g[1]);
 	},
 
 	physicsStep : function()
@@ -174,7 +201,7 @@ World = {
 				// gravity
 				var obj = World._objects[i];
 				obj.force = [0,0,
-					(obj.static)?0 : (-0.00981*obj.mass/World._physicsIterations)
+					(obj.static)?0 : (-0.04*obj.mass/World._physicsIterations)
 				];
 			}
 			
@@ -275,54 +302,41 @@ World = {
 				}
 			}
 			// process links
-			for(var i = 0; i < World._links.length; i++)
-			{
-				var l = World._links[i];
-				if(l.o1.sensor == true)
+				for(var i = 0; i < World._links.length; i++)
 				{
-					l.o1.pos[0] = l.o2.pos[0] + l.dpos[0];
-					l.o1.pos[1] = l.o2.pos[1] + l.dpos[1];
-					l.o1.pos[2] = l.o2.pos[2] + l.dpos[2];
-					continue;
-				}
-				else if(l.o2.sensor == true)
-				{
-					l.o2.pos[0] = l.o1.pos[0] - l.dpos[0];
-					l.o2.pos[1] = l.o1.pos[1] - l.dpos[1];
-					l.o2.pos[2] = l.o1.pos[2] - l.dpos[2];
-					continue;
-				}
-				var error = [
-					 l.dpos[0]-(l.o2.pos[0]-l.o1.pos[0]),
-					 l.dpos[1]-(l.o2.pos[1]-l.o1.pos[1]),
-					 l.dpos[2]-(l.o2.pos[2]-l.o1.pos[2])
-				];
-				var d = 0.50;
-				l.o1.force[0] -= error[0]*d;
-				l.o1.force[1] -= error[1]*d;
-				l.o1.force[2] -= error[2]*d;
-				l.o2.force[0] += error[0]*d;
-				l.o2.force[1] += error[1]*d;
-				l.o2.force[2] += error[2]*d;
-				// mean their velocities and correct positions
-				/*
-				l.o1.pos[0] -= error[0]*d;
-				l.o1.pos[1] -= error[1]*d;
-				l.o1.pos[2] -= error[2]*d;
-				l.o2.pos[0] += error[0]*d;
-				l.o2.pos[1] += error[1]*d;
-				l.o2.pos[2] += error[2]*d;*/
+					var l = World._links[i];
+					if(l.o1.sensor == true)
+					{
+						l.o1.pos[0] = l.o2.pos[0] + l.dpos[0];
+						l.o1.pos[1] = l.o2.pos[1] + l.dpos[1];
+						l.o1.pos[2] = l.o2.pos[2] + l.dpos[2];
+						continue;
+					}
+					else if(l.o2.sensor == true)
+					{
+						l.o2.pos[0] = l.o1.pos[0] - l.dpos[0];
+						l.o2.pos[1] = l.o1.pos[1] - l.dpos[1];
+						l.o2.pos[2] = l.o1.pos[2] - l.dpos[2];
+						continue;
+					}
+					var error = [
+						 l.dpos[0]-(l.o2.pos[0]-l.o1.pos[0]),
+						 l.dpos[1]-(l.o2.pos[1]-l.o1.pos[1]),
+						 l.dpos[2]-(l.o2.pos[2]-l.o1.pos[2])
+					];
+					var d = 0.55;
 
-				var meanvel = [
-					 (l.o1.vel[0]+l.o2.vel[0])/2,
-					 (l.o1.vel[1]+l.o2.vel[1])/2,
-					 (l.o1.vel[2]+l.o2.vel[2])/2
-				];
+					// reduces twitching when error is low
+					//if(Math.abs(error[0])+Math.abs(error[1])+Math.abs(error[2]) < 0.2)
+						//d /= 2;
 
-				l.o1.vel[0] = l.o2.vel[0] = meanvel[0];
-				l.o1.vel[1] = l.o2.vel[1] = meanvel[1];
-				l.o1.vel[2] = l.o2.vel[2] = meanvel[2];
-			}
+					l.o1.force[0] -= error[0]*d;
+					l.o1.force[1] -= error[1]*d;
+					l.o1.force[2] -= error[2]*d;
+					l.o2.force[0] += error[0]*d;
+					l.o2.force[1] += error[1]*d;
+					l.o2.force[2] += error[2]*d;
+				}
 			// euler integrate
 			for(var i = 0; i < World._objects.length; i++)
 			{
@@ -335,9 +349,13 @@ World = {
 				obj.pos[1] += obj.vel[1]/World._physicsIterations;
 				obj.pos[2] += obj.vel[2]/World._physicsIterations;
 				
-				obj.vel[0] *= 0.95;
-				obj.vel[1] *= 0.95;
-				obj.vel[2] *= 0.95;
+				obj.vel[0] *= 0.97;
+				obj.vel[1] *= 0.97;
+				obj.vel[2] *= 0.97;
+
+				while(Math.abs(obj.vel[0])>1)obj.vel[0] /= 2;
+				while(Math.abs(obj.vel[1])>1)obj.vel[1] /= 2;
+				while(Math.abs(obj.vel[2])>1)obj.vel[2] /= 2;
 			}
 		}
 	},
