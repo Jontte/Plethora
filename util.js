@@ -1,13 +1,13 @@
 
 
-function draw(obj, x, y, tilex, tiley)
+function draw(obj, x, y, tilex, tiley, ctx)
 {
+	// If no canvas context was specified, use the main canvas
+	if(!ctx)ctx = Graphics.ctx;
+	
 	if(x+32<0||y+32<0||x-32>640||y-32>480)return;
-	// Examine input object
-	if(typeof(obj) != 'object')
-		return;
-
-	Graphics.ctx.drawImage(
+	
+	ctx.drawImage(
 		Graphics.tileset, 
 		32*tilex, 32*tiley,	
 		32, 32,
@@ -58,5 +58,14 @@ function lower_bound(arr, min, max, threshold, func)
 			continue;
 		}
 	}
+}
+
+// Transform world coordinates to screen coordinates
+function World2Screen(p)
+{
+	return [
+		(p[0]-p[1])*16,
+		(p[0]+p[1]-2*p[2])*8
+	];
 }
 

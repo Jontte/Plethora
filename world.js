@@ -1,16 +1,4 @@
 
-/*
- * We represent the world as a large 3d grid of objects
- */
-
-
-		/*function binary_search(arr, min, max, threshold, func)
-		{
-			if(min==max)
-				return min;
-			if(func(arr[min] < treshold) 
-			
-		}*/
 World = {
 	_physicsIterations: 4,
 	_objects: new Array(),
@@ -28,6 +16,7 @@ World = {
 		World._control = null;
 		World._cameraFocus = null;
 		World._tree.reset();
+		//Patch.reset();
 	},
 	setKeyboardControl : function(obj)
 	{
@@ -83,8 +72,11 @@ World = {
 			});
 		}
 		else {
-			// Whereas static objects go to a large kd-tree
+			// Whereas static objects go to a large kd-tree for collision testing
 			World._tree.insert({pos: pos, obj: obj});
+
+			// ... And to the patch manager for optimal drawing
+			//Patch.addToCache(obj);
 		}
 		return obj;
 	},
@@ -116,6 +108,7 @@ World = {
 	render : function()
 	{
 		console.time('render');
+
 		// Update camera position
 		if(World._cameraFocus != null)
 		{
@@ -216,12 +209,12 @@ World = {
 			g = g[obj.frame];
 		}
 
-		var focus = [
-			320-(World._cameraPos[0]-World._cameraPos[1])*16,
-			240-(World._cameraPos[0]+World._cameraPos[1]-2*World._cameraPos[2])*8
-		];
+		var focus = World2Screen(World._cameraPos);
+		var coords = World2Screen(obj.pos);
 
-		draw(obj.tiles.g, focus[0]+(obj.pos[0]-obj.pos[1])*16, focus[1]+(obj.pos[0]+obj.pos[1]-2*obj.pos[2])*8, g[0],g[1]);
+		coords[0] += 320-focus[0];
+		coords[1] += 240-focus[1];
+		draw(obj.tiles.g, coords[0], coords[1], g[0],g[1]);
 	},
 
 	physicsStep : function()
