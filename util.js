@@ -29,3 +29,34 @@ function insertionSort(sortMe, compare)
 	}
 }
 
+// Don't Worry, I come from the Amazing world of C++
+// This function does a binary search (O(log n)) on a sorted array and returns
+// index of first element that when called as a parameter of func is higher
+// than threshold
+function lower_bound(arr, min, max, threshold, func)
+{
+	while(true)
+	{
+		var w = max-min;
+		if(w == 0)
+			return min;
+		var midpoint = min+Math.floor(w/2);
+
+		if(func(arr[midpoint]) <= threshold)
+		{
+			if(min == midpoint) {
+				min++; // This might happen due to rounding
+			}
+			else {
+				min = midpoint;
+			}
+			continue;
+		}
+		else
+		{
+			max = midpoint;
+			continue;
+		}
+	}
+}
+

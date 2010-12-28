@@ -5,8 +5,8 @@ var Game = {
 
 
 var grid = [];
-var w = 20;
-var h = 20;
+var w = 5;
+var h = 5;
 
 for(var x = 0; x < w*2+1; x++)
 {
@@ -132,7 +132,5 @@ function level_loop()
 	Game.player.head.direction = Game.player.direction;
 }
 
-
-// Finished loading level.
 initialize();
 

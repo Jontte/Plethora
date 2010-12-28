@@ -66,7 +66,4 @@ function level_loop()
 	Game.player.head.direction = Game.player.direction;
 }
 
-
-// Finished loading level.
 initialize();
-

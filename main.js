@@ -80,22 +80,23 @@ function reset()
 	// Select & load level
 	var levelname = document.getElementById('lselect').value;
 
-	// Add level js file
-	var fileref=document.createElement('script');
-	fileref.setAttribute("type","text/javascript");
-	fileref.setAttribute("src", 'levels/'+levelname+'?invalidate_cache='+(new Date()).getTime());
+	// Load level and initialize
+	var head= document.getElementsByTagName('head')[0];
+	var script= document.createElement('script');
 
-	if (typeof fileref!="undefined")
-		document.getElementsByTagName("head")[0].appendChild(fileref);
-	else
-		alert('Error loading file!');
+	script.type= 'text/javascript';
+	script.src='index.php?level='+levelname;
+
+	head.appendChild(script);
+	
+	//load_level();
+	//initialize();
 }
 function initialize()
 {
 	var canvas = document.getElementById('canvas');  
 	Graphics.ctx = canvas.getContext('2d');
 	Graphics.ctx.fillStyle = "rgb(96,160,255)";  
-
 	// Start registering keyboard input
 	Key.register();
 
@@ -122,8 +123,10 @@ function game_loop()
 	}
 
 	// Clear screen
-	Graphics.ctx.fillRect (0, 0, 640, 480);  
-	
+	//Graphics.ctx.globalAlpha = 1.0;
+	Graphics.ctx.fillRect (0, 0, 640, 480);  	
+	//Graphics.ctx.globalAlpha = 0.5;
+
 	World.render();
 	World.physicsStep();
 	

@@ -4,6 +4,13 @@
  */
 
 
+		/*function binary_search(arr, min, max, threshold, func)
+		{
+			if(min==max)
+				return min;
+			if(func(arr[min] < treshold) 
+			
+		}*/
 World = {
 	_physicsIterations: 4,
 	_objects: new Array(),
@@ -108,6 +115,7 @@ World = {
 	},
 	render : function()
 	{
+		console.time('render');
 		// Update camera position
 		if(World._cameraFocus != null)
 		{
@@ -145,14 +153,41 @@ World = {
 		// Drawing order is important
 		// Sort all objects by depth before rendering
 
-		World._objects.sort(function(a,b){
-			return (a.pos[0]+a.pos[1]+a.pos[2]*0.95) - (b.pos[0]+b.pos[1]+b.pos[2]*0.95);
-		});;
+		console.time('sort');
+		var depth_func =  function(arr){
+			return (arr[0]+arr[1]+arr[2]*0.95);
+		};
+		//World._objects.sort(function(a,b){return depth_func(a.pos) - depth_func(b.pos);});
+		
+		insertionSort(World._objects, function(a,b){
+			return depth_func(a.pos) < depth_func(b.pos);
+		});
+		console.timeEnd('sort');
 
-		for(var i = 0; i < World._objects.length; i++)
+		// Limit object visibility thru zfar and znear (relative to camera coordinates)
+		var cameradepth = depth_func(World._cameraPos);
+
+		var znear = -30 + cameradepth;
+		var zfar =   30 + cameradepth;
+		
+		// Find boundary indexes thru binary search
+		
+		var znearindex = 0;
+		var zfarindex = World._objects.length;
+		
+		znearindex = lower_bound(World._objects, 0, World._objects.length, znear, 
+			function(a){return depth_func(a.pos);});
+		zfarindex =  lower_bound(World._objects, 0, World._objects.length, zfar, 
+			function(a){return depth_func(a.pos);});
+
+		console.time('render actual');
+		for(var i = znearindex; i < zfarindex; i++)
 		{
 			World.drawSingleObject(World._objects[i]);
 		}
+		console.timeEnd('render actual');
+		console.timeEnd('render');
+		//console.log('Drew ' + (zfarindex-znearindex+1) + ' objects');
 	},
 	drawSingleObject : function(obj)
 	{
@@ -191,6 +226,7 @@ World = {
 
 	physicsStep : function()
 	{
+		console.time('physics');
 		World._tree.maybeOptimize();
 
 		for(var iter = 0; iter < World._physicsIterations; iter++)
@@ -358,6 +394,7 @@ World = {
 				while(Math.abs(obj.vel[2])>1)obj.vel[2] /= 2;
 			}
 		}
+		console.timeEnd('physics');
 	},
 	_tryCollideAndResponse : function(o1, o2)
 	{
