@@ -23,6 +23,7 @@ var ANIMATED_RANDOM = 4; // .. with random frame order
  * Engine
  */
 var Graphics = {
+	img: {}, // Loaded images are placed here
 	DudeTop :	{
 					t: DIRECTED | ANIMATED, // Animation type
 					g: [ // Tile indexes
@@ -88,27 +89,42 @@ function reset()
 	script.src='index.php?level='+levelname;
 
 	head.appendChild(script);
-	
-	//load_level();
-	//initialize();
+}
+function load_gfx(filename, onload)
+{
+	// Makes sure an external img file is loaded into memory
+	// Optional onload function may be specified
+	if(!Graphics.img[filename])
+	{
+		var img = new Image();
+		img.src = filename;
+		if(onload)
+		{
+			img.onload = onload;
+		}
+		Graphics.img[filename] = img;
+	}
 }
 function initialize()
 {
 	var canvas = document.getElementById('canvas');  
 	Graphics.ctx = canvas.getContext('2d');
-	Graphics.ctx.fillStyle = "rgb(96,160,255)";  
+
 	// Start registering keyboard input
 	Key.register();
 
-	Graphics.tileset = new Image();
-	Graphics.tileset.onload = game_start;
-	Graphics.tileset.src = Config.graphics;
-	
-	Config.gamestate = 'online';
+	load_gfx('cloud1.png');
+	load_gfx('cloud2.png');
+	load_gfx('cloud3.png');
+	load_gfx('cloud4.png');
+	load_gfx('cloud5.png');
+	load_gfx('stars.png');
+	load_gfx('tileset.png', game_start);
 }
 function game_start()
 {
 	// Load level here
+	Config.gamestate = 'online';
 	Config.timeout = setTimeout(game_loop, 50);
 }
 
@@ -133,6 +149,9 @@ function game_loop()
 	// User defined functions
 	if(level_loop != undefined)
 		level_loop();
+
+	// Reset key states
+	Key.timestep();
 }
 
 

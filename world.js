@@ -5,7 +5,6 @@ World = {
 	_proxy: new Array, // broadphase sweep & prune proxy array
 	_tree: new KDTree(), // KD-Tree for static objects
 	_links: new Array(),
-	_control: null,
 	_cameraFocus: null,
 	_cameraPos: [0,0,0],
 	reset : function()
@@ -13,14 +12,9 @@ World = {
 		World._objects = new Array();
 		World._proxy = new Array();
 		World._links = new Array();
-		World._control = null;
 		World._cameraFocus = null;
 		World._tree.reset();
 		//Patch.reset();
-	},
-	setKeyboardControl : function(obj)
-	{
-		World._control = obj;
 	},
 	setCameraFocus : function(obj)
 	{
@@ -42,13 +36,16 @@ World = {
 		{
 			pos: pos,
 			vel: [0,0,0],
+			force: [0,0,0],
 			mass: 1,
 			tiles: tiles,
 			direction: 0,
 			static: static, // partake in dynamics simulation if static=false
 			frame: 0, // current frame
 			frameTick: 0, // current tick
-			frameMaxTicks: 1, // ticks to reach until we switch to next frame (0 to disable animation)
+			frameMaxTicks: 1, // ticks to reach until we switch to next frame (0 to disable animation),
+			lgroup: [], // Link group array will be set here if this object is to be a part of a link group
+			lgroup_offset: [0,0,0], // Offset from link groups 
 		};
 
 		// Physics shape defaults to 1x1x1 box:
@@ -115,33 +112,9 @@ World = {
 			World._cameraPos[0] = World._cameraFocus.pos[0];
 			World._cameraPos[1] = World._cameraFocus.pos[1];
 			World._cameraPos[2] = World._cameraFocus.pos[2];
-			
-			// Update world sky color based on new camera position
-			var r,g,b;
-			var h = World._cameraPos[2];
-			// Color at zero height
-			var midpoint = [96,127,255];
-
-			var edges = [-100, 100];
-			if(h > 0) {
-				if(h>edges[1])h=edges[1];
-				r = midpoint[0]+(255-midpoint[0])*(h/edges[1]);
-				g = midpoint[1]+(255-midpoint[1])*(h/edges[1]);
-				b = midpoint[2]+(255-midpoint[2])*(h/edges[1]);
-			}
-			else {
-				if(h<edges[0])h=edges[0];
-				r = midpoint[0]+(0-midpoint[0])*(h/edges[0]);
-				g = midpoint[1]+(0-midpoint[1])*(h/edges[0]);
-				b = midpoint[2]+(0-midpoint[2])*(h/edges[0]);
-			}
-			r=Math.floor(r);
-			g=Math.floor(g);
-			b=Math.floor(b);
-
-			// Change sky color
-			Graphics.ctx.fillStyle = 'rgb('+r+','+g+','+b+')';
 		}
+
+		World.drawBackground();
 
 		// Drawing order is important
 		// Sort all objects by depth before rendering
@@ -173,14 +146,86 @@ World = {
 		zfarindex =  lower_bound(World._objects, 0, World._objects.length, zfar, 
 			function(a){return depth_func(a.pos);});
 
-		console.time('render actual');
 		for(var i = znearindex; i < zfarindex; i++)
 		{
 			World.drawSingleObject(World._objects[i]);
 		}
-		console.timeEnd('render actual');
 		console.timeEnd('render');
 		//console.log('Drew ' + (zfarindex-znearindex+1) + ' objects');
+	},
+	drawBackground : function()
+	{
+		// Clears the screen with a suitable color, renders clouds, etc.
+			
+		// Update world sky color based on camera position
+		var r,g,b;
+		var h = World._cameraPos[2];
+		// Color at zero height
+		var midpoint = [96,127,255];
+		var edges = [-100, 100];
+		
+		cloud_alpha = Math.min(1, Math.max(0, 1.0-Math.abs((h-25)/50)));
+		star_alpha = Math.min(1, Math.max(0, (h-40)/20));
+
+		if(h > 0) {
+			if(h>edges[1])h=edges[1];
+			r = midpoint[0]+(0-midpoint[0])*(h/edges[1]);
+			g = midpoint[1]+(0-midpoint[1])*(h/edges[1]);
+			b = midpoint[2]+(0-midpoint[2])*(h/edges[1]);
+		}
+		else {
+			if(h<edges[0])h=edges[0];
+			r = midpoint[0]+(0-midpoint[0])*(h/edges[0]);
+			g = midpoint[1]+(0-midpoint[1])*(h/edges[0]);
+			b = midpoint[2]+(64-midpoint[2])*(h/edges[0]);
+		}
+		r=Math.floor(r);
+		g=Math.floor(g);
+		b=Math.floor(b);
+
+		// Change sky color
+		Graphics.ctx.fillStyle = 'rgb('+r+','+g+','+b+')';
+
+		//Graphics.ctx.globalAlpha = 1.0;
+		
+		// Clear with sky color
+		Graphics.ctx.fillRect (0, 0, 640, 480);		
+		//Graphics.ctx.globalAlpha = 0.5;
+		
+		// Draw stars
+		if(star_alpha > 0.001)
+		{
+			Graphics.ctx.globalAlpha = star_alpha;
+			Graphics.ctx.fillStyle = Graphics.ctx.createPattern(Graphics.img['stars.png'], 'repeat');
+			Graphics.ctx.fillRect (0, 0, 640, 480);		
+			Graphics.ctx.globalAlpha = 1.0;
+		}
+		// Draw wrapping clouds. We can skip drawing altogether if alpha = 0
+		if(cloud_alpha > 0.001)
+		{
+			var camerapos = World2Screen(World._cameraPos);
+	
+			// Calculate alpha for clouds
+			Graphics.ctx.globalAlpha = cloud_alpha;
+	
+			// Filenames and offsets I made up
+			var clouds = [
+				['cloud1.png', 800, 200],
+				['cloud2.png', 200, 600],
+				['cloud3.png', 10, 300],
+				['cloud4.png', 500, 100],
+				['cloud5.png', 800, 400],
+			];
+			function clampwrap(x, loop){/*x -= loop*Math.floor(x/loop); } //*/while(x<0)x+= loop; return x % loop;}
+			for(var i = 0; i < clouds.length; i++)
+			{
+				Graphics.ctx.drawImage(
+					Graphics.img[clouds[i][0]], 
+					clampwrap(clouds[i][1]-camerapos[0],640*2)-320,
+					clampwrap(clouds[i][2]-camerapos[1],480*2)-240);
+			}
+			Graphics.ctx.globalAlpha = 1.0;
+		}
 	},
 	drawSingleObject : function(obj)
 	{
@@ -214,7 +259,7 @@ World = {
 
 		coords[0] += 320-focus[0];
 		coords[1] += 240-focus[1];
-		draw(obj.tiles.g, coords[0], coords[1], g[0],g[1]);
+		draw(coords[0], coords[1], g[0],g[1]);
 	},
 
 	physicsStep : function()
@@ -224,54 +269,6 @@ World = {
 
 		for(var iter = 0; iter < World._physicsIterations; iter++)
 		{
-			// reset forces
-			for(var i = 0; i < World._objects.length; i++)
-			{
-				// gravity
-				var obj = World._objects[i];
-				obj.force = [0,0,
-					(obj.static)?0 : (-0.04*obj.mass/World._physicsIterations)
-				];
-			}
-			
-			// Keyboard controlled object gets some force
-			if(World._control != null)
-			{
-				var obj = World._control;
-				var d = 0.02;
-				var movement = [0,0];
-				if(Key.get(KEY_LEFT)){ 
-				  movement[0] -= d;
-				  movement[1] += d;
-				}
-				if(Key.get(KEY_RIGHT)){ 
-				  movement[0] += d;
-				  movement[1] -= d;
-				}
-				if(Key.get(KEY_UP)){ 
-				  movement[0] -= d;
-				  movement[1] -= d;
-				}
-				if(Key.get(KEY_DOWN)){ 
-				  movement[0] += d;
-				  movement[1] += d;
-				}
-
-				obj.force[0] += movement[0] - obj.vel[0]/20;
-				obj.force[1] += movement[1] - obj.vel[1]/20;
-
-				if(Key.get(KEY_LEFT) && Key.get(KEY_UP))
-					obj.direction = WEST;
-				else if(Key.get(KEY_UP) && Key.get(KEY_RIGHT))
-					obj.direction = NORTH;
-				else if(Key.get(KEY_RIGHT) && Key.get(KEY_DOWN))
-					obj.direction = EAST;
-				else if(Key.get(KEY_DOWN) && Key.get(KEY_LEFT))
-					obj.direction = SOUTH;
-				//if(Key.get(KEY_SPACE))
-				//  obj.force[2] += 0.2;
-			}
-
 			// Sweep-line the objects
 			//
 			
@@ -284,6 +281,7 @@ World = {
 			for(var i = 0 ; i < World._proxy.length; i++)
 			{
 				var p = World._proxy[i];
+				// That magical value 0.8 comes from sqrt(1+1+1)/2 aka half space diagonal of a cube
 				p.d = (p.obj.pos[0]+p.obj.pos[1]+p.obj.pos[2]) + ((p.begin==true)?-0.8:0.8);
 			}
 
@@ -317,6 +315,8 @@ World = {
 						
 						if(o1.sensor == true && o2.sensor == true)
 							continue;
+
+						// Collide with the other dynamic object
 						World._tryCollideAndResponse(o1,o2);
 					}
 					// Add object to buffer 
@@ -334,26 +334,12 @@ World = {
 				for(var i = 0; i < World._links.length; i++)
 				{
 					var l = World._links[i];
-					if(l.o1.sensor == true)
-					{
-						l.o1.pos[0] = l.o2.pos[0] + l.dpos[0];
-						l.o1.pos[1] = l.o2.pos[1] + l.dpos[1];
-						l.o1.pos[2] = l.o2.pos[2] + l.dpos[2];
-						continue;
-					}
-					else if(l.o2.sensor == true)
-					{
-						l.o2.pos[0] = l.o1.pos[0] - l.dpos[0];
-						l.o2.pos[1] = l.o1.pos[1] - l.dpos[1];
-						l.o2.pos[2] = l.o1.pos[2] - l.dpos[2];
-						continue;
-					}
 					var error = [
 						 l.dpos[0]-(l.o2.pos[0]-l.o1.pos[0]),
 						 l.dpos[1]-(l.o2.pos[1]-l.o1.pos[1]),
 						 l.dpos[2]-(l.o2.pos[2]-l.o1.pos[2])
 					];
-					var d = 0.55;
+					var d = 1.1;
 
 					// reduces twitching when error is low
 					//if(Math.abs(error[0])+Math.abs(error[1])+Math.abs(error[2]) < 0.2)
@@ -386,6 +372,15 @@ World = {
 				while(Math.abs(obj.vel[1])>1)obj.vel[1] /= 2;
 				while(Math.abs(obj.vel[2])>1)obj.vel[2] /= 2;
 			}
+			// reset forces & set gravity ready for next round
+			for(var i = 0; i < World._objects.length; i++)
+			{
+				var obj = World._objects[i];
+				obj.force = [0,0,
+					(obj.static)?0 : (-0.04*obj.mass/World._physicsIterations)
+				];
+			}
+			
 		}
 		console.timeEnd('physics');
 	},

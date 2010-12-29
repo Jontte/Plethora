@@ -5,8 +5,8 @@ var Game = {
 
 
 var grid = [];
-var w = 5;
-var h = 5;
+var w = 20;
+var h = 20;
 
 for(var x = 0; x < w*2+1; x++)
 {
@@ -43,8 +43,12 @@ function connect(g, x1, y1, x2, y2)
 {
 	g[x1+x2+1][y1+y2+1] = false;
 }
+var counter = 0;
+var max = w*h;
 while(true)
 {
+	counter++;
+	progressbar(counter, max, 'hello');
 	var px=-1;
 	var py=-1;
 	// find first nonvisited square
@@ -75,6 +79,7 @@ while(true)
 	
 	while(true)
 	{
+
 	var nx = -1;
 	var ny = -1;
 	
@@ -96,6 +101,8 @@ while(true)
 	px=nx;
 	py=ny;
 
+	counter++;
+	progressbar(counter, max, 'hello');
 	}
 }
 
@@ -123,11 +130,47 @@ World.linkObjects(Game.player, Game.player.head);
 
 var duck = World.createObject(Graphics.Duck, [w*2-1,h*2-1,2], false);
 
-World.setKeyboardControl(Game.player);
 World.setCameraFocus(Game.player);
 
 function level_loop()
 {
+	// Keyboard controlled object gets some force
+	var obj = Game.player;
+	var d = 0.02;
+	
+	var movement = [0,0];
+	
+	if(Key.get(KEY_LEFT)){ 
+		movement[0] -= d;
+		movement[1] += d;
+	}
+	if(Key.get(KEY_RIGHT)){ 
+		movement[0] += d;
+		movement[1] -= d;
+	}
+	if(Key.get(KEY_UP)){
+		movement[0] -= d;
+		movement[1] -= d;
+	}
+	if(Key.get(KEY_DOWN)){ 
+		movement[0] += d;
+		movement[1] += d;
+	}
+
+	obj.force[0] += movement[0] - obj.vel[0]/20;
+	obj.force[1] += movement[1] - obj.vel[1]/20;
+
+	if(Key.get(KEY_LEFT) && Key.get(KEY_UP))
+		obj.direction = WEST;
+	else if(Key.get(KEY_UP) && Key.get(KEY_RIGHT))
+		obj.direction = NORTH;
+	else if(Key.get(KEY_RIGHT) && Key.get(KEY_DOWN))
+		obj.direction = EAST;
+	else if(Key.get(KEY_DOWN) && Key.get(KEY_LEFT))
+		obj.direction = SOUTH;
+		
+	if(Key.get(KEY_SPACE))obj.force[2] += 0.2;
+	
 	// Synch head movement to body movement
 	Game.player.head.direction = Game.player.direction;
 }

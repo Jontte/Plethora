@@ -1,6 +1,6 @@
 
 
-function draw(obj, x, y, tilex, tiley, ctx)
+function draw(x, y, tilex, tiley, ctx)
 {
 	// If no canvas context was specified, use the main canvas
 	if(!ctx)ctx = Graphics.ctx;
@@ -8,12 +8,30 @@ function draw(obj, x, y, tilex, tiley, ctx)
 	if(x+32<0||y+32<0||x-32>640||y-32>480)return;
 	
 	ctx.drawImage(
-		Graphics.tileset, 
+		Graphics.img['tileset.png'], 
 		32*tilex, 32*tiley,	
 		32, 32,
 		Math.floor(x), Math.floor(y),
 		32, 32
 	);
+}
+
+function progressbar(current, max, message)
+{
+	var w = 640;
+	var h = 480;
+
+	var ctx = Graphics.ctx;
+
+	ctx.fillStyle = 'black';
+	ctx.globalAlpha = 0.2;
+	ctx.fillRect (0, 0, 640, 480);		
+	ctx.globalAlpha = 1.0;
+	
+	ctx.fillStyle = 'black';
+	Graphics.ctx.fillRect(w/4,h/4,w/2,h/2);
+	ctx.fillStyle = 'red';
+	Graphics.ctx.fillRect(w/4+50,h/4+50,(w/2-100)*current/max,h/2-100);
 }
 
 
@@ -44,8 +62,8 @@ function lower_bound(arr, min, max, threshold, func)
 
 		if(func(arr[midpoint]) <= threshold)
 		{
-			if(min == midpoint) {
-				min++; // This might happen due to rounding
+			if(min == midpoint) { // This might happen due to rounding
+				min++;
 			}
 			else {
 				min = midpoint;
@@ -68,4 +86,6 @@ function World2Screen(p)
 		(p[0]+p[1]-2*p[2])*8
 	];
 }
+
+
 
