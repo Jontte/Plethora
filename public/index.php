@@ -4,6 +4,7 @@
 	// Configurables
 	$source_directory = '/home/joonas/plethora/';
 	$levels = array('testlevel.js', 'maze.js');
+	$minify = true;
 
 	$selection = $_GET['level'];
 
@@ -12,9 +13,11 @@
 		header('Content-type: text/javascript');
 		if(in_array($selection, $levels))
 		{
-			echo JSMin::minify(
-				file_get_contents($source_directory.'levels/'.$selection)
-			);
+			$src = file_get_contents($source_directory.'levels/'.$selection);
+			if($minify == true)
+				echo JSMin::minify($src);
+			else
+				echo $src;
 		}
 		die();
 	}
@@ -32,7 +35,10 @@
 			foreach($files as $file)
 			{
 				$src = file_get_contents($source_directory.$file);
-				echo JSMin::minify($src);
+				if($minify == true)
+					echo JSMin::minify($src);
+				else
+					echo $src;
 			}
 			echo '</script>';
 		?>

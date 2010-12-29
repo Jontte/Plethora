@@ -2,19 +2,23 @@
 World = {
 	_physicsIterations: 4,
 	_objects: new Array(),
+	_nonstatic: new Array(), // lists every moving object for quick access
 	_proxy: new Array, // broadphase sweep & prune proxy array
 	_tree: new KDTree(), // KD-Tree for static objects
 	_links: new Array(),
 	_cameraFocus: null,
 	_cameraPos: [0,0,0],
+	_objectCounter : 0, // Used to assign unique IDs to new objects
 	reset : function()
 	{
 		World._objects = new Array();
 		World._proxy = new Array();
 		World._links = new Array();
+		World._nonstatic = new Array();
+		World._objectCounter = 0;
 		World._cameraFocus = null;
+		World._cameraPos = [0,0,0];
 		World._tree.reset();
-		//Patch.reset();
 	},
 	setCameraFocus : function(obj)
 	{
@@ -43,9 +47,8 @@ World = {
 			static: static, // partake in dynamics simulation if static=false
 			frame: 0, // current frame
 			frameTick: 0, // current tick
-			frameMaxTicks: 1, // ticks to reach until we switch to next frame (0 to disable animation),
-			lgroup: [], // Link group array will be set here if this object is to be a part of a link group
-			lgroup_offset: [0,0,0], // Offset from link groups 
+			frameMaxTicks: 1, // ticks to reach until we switch to next frame (0 to disable animation)
+			id: World._objectCounter++
 		};
 
 		// Physics shape defaults to 1x1x1 box:
@@ -67,13 +70,12 @@ World = {
 				d: 0,
 				obj: obj
 			});
+			// And can be accessed quickly thru a separate array as well
+			World._nonstatic.push(obj); 
 		}
 		else {
 			// Whereas static objects go to a large kd-tree for collision testing
 			World._tree.insert({pos: pos, obj: obj});
-
-			// ... And to the patch manager for optimal drawing
-			//Patch.addToCache(obj);
 		}
 		return obj;
 	},
@@ -104,7 +106,7 @@ World = {
 	},
 	render : function()
 	{
-		console.time('render');
+		//console.time('render');
 
 		// Update camera position
 		if(World._cameraFocus != null)
@@ -119,7 +121,7 @@ World = {
 		// Drawing order is important
 		// Sort all objects by depth before rendering
 
-		console.time('sort');
+		//console.time('sort');
 		var depth_func =  function(arr){
 			return (arr[0]+arr[1]+arr[2]*0.95);
 		};
@@ -128,7 +130,7 @@ World = {
 		insertionSort(World._objects, function(a,b){
 			return depth_func(a.pos) < depth_func(b.pos);
 		});
-		console.timeEnd('sort');
+		//console.timeEnd('sort');
 
 		// Limit object visibility thru zfar and znear (relative to camera coordinates)
 		var cameradepth = depth_func(World._cameraPos);
@@ -150,8 +152,8 @@ World = {
 		{
 			World.drawSingleObject(World._objects[i]);
 		}
-		console.timeEnd('render');
-		//console.log('Drew ' + (zfarindex-znearindex+1) + ' objects');
+		//console.timeEnd('render');
+		//console.log('Drew ' + (zfarindex-znearindex+1) + ' objects (out of '+World._objects.length+')');
 	},
 	drawBackground : function()
 	{
@@ -164,7 +166,7 @@ World = {
 		var midpoint = [96,127,255];
 		var edges = [-100, 100];
 		
-		cloud_alpha = Math.min(1, Math.max(0, 1.0-Math.abs((h-25)/50)));
+		cloud_alpha = Math.min(1, Math.max(0, 5*(1-1*Math.abs((h-25)/50))));
 		star_alpha = Math.min(1, Math.max(0, (h-40)/20));
 
 		if(h > 0) {
@@ -264,7 +266,7 @@ World = {
 
 	physicsStep : function()
 	{
-		console.time('physics');
+		//console.time('physics');
 		World._tree.maybeOptimize();
 
 		for(var iter = 0; iter < World._physicsIterations; iter++)
@@ -272,11 +274,6 @@ World = {
 			// Sweep-line the objects
 			//
 			
-			// Each object is assigned an unique id for the duration of the loop
-			for(var i = 0; i < World._objects.length; i++)
-			{
-				World._objects[i].id = i;
-			}
 			// Initialize proxy array
 			for(var i = 0 ; i < World._proxy.length; i++)
 			{
@@ -312,9 +309,6 @@ World = {
 						if(!objectbuffer.hasOwnProperty(other))continue;
 						
 						var o2 = objectbuffer[other].obj;
-						
-						if(o1.sensor == true && o2.sensor == true)
-							continue;
 
 						// Collide with the other dynamic object
 						World._tryCollideAndResponse(o1,o2);
@@ -353,10 +347,9 @@ World = {
 					l.o2.force[2] += error[2]*d;
 				}
 			// euler integrate
-			for(var i = 0; i < World._objects.length; i++)
+			for(var i = 0; i < World._nonstatic.length; i++)
 			{
-				var obj = World._objects[i];
-				if(obj.static==true)continue;
+				var obj = World._nonstatic[i];
 				obj.vel[0] += obj.force[0]/obj.mass;
 				obj.vel[1] += obj.force[1]/obj.mass;
 				obj.vel[2] += obj.force[2]/obj.mass;
@@ -373,16 +366,14 @@ World = {
 				while(Math.abs(obj.vel[2])>1)obj.vel[2] /= 2;
 			}
 			// reset forces & set gravity ready for next round
-			for(var i = 0; i < World._objects.length; i++)
+			for(var i = 0; i < World._nonstatic.length; i++)
 			{
-				var obj = World._objects[i];
-				obj.force = [0,0,
-					(obj.static)?0 : (-0.04*obj.mass/World._physicsIterations)
-				];
+				var obj = World._nonstatic[i];
+				obj.force = [0,0, -0.04*obj.mass/World._physicsIterations];
 			}
 			
 		}
-		console.timeEnd('physics');
+		//console.timeEnd('physics');
 	},
 	_tryCollideAndResponse : function(o1, o2)
 	{

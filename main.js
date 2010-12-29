@@ -119,7 +119,9 @@ function initialize()
 	load_gfx('cloud4.png');
 	load_gfx('cloud5.png');
 	load_gfx('stars.png');
-	load_gfx('tileset.png', game_start);
+	load_gfx('tileset.png');
+
+	game_start();
 }
 function game_start()
 {
