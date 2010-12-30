@@ -68,6 +68,10 @@
 				<option value="maze.js">Maze</option>
 			</select>
 			<input type="button" onclick="reset()" value="Reset"/>
+			<br clear="left">
+			<a href="http://www.google.com/chrome">
+				<img src="worksbestwith.png" alt="Works best with Google Chrome"/>
+			</a>
 		</div>
 	</body>
 </html>
