@@ -41,16 +41,33 @@
 					echo $src;
 			}
 			echo '</script>';
-		?>
+?>		<style>
+			#background {
+				height: 100px;
+				background-color: #1a82f7;
+				background: url(images/linear_bg_2.png);
+				background: -moz-linear-gradient(100% 100% 90deg, #2F2727, #1a82f7);
+				background: -webkit-gradient(linear, 0% 0%, 0% 100%, from(#1a82f7), to(#2F2727));
+			}
+			#border {
+				border: 1px black solid;
+				width: 640px;
+				height: 480px;
+			}
+		</style>
 	</head>
-	<body onload="reset()">
-		<canvas id="canvas" width="640" height="480">
-			You browser doesn't support the new HTML5 &lt;canvas&gt; element. <a href="http://getfirefox.org/">Try getting a real browser from Mozilla: http://getfirefox.org/</a>
-		</canvas>
-		<select name="Level selection" id="lselect" size="4" onchange="reset()">
-			<option value="testlevel.js" selected="true">Testlevel</option>
-			<option value="maze.js">Maze</option>
-		</select>
-		<input type="button" onclick="reset()" value="Reset"/>
+	<body onload="reset()" id="background">
+		<div id="border" style="float: left">
+			<canvas id="canvas" width="640" height="480">
+				You browser doesn't support the new HTML5 &lt;canvas&gt; element. <a href="http://getfirefox.org/">Try getting a real browser from Mozilla: http://getfirefox.org/</a>
+			</canvas>
+		</div>
+		<div style="float: left">
+			<select name="Level selection" id="lselect" size="4" onchange="reset()">
+				<option value="testlevel.js" selected="true">Testlevel</option>
+				<option value="maze.js">Maze</option>
+			</select>
+			<input type="button" onclick="reset()" value="Reset"/>
+		</div>
 	</body>
 </html>

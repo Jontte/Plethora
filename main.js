@@ -69,13 +69,17 @@ var Graphics = {
 
 function reset()
 {
-	if(Config.gamestate != 'halt')
+	if(Config.gamestate == 'online')
 	{
 		Config.gamestate = 'reset';
 		// Try again in 50ms
 		setTimeout(reset, 50);
 		return;
 	}
+	if(Config.gamestate != 'halt')
+		return;
+
+	Config.gamestate = 'initializing';
 
 	World.reset();
 	// Select & load level
@@ -108,6 +112,7 @@ function load_gfx(filename, onload)
 function initialize()
 {
 	var canvas = document.getElementById('canvas');  
+	canvas.focus();
 	Graphics.ctx = canvas.getContext('2d');
 
 	// Start registering keyboard input
@@ -121,11 +126,6 @@ function initialize()
 	load_gfx('stars.png');
 	load_gfx('tileset.png');
 
-	game_start();
-}
-function game_start()
-{
-	// Load level here
 	Config.gamestate = 'online';
 	Config.timeout = setTimeout(game_loop, 50);
 }

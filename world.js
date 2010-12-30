@@ -164,7 +164,7 @@ World = {
 		var h = World._cameraPos[2];
 		// Color at zero height
 		var midpoint = [96,127,255];
-		var edges = [-100, 100];
+		var edges = [-50, 100];
 		
 		cloud_alpha = Math.min(1, Math.max(0, 5*(1-1*Math.abs((h-25)/50))));
 		star_alpha = Math.min(1, Math.max(0, (h-40)/20));
