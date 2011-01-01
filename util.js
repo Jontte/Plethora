@@ -56,25 +56,33 @@ function lower_bound(arr, min, max, threshold, func)
 	while(true)
 	{
 		var w = max-min;
-		if(w == 0)
-			return min;
 		var midpoint = min+Math.floor(w/2);
 
+		if(w <= 0)
+			return -1;
+		if(w == 1)
+		{
+			if(func(arr[min]) > threshold)
+				return min;
+			return -1;
+		}
+		if(w == 2)
+		{
+			if(func(arr[min]) > threshold)
+				return min;
+			if(func(arr[min+1]) > threshold)
+				return min+1;
+			return -1;
+		}
 		if(func(arr[midpoint]) <= threshold)
 		{
-			if(min == midpoint) { // This might happen due to rounding
-				min++;
-			}
-			else {
-				min = midpoint;
-			}
-			continue;
+			min = midpoint+1;
 		}
 		else
 		{
-			max = midpoint;
-			continue;
+			max = midpoint+1;
 		}
+		continue;
 	}
 }
 

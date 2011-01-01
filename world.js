@@ -3,18 +3,25 @@ World = {
 	_physicsIterations: 4,
 	_objects: new Array(),
 	_nonstatic: new Array(), // lists every moving object for quick access
+	_static : new Array(), // same for static objects
 	_proxy: new Array, // broadphase sweep & prune proxy array
 	_tree: new KDTree(), // KD-Tree for static objects
 	_links: new Array(),
 	_cameraFocus: null,
 	_cameraPos: [0,0,0],
 	_objectCounter : 0, // Used to assign unique IDs to new objects
+	_depth_func: function(a)
+	{
+		// Depth formula. Used to calculate depth for each object based on their xyz-coordinates
+		return a[0] + a[1] + 0.95 * a[2];
+	},
 	reset : function()
 	{
 		World._objects = new Array();
 		World._proxy = new Array();
 		World._links = new Array();
 		World._nonstatic = new Array();
+		World._static = new Array();
 		World._objectCounter = 0;
 		World._cameraFocus = null;
 		World._cameraPos = [0,0,0];
@@ -48,7 +55,7 @@ World = {
 			frame: 0, // current frame
 			frameTick: 0, // current tick
 			frameMaxTicks: 1, // ticks to reach until we switch to next frame (0 to disable animation)
-			id: World._objectCounter++
+			id: World._objectCounter++ // Unique id is assigned to each object
 		};
 
 		// Physics shape defaults to 1x1x1 box:
@@ -76,6 +83,23 @@ World = {
 		else {
 			// Whereas static objects go to a large kd-tree for collision testing
 			World._tree.insert({pos: pos, obj: obj});
+
+			var dbghelp = [];
+			for(var i = 0; i < World._static.length;i++)
+				dbghelp.push(World._depth_func(World._static[i].pos));
+
+			//debugger;
+			// ... And to their own quick-access array
+			// Since it's sorted, we will have to insert the new object to a specific index
+			// in order to keep it that way
+			var depth = World._depth_func(obj.pos);
+			var index = lower_bound(World._static, 0, World._static.length, depth, 
+				function(a){return World._depth_func(a.pos);});
+			
+			if(index == -1)
+				World._static.push(obj);
+			else
+				World._static.splice(index, 0, obj);  //insert
 		}
 		return obj;
 	},
@@ -87,7 +111,7 @@ World = {
 			o1 : o1,
 			o2 : o2,
 			maxforce : maxforce,
-			dpos : [o2.pos[0]-o1.pos[0],o2.pos[1]-o1.pos[1],[o2.pos[2]-o1.pos[2]]]
+			dpos : [o2.pos[0]-o1.pos[0],o2.pos[1]-o1.pos[1],o2.pos[2]-o1.pos[2]]
 		};
 		World._links.push(lnk);
 		return lnk;
@@ -119,39 +143,86 @@ World = {
 		World.drawBackground();
 
 		// Drawing order is important
-		// Sort all objects by depth before rendering
+		// Sort all nonstatic objects by depth before rendering
 
 		//console.time('sort');
-		var depth_func =  function(arr){
-			return (arr[0]+arr[1]+arr[2]*0.95);
-		};
-		//World._objects.sort(function(a,b){return depth_func(a.pos) - depth_func(b.pos);});
 		
-		insertionSort(World._objects, function(a,b){
-			return depth_func(a.pos) < depth_func(b.pos);
+		//insertionSort(World._static, function(a,b){
+		//	return World._depth_func(a.pos) < World._depth_func(b.pos);
+		//});
+		insertionSort(World._nonstatic, function(a,b){
+			return World._depth_func(a.pos) < World._depth_func(b.pos);
 		});
 		//console.timeEnd('sort');
 
 		// Limit object visibility thru zfar and znear (relative to camera coordinates)
-		var cameradepth = depth_func(World._cameraPos);
+		var cameradepth = World._depth_func(World._cameraPos);
 
 		var znear = -30 + cameradepth;
 		var zfar =   30 + cameradepth;
 		
-		// Find boundary indexes thru binary search
+		// Find boundary indexes from static objs thru binary search
 		
 		var znearindex = 0;
-		var zfarindex = World._objects.length;
+		var zfarindex = World._static.length;
 		
-		znearindex = lower_bound(World._objects, 0, World._objects.length, znear, 
-			function(a){return depth_func(a.pos);});
-		zfarindex =  lower_bound(World._objects, 0, World._objects.length, zfar, 
-			function(a){return depth_func(a.pos);});
+		znearindex = lower_bound(World._static, 0, World._static.length, znear, 
+			function(a){return World._depth_func(a.pos);});
+		zfarindex =  lower_bound(World._static, 0, World._static.length, zfar, 
+			function(a){return World._depth_func(a.pos);});
 
+		if(znearindex == -1)znearindex = 0;
+		if(zfarindex == -1)zfarindex = World._static.length;
+
+		// For each nonstatic object, find an index on static objects
+
+		// TODO This is naive, we can do better
+		console.time('mapping');
+		var indices = [];
+		for(var i = 0; i < World._nonstatic.length; i++)
+		{
+			var d = World._depth_func(World._nonstatic[i].pos);
+			indices.push(
+				lower_bound(World._static, 0, World._static.length, d,
+					function(a){return World._depth_func(a.pos);})
+			);
+		}
+		console.timeEnd('mapping');
+
+		// TODO respect znear zfar
+
+		
+		console.time('traversing');
+		// Traverse those indices
+		//
+		var currentpos = 0;
+
+		// Skip till first nonstatic...
+		while(currentpos < World._static.length && indices[currentpos] < znearindex)currentpos++;
+
+		// Start drawing statics primarily, nonstatics as we bump into them
 		for(var i = znearindex; i < zfarindex; i++)
 		{
-			World.drawSingleObject(World._objects[i]);
+			while(currentpos < World._static.length && indices[currentpos] == i)
+			{
+				World.drawSingleObject(World._nonstatic[currentpos]);
+				currentpos++;
+			}
+			World.drawSingleObject(World._static[i]);
 		}
+		// Render rest of nonstatics
+		for(var i = currentpos; i < World._nonstatic.length; i++)
+		{
+			if(World._depth_func(World._nonstatic[i].pos) >= zfar)
+				break;
+			World.drawSingleObject(World._nonstatic[i]);
+		}
+
+		console.timeEnd('traversing');
+		/*for(var i = znearindex; i < zfarindex; i++)
+		{
+			World.drawSingleObject(World._static[i]);
+		}*/
 		//console.timeEnd('render');
 		//console.log('Drew ' + (zfarindex-znearindex+1) + ' objects (out of '+World._objects.length+')');
 	},
