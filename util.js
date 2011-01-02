@@ -32,12 +32,16 @@ function progressbar(current, max, message)
 	Graphics.ctx.fillRect(w/4,h/4,w/2,h/2);
 	ctx.fillStyle = 'red';
 	Graphics.ctx.fillRect(w/4+50,h/4+50,(w/2-100)*current/max,h/2-100);
+
+	// Force redraw of canvas..
+	document.getElementById('canvas').style.opacity = 1.0-0.001*Math.random();
 }
 
 
 // Sort sortMe by using compare as the comparison function
 function insertionSort(sortMe, compare)
 {
+	var i,j,tmp;
 	for (i=0; i<sortMe.length; i++) {
 		tmp = sortMe[i];
 		for (j=i-1; j>=0 && compare(tmp, sortMe[j]); j--) {

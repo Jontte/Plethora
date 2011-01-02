@@ -116,12 +116,14 @@ function mkMaze(offset, dimensions)
 	}
 }
 
-var levels = 10+Math.floor(Math.random()*10);
+var levels = 20+Math.floor(Math.random()*10);
 var pos = [0,0];
 for(var i=0;i<levels;i++)
 {
-	var width = 10+Math.floor(Math.random()*10);
-	var height = 10+Math.floor(Math.random()*10);
+	//progressbar(i,levels, "loading");
+	console.log('level.. '+i);
+	var width = 2+Math.floor(Math.random()*10);
+	var height = 2+Math.floor(Math.random()*10);
 
 	mkMaze([pos[0],pos[1],-2*i],[width,height]);
 	pos[0] += 2*width-2;

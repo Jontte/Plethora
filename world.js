@@ -84,22 +84,19 @@ World = {
 			// Whereas static objects go to a large kd-tree for collision testing
 			World._tree.insert({pos: pos, obj: obj});
 
-			var dbghelp = [];
-			for(var i = 0; i < World._static.length;i++)
-				dbghelp.push(World._depth_func(World._static[i].pos));
+		
+		//	var dbghelp = [];
+		//	for(var i = 0; i < World._static.length;i++)
+		//		dbghelp.push(World._depth_func(World._static[i].pos));
 
 			//debugger;
 			// ... And to their own quick-access array
-			// Since it's sorted, we will have to insert the new object to a specific index
-			// in order to keep it that way
-			var depth = World._depth_func(obj.pos);
-			var index = lower_bound(World._static, 0, World._static.length, depth, 
-				function(a){return World._depth_func(a.pos);});
-			
-			if(index == -1)
-				World._static.push(obj);
-			else
-				World._static.splice(index, 0, obj);  //insert
+			// Strangely, it's at least 10x faster to sort the array with insertion sort
+			// every time an object is added than to binary search and insert
+			World._static.push(obj);
+			insertionSort(World._static, function(a,b){
+				return World._depth_func(a.pos) < World._depth_func(b.pos);
+			});
 		}
 		return obj;
 	},
