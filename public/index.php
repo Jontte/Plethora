@@ -4,7 +4,7 @@
 	// Configurables
 	$source_directory = '/home/joonas/plethora/';
 	$levels = array('testlevel.js', 'maze.js');
-	$minify = false;
+	$minify = true;
 
 	$selection = $_GET['level'];
 
@@ -104,6 +104,7 @@
 					}
 				}	
 			</script>
+			<?php if(file_exists('ga_tracker.php')){echo file_get_contents('ga_tracker.php');} ?>
 	</head>
 	<body onload="reset()" id="background">
 		<div id="container">
