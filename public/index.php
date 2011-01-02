@@ -3,7 +3,14 @@
 
 	// Configurables
 	$source_directory = '/home/joonas/plethora/';
-	$levels = array('testlevel.js', 'maze.js');
+	$levels =	
+		array(
+			'Testlevel'	=> array('basepkg.js', 'testlevel.js'),
+			'Maze'		=> array('basepkg.js', 'maze.js'),
+			'Puzzle' 	=> array('basepkg.js', 'puzzle.js')
+		);
+
+
 	$minify = true;
 
 	$selection = $_GET['level'];
@@ -11,13 +18,19 @@
 	if(isset($selection))
 	{
 		header('Content-type: text/javascript');
-		if(in_array($selection, $levels))
+		
+		if(array_key_exists($selection, $levels))
 		{
-			$src = file_get_contents($source_directory.'levels/'.$selection);
-			if($minify == true)
-				echo JSMin::minify($src);
-			else
-				echo $src;
+			$files = $levels[$selection];
+			foreach($files as $file)
+			{
+				$src = file_get_contents($source_directory.'levels/'.$file);
+				
+				if($minify == true)
+					echo JSMin::minify($src);
+				else
+					echo $src;
+			}
 		}
 		die();
 	}
@@ -45,7 +58,6 @@
 			#background {
 				height: 100px;
 				background-color: #1a82f7;
-				background: url(images/linear_bg_2.png);
 				background: -moz-linear-gradient(100% 100% 90deg, #2F2727, #1a82f7);
 				background: -webkit-gradient(linear, 0% 0%, 0% 100%, from(#1a82f7), to(#2F2727));
 			}
@@ -130,8 +142,14 @@
 				<a href="#" onclick="show_message('author')"><div class="menuitem">Author</div></a>
 
 				<select name="Level selection" id="lselect" size="4" onchange="reset()">
-					<option value="testlevel.js" selected="true">Testlevel</option>
-					<option value="maze.js">Maze</option>
+<?php
+	$first = ' selected="true"';
+	foreach($levels as $key => $value)
+	{
+		echo "<option value=\"$key\"$first>$key</option>\n";
+		$first = '';
+	}
+?>
 				</select>
 				<input id="selector" type="button" onclick="reset()" value="Reset"/>
 				<br clear="left">

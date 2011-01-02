@@ -1,6 +1,6 @@
 
 World = {
-	_physicsIterations: 4,
+	_physicsIterations: 5,
 	_objects: new Array(),
 	_nonstatic: new Array(), // lists every moving object for quick access
 	_static : new Array(), // same for static objects
@@ -83,11 +83,6 @@ World = {
 		else {
 			// Whereas static objects go to a large kd-tree for collision testing
 			World._tree.insert({pos: pos, obj: obj});
-
-		
-		//	var dbghelp = [];
-		//	for(var i = 0; i < World._static.length;i++)
-		//		dbghelp.push(World._depth_func(World._static[i].pos));
 
 			//debugger;
 			// ... And to their own quick-access array
@@ -174,7 +169,7 @@ World = {
 		// For each nonstatic object, find an index on static objects
 
 		// TODO This is naive, we can do better
-		console.time('mapping');
+		//console.time('mapping');
 		var indices = [];
 		for(var i = 0; i < World._nonstatic.length; i++)
 		{
@@ -184,12 +179,9 @@ World = {
 					function(a){return World._depth_func(a.pos);})
 			);
 		}
-		console.timeEnd('mapping');
-
-		// TODO respect znear zfar
-
+		//console.timeEnd('mapping');
 		
-		console.time('traversing');
+		//console.time('traversing');
 		// Traverse those indices
 		//
 		var currentpos = 0;
@@ -210,12 +202,12 @@ World = {
 		// Render rest of nonstatics
 		for(var i = currentpos; i < World._nonstatic.length; i++)
 		{
-			if(World._depth_func(World._nonstatic[i].pos) >= zfar)
-				break;
 			World.drawSingleObject(World._nonstatic[i]);
+			if(World._depth_func(World._nonstatic[i].pos) > zfar)
+				break;
 		}
 
-		console.timeEnd('traversing');
+		//console.timeEnd('traversing');
 		/*for(var i = znearindex; i < zfarindex; i++)
 		{
 			World.drawSingleObject(World._static[i]);
@@ -309,7 +301,7 @@ World = {
 		{
 			// Increment frame tick counter
 			obj.frameTick ++;
-			if(obj.frameTick >= obj.frameMaxTicks)
+			if(obj.frameTick >= obj.frameMaxTicks && obj.frameMaxTicks != 0)
 			{
 				obj.frameTick = 0;
 				if(obj.tiles.t & ANIMATED_RANDOM)
@@ -425,13 +417,13 @@ World = {
 				obj.pos[1] += obj.vel[1]/World._physicsIterations;
 				obj.pos[2] += obj.vel[2]/World._physicsIterations;
 				
-				obj.vel[0] *= 0.97;
-				obj.vel[1] *= 0.97;
-				obj.vel[2] *= 0.97;
+				obj.vel[0] *= 0.99;
+				obj.vel[1] *= 0.99;
+				obj.vel[2] *= 0.99;
 
-				while(Math.abs(obj.vel[0])>1)obj.vel[0] /= 2;
-				while(Math.abs(obj.vel[1])>1)obj.vel[1] /= 2;
-				while(Math.abs(obj.vel[2])>1)obj.vel[2] /= 2;
+				//while(Math.abs(obj.vel[0])>1)obj.vel[0] /= 2;
+				//while(Math.abs(obj.vel[1])>1)obj.vel[1] /= 2;
+				//while(Math.abs(obj.vel[2])>1)obj.vel[2] /= 2;
 			}
 			// reset forces & set gravity ready for next round
 			for(var i = 0; i < World._nonstatic.length; i++)
@@ -451,10 +443,22 @@ World = {
 
 			var normal = colldata[0];
 			var displacement = colldata[1];
+			
+			// Get centers of mass
+			var o1center = [
+				o1.pos[0],
+				o1.pos[1],
+				o1.pos[2] + o1.tiles.c.h/2
+				];
+			var o2center = [
+				o2.pos[0],
+				o2.pos[1],
+				o2.pos[2] + o2.tiles.c.h/2
+				];
 
-			var dx = (o2.pos[0]-o1.pos[0])*normal[0];
-			var dy = (o2.pos[1]-o1.pos[1])*normal[1];
-			var dz = (o2.pos[2]-o1.pos[2])*normal[2];
+			var dx = (o2center[0]-o1center[0])*normal[0];
+			var dy = (o2center[1]-o1center[1])*normal[1];
+			var dz = (o2center[2]-o1center[2])*normal[2];
 			var d = dx*dx+dy*dy+dz*dz;
 			d = Math.sqrt(d);
 
@@ -462,9 +466,9 @@ World = {
 			// direction in case the forces would get too high
 			if(d < 0.0001)
 			{
-				var dx = (o2.pos[0]-o1.pos[0]);
-				var dy = (o2.pos[1]-o1.pos[1]);
-				var dz = (o2.pos[2]-o1.pos[2]);
+				var dx = (o2center[0]-o1center[0]);
+				var dy = (o2center[1]-o1center[1]);
+				var dz = (o2center[2]-o1center[2]);
 				var d = dx*dx+dy*dy+dz*dz;
 				d = Math.sqrt(d);
 			}
@@ -537,7 +541,7 @@ World = {
 			 Math.abs((o1.pos[2]+o1.tiles.c.h)-o2.pos[2]),
 			 Math.abs(o1.pos[2]-(o2.pos[2]+o2.tiles.c.h))
 		);
-		var topdown_treshold = 0.2;
+		var topdown_treshold = 0.3;
 		// XY-check:
 
 		if(o1.tiles.c.s == 'cylinder' && o2.tiles.c.s == 'cylinder')
@@ -605,10 +609,13 @@ World = {
 			
 			if(Math.abs(dx) < length && Math.abs(dy) < length)
 			{
+				if(topdown_distance<topdown_treshold)
+					return [[0,0,1], topdown_distance];
+				
 				if(Math.abs(dx) > Math.abs(dy))
-					return (topdown_distance<topdown_treshold)?[[0,0,1], topdown_distance]:[[1,1,0],length-Math.abs(dx)];
+					return [[1,1,0],length-Math.abs(dx)];
 				else
-					return (topdown_distance<topdown_treshold)?[[0,0,1], topdown_distance]:[[1,1,0],length-Math.abs(dy)];
+					return [[1,1,0],length-Math.abs(dy)];
 			}
 		}
 		else {

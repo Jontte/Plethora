@@ -1,8 +1,3 @@
-
-var Game = {
-	player: {}
-};
-
 function isset(g, x, y, w, h)
 {
 	if(x<0)return false;
@@ -116,7 +111,7 @@ function mkMaze(offset, dimensions)
 	}
 }
 
-var levels = 20+Math.floor(Math.random()*10);
+var levels = 10+Math.floor(Math.random()*10);
 var pos = [0,0];
 for(var i=0;i<levels;i++)
 {
@@ -133,60 +128,11 @@ World.createObject(Graphics.GroundBlock, [pos[0]+1,pos[1]+1, -2*levels-2]);
 var duck = World.createObject(Graphics.Duck, [pos[0]+1,pos[1]+1, -2*levels+1], false);
 
 
-Game.player = World.createObject(Graphics.DudeBottom, [1,1,1], false);
-Game.player.head = World.createObject(Graphics.DudeTop, [1,1,2], false);
-
-Game.player.frameMaxTicks=5;
-Game.player.head.frameMaxTicks=5;
-
-World.linkObjects(Game.player, Game.player.head);
-
-World.setCameraFocus(Game.player);
+Base.createGuy([1,1,1], false); // No jumping on mazes ;)
 
 function level_loop()
 {
-// Keyboard controlled object gets some force
-	var obj = Game.player;
-	var d = 0.05;
-	
-	var movement = [0,0];
-	
-	if(Key.get(KEY_LEFT)){ 
-		movement[0] -= d;
-		movement[1] += d;
-	}
-	if(Key.get(KEY_RIGHT)){ 
-		movement[0] += d;
-		movement[1] -= d;
-	}
-	if(Key.get(KEY_UP)){
-		movement[0] -= d;
-		movement[1] -= d;
-	}
-	if(Key.get(KEY_DOWN)){ 
-		movement[0] += d;
-		movement[1] += d;
-	}
-
-	obj.force[0] += movement[0] - obj.vel[0]/20;
-	obj.force[1] += movement[1] - obj.vel[1]/20;
-
-	if(Key.get(KEY_LEFT) && Key.get(KEY_UP))
-		obj.direction = WEST;
-	else if(Key.get(KEY_UP) && Key.get(KEY_RIGHT))
-		obj.direction = NORTH;
-	else if(Key.get(KEY_RIGHT) && Key.get(KEY_DOWN))
-		obj.direction = EAST;
-	else if(Key.get(KEY_DOWN) && Key.get(KEY_LEFT))
-		obj.direction = SOUTH;
-		
-	if(Key.changed(KEY_SPACE) && Key.get(KEY_SPACE)){
-	  Game.player.force[2] += 5;
-	  Game.player.head.force[2] += 5;
-	}
-		
-	// Synch head movement to body movement
-	Game.player.head.direction = Game.player.direction;
+	Base.step();
 }
 
 initialize();

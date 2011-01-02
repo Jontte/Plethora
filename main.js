@@ -61,10 +61,13 @@ var Graphics = {
 	Lift : {t: ANIMATED,g: [[0,6],[1,6],[2,6],[3,6],[4,6],[5,6],[6,6],[7,6],[8,6],[9,6]]},
 	Water: {t: ANIMATED_RANDOM, g: [[2,0],[3,0]]},
 	BarrelWooden: {t: 0, g: [2,1], c: {s: "cylinder", r: 0.40, h: 1}},
-	Crate: {t: 0, g: [3,1]},
+	Crate: {t: 0, g: [3,1], c: {s: "box", l: 1.0, h: 1.0}},
 	Duck: {t: 0, g: [5,1], c: {s: "cylinder", r: 0.2, h: 0.5}},
+	CompanionCube: {t: 0, g: [4,1], c: {s: "box", l: 1.0, h: 1.0}},
 	Shadow: {t: 0, g: [8,1], c: {s: "cylinder", r: 0.51, h: 5}},
-	DarkBlock: {t: 0, g:[0,11], c: {s: 'box', l: 1, h: 0.5}}
+	DarkBlock: {t: 0, g:[0,11], c: {s: 'box', l: 1, h: 0.5}},
+	FenceX: {t: 0, g:[4,0], c: {s: 'box', l: 1, h: 1.0}},
+	FenceY: {t: 0, g:[5,0], c: {s: 'box', l: 1, h: 1.0}}
 };
 
 
@@ -87,6 +90,7 @@ function reset()
 	// Select & load level
 	var levelname = document.getElementById('lselect').value;
 	document.getElementById('lselect').blur();
+	document.getElementById('selector').blur();
 
 	// Load level and initialize
 	var head= document.getElementsByTagName('head')[0];
