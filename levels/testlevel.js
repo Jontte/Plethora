@@ -47,7 +47,10 @@ World.createObject(Graphics.Duck, [13,-38,1], false);
 Base.createGuy([6,6,1]);
 
 for(var i = 0; i < 5; i++)
-	Base.createLift([2,8,1+i], false);
+	Base.createLift([8,2,1+i], false);
+
+for(var i = 0; i < 5; i++)
+	Base.createConveyorBeltY([0,11+i,0.5]);
 
 // This function gets called each frame
 function level_loop()

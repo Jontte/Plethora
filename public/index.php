@@ -152,7 +152,8 @@
 ?>
 				</select>
 				<input id="selector" type="button" onclick="reset()" value="Reset"/>
-				<br clear="left">
+				<div style="height: 200px;">
+				</div>
 				<a href="http://www.google.com/chrome">
 					<img src="worksbestwith.png" alt="Works best with Google Chrome"/>
 				</a>

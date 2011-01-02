@@ -41,6 +41,12 @@ Base =
 		
 		return obj;
 	},
+	createConveyorBeltY : function(position,static)
+	{
+		var obj = World.createObject(Graphics.ConveyorBeltY, position, static);
+		obj.frameMaxTicks = -3;
+		return obj;
+	},
 	step : function()
 	{
 		// Step any existing lifts...

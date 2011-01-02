@@ -48,7 +48,7 @@ World = {
 			pos: pos,
 			vel: [0,0,0],
 			force: [0,0,0],
-			mass: 1,
+			mass: 1, // ignored for static objects
 			tiles: tiles,
 			direction: 0,
 			static: static, // partake in dynamics simulation if static=false
@@ -301,7 +301,7 @@ World = {
 		{
 			// Increment frame tick counter
 			obj.frameTick ++;
-			if(obj.frameTick >= obj.frameMaxTicks && obj.frameMaxTicks != 0)
+			if(obj.frameTick >= Math.abs(obj.frameMaxTicks) && obj.frameMaxTicks != 0)
 			{
 				obj.frameTick = 0;
 				if(obj.tiles.t & ANIMATED_RANDOM)
@@ -310,7 +310,10 @@ World = {
 				}
 				else
 				{
-					obj.frame = (obj.frame+1) % g.length;
+					if(obj.frameMaxTicks < 0) // inverse animation
+						obj.frame = (obj.frame-1<0)?g.length-1:obj.frame-1;
+					else
+						obj.frame = (obj.frame+1) % g.length;
 				}
 			}
 			g = g[obj.frame];
@@ -440,120 +443,99 @@ World = {
 		var colldata = World._collide(o1, o2);
 		if(colldata != false && o1.sensor != true && o2.sensor != true)
 		{
-
 			var normal = colldata[0];
 			var displacement = colldata[1];
 			
-			// Get centers of mass
-			var o1center = [
-				o1.pos[0],
-				o1.pos[1],
-				o1.pos[2] + o1.tiles.c.h/2
-				];
-			var o2center = [
-				o2.pos[0],
-				o2.pos[1],
-				o2.pos[2] + o2.tiles.c.h/2
+			var force = [
+				normal[0]*displacement,
+				normal[1]*displacement,
+				normal[2]*displacement
 				];
 
-			var dx = (o2center[0]-o1center[0])*normal[0];
-			var dy = (o2center[1]-o1center[1])*normal[1];
-			var dz = (o2center[2]-o1center[2])*normal[2];
-			var d = dx*dx+dy*dy+dz*dz;
-			d = Math.sqrt(d);
-
-			// A precaution that will allow us to bend in any possible
-			// direction in case the forces would get too high
-			if(d < 0.0001)
+			for(var i = 0; i < 3; i++)
 			{
-				var dx = (o2center[0]-o1center[0]);
-				var dy = (o2center[1]-o1center[1]);
-				var dz = (o2center[2]-o1center[2]);
-				var d = dx*dx+dy*dy+dz*dz;
-				d = Math.sqrt(d);
+				o1.force[i] += force[i];
+				o2.force[i] -= force[i];
+/*				
+				if(!o1.static && !o2.static)
+				{
+					o1.pos[i] += force[i]*(o2.mass/(o1.mass+o2.mass));
+					o2.pos[i] -= force[i]*(o1.mass/(o1.mass+o2.mass));
+				}
+				else if(o1.static)
+				{
+					o2.pos[i] -= force[i];
+				}
+				else if(o2.static)
+				{
+					o1.pos[i] += force[i];
+				}*/
 			}
-			if(d < 0.0001)
-			  d = 0.0001;
-			dx /= d;
-			dy /= d;
-			dz /= d;
-
-			dx *= displacement;
-			dy *= displacement;
-			dz *= displacement;
-
-			o1.force[0] -= dx;
-			o1.force[1] -= dy;
-			o1.force[2] -= dz;
-			o2.force[0] += dx;
-			o2.force[1] += dy;
-			o2.force[2] += dz;
-
-			if(o1.static == true)
-			  o1.mass = 1e99;
-			if(o2.static == true)
-			  o2.mass = 1e99;
+			
 
 			var mean = [
-				 o1.vel[0]*o1.mass + o2.vel[0]*o2.mass,
-				 o1.vel[1]*o1.mass + o2.vel[1]*o2.mass,
-				 o1.vel[2]*o1.mass + o2.vel[2]*o2.mass
-				 ];
+				o1.vel[0]*o1.mass + o2.vel[0]*o2.mass,
+				o1.vel[1]*o1.mass + o2.vel[1]*o2.mass,
+				o1.vel[2]*o1.mass + o2.vel[2]*o2.mass
+				];
 
 			mean[0] /= o1.mass + o2.mass;
 			mean[1] /= o1.mass + o2.mass;
 			mean[2] /= o1.mass + o2.mass;
 
-			if(normal[0]>0){
-				o1.vel[0] = mean[0];
-				o2.vel[0] = mean[0];
-			}
-			if(normal[1]>0){
-				o1.vel[1] = mean[1];
-				o2.vel[1] = mean[1];
-			}
-			if(normal[2]>0){
-				o1.vel[2] = mean[2];
-				o2.vel[2] = mean[2];
+			// Velocities should equal each other on the axis defined by normal
+			// Easy.
+			for(var i = 0; i < 3; i++)
+			{
+				o1.vel[i] = o1.vel[i]+(mean[i]-o1.vel[i])*Math.abs(normal[i]);
+				o2.vel[i] = o2.vel[i]+(mean[i]-o2.vel[i])*Math.abs(normal[i]);
 			}
 		}
 	},
 	// Collide two objects
-	// return free axii for collision response and amount of displacement
-	// or false if no collision
+	// return false if no collision
+	// otherwise return [collision plane normal vector, amount of displacement]
 	// for example [[0,0,1], 0.1] means the two objects have penetrated 0.1 units and will have to be moved outwards eachother on the z axis
 	_collide : function(o1, o2)
 	{
-		// Z-check first:
+		// Quick bounding volume checks to rule obvious cases out:
 		if(o1.pos[2]+o1.tiles.c.h < o2.pos[2])
 			return false;
 		if(o1.pos[2] > o2.pos[2]+o2.tiles.c.h)
 			return false;
-
-		// Quick bb-check:
 		if(o1.pos[0]+1.1 < o2.pos[0]) return false;
 		if(o1.pos[0]-1.1 > o2.pos[0]) return false;
 		if(o1.pos[1]+1.1 < o2.pos[1]) return false;
 		if(o1.pos[1]-1.1 > o2.pos[1]) return false;
 
 		// Treshold for topdown contact :
+		var topdown_treshold = 0.2;
 		var topdown_distance = Math.min(
 			 Math.abs((o1.pos[2]+o1.tiles.c.h)-o2.pos[2]),
 			 Math.abs(o1.pos[2]-(o2.pos[2]+o2.tiles.c.h))
 		);
-		var topdown_treshold = 0.3;
-		// XY-check:
+		// determine which of the objs is on top..
+		var topdown_normal = [0,0,
+			((o1.pos[2]+o1.tiles.c.h/2) > (o2.pos[2]+o2.tiles.c.h/2))?1:-1];
 
+		// XY-check:
 		if(o1.tiles.c.s == 'cylinder' && o2.tiles.c.s == 'cylinder')
 		{
 			var d = 
+				Math.sqrt(
 				 (o1.pos[0]-o2.pos[0])*(o1.pos[0]-o2.pos[0])+
-				 (o1.pos[1]-o2.pos[1])*(o1.pos[1]-o2.pos[1]);
-			if(Math.sqrt(d) < (o1.tiles.c.r + o2.tiles.c.r))
+				 (o1.pos[1]-o2.pos[1])*(o1.pos[1]-o2.pos[1])
+				);
+			if(d < (o1.tiles.c.r + o2.tiles.c.r))
 			{
 				if(topdown_distance < topdown_treshold)
-				  return [[0,0,1], topdown_distance];
-				return [[1,1,0], o1.tiles.c.r+o2.tiles.c.r-Math.sqrt(d)];
+				 	return [topdown_normal, topdown_distance];
+				// calculate normal + normalize it
+				var normal = [o1.pos[0]-o2.pos[0],o1.pos[1]-o2.pos[1],0];
+				var len = Math.sqrt(normal[0]*normal[0]+normal[1]*normal[1]);
+				normal[0] /= len;
+				normal[1] /= len;
+				return [normal, o1.tiles.c.r+o2.tiles.c.r-d];
 			}
 		}
 		else if((o1.tiles.c.s == 'cylinder' && o2.tiles.c.s == 'box')
@@ -565,41 +547,49 @@ World = {
 			var dx = box.pos[0]-cyl.pos[0];
 			var dy = box.pos[1]-cyl.pos[1];
 			var dist = box.tiles.c.l/2 + cyl.tiles.c.r;
+
 			// check sides
 			if((Math.abs(dx) < dist) && 
 			  (Math.abs(dy) < dist))
 			{
 				if(topdown_distance < topdown_treshold)
-				  return [[0,0,1], topdown_distance];
+				 	return [topdown_normal, topdown_distance];
 
 				if(Math.abs(dx) > Math.abs(dy))
-					return [[1,0,0], dist-Math.abs(dx)];
+					return [[(o1.pos[0]>o2.pos[0])?1:-1,0,0], dist-Math.abs(dx)];
 				else 
-					return [[0,1,0], dist-Math.abs(dy)];
+					return [[0,(o1.pos[1]>o2.pos[1])?1:-1,0], dist-Math.abs(dy)];
 			}
+			
 			var d = 0;
 
 			// check corners
-			dx = (box.pos[0]-box.tiles.c.l/2-cyl.pos[0]);
-			dy = (box.pos[1]-box.tiles.c.l/2-cyl.pos[1]);
-			dist = Math.sqrt(dx*dx+dy*dy);
-			d = cyl.tiles.c.r - dist;
-			if(d > 0) return (topdown_distance<topdown_treshold)?[[0,0,1], topdown_distance]:[[1,1,0], d];
-			dx = (box.pos[0]+box.tiles.c.l/2-cyl.pos[0]);
-			dy = (box.pos[1]-box.tiles.c.l/2-cyl.pos[1]);
-			dist = Math.sqrt(dx*dx+dy*dy);
-			d = cyl.tiles.c.r - dist;
-			if(d > 0) return (topdown_distance<topdown_treshold)?[[0,0,1], topdown_distance]:[[1,1,0], d];
-			dx = (box.pos[0]-box.tiles.c.l/2-cyl.pos[0]);
-			dy = (box.pos[1]+box.tiles.c.l/2-cyl.pos[1]);
-			dist = Math.sqrt(dx*dx+dy*dy);
-			d = cyl.tiles.c.r - dist;
-			if(d > 0) return (topdown_distance<topdown_treshold)?[[0,0,1], topdown_distance]:[[1,1,0], d];
-			dx = (box.pos[0]+box.tiles.c.l/2-cyl.pos[0]);
-			dy = (box.pos[1]+box.tiles.c.l/2-cyl.pos[1]);
-			dist = Math.sqrt(dx*dx+dy*dy);
-			d = cyl.tiles.c.r - dist;
-			if(d > 0) return (topdown_distance<topdown_treshold)?[[0,0,1], topdown_distance]:[[1,1,0], d];
+			var corners = [[1,1],[-1,1],[1,-1],[-1,-1]];
+			for(var i = 0; i < 4; i++)
+			{
+				var xmul = corners[i][0];
+				var ymul = corners[i][1];
+				
+				var corner = [
+					box.pos[0] + xmul*box.tiles.c.l/2,
+					box.pos[1] + ymul*box.tiles.c.l/2
+				];
+				
+				dx = corner[0] - cyl.pos[0];
+				dy = corner[1] - cyl.pos[1];
+				
+				dist = Math.sqrt(dx*dx+dy*dy);
+				
+				d = cyl.tiles.c.r - dist;
+				
+				if(d > 0)
+				{
+					if(topdown_distance < topdown_treshold)
+				 		return [topdown_normal, topdown_distance];
+				 	var mul = (o1.id == box.id)?1:-1;
+					return [[mul*dx/dist, mul*dy/dist, 0], d];
+				}
+			}
 		}
 		else if(o1.tiles.c.s == 'box' && o2.tiles.c.s == 'box')
 		{
@@ -610,12 +600,12 @@ World = {
 			if(Math.abs(dx) < length && Math.abs(dy) < length)
 			{
 				if(topdown_distance<topdown_treshold)
-					return [[0,0,1], topdown_distance];
+					return [topdown_normal, topdown_distance];
 				
 				if(Math.abs(dx) > Math.abs(dy))
-					return [[1,1,0],length-Math.abs(dx)];
+					return [[o1.pos[0]>o2.pos[0]?1:-1,0,0],length-Math.abs(dx)];
 				else
-					return [[1,1,0],length-Math.abs(dy)];
+					return [[0,o1.pos[1]>o2.pos[1]?1:-1,0],length-Math.abs(dy)];
 			}
 		}
 		else {
