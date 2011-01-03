@@ -441,8 +441,10 @@ World = {
 	_tryCollideAndResponse : function(o1, o2)
 	{
 		var colldata = World._collide(o1, o2);
-		if(colldata != false && o1.sensor != true && o2.sensor != true)
+		if(colldata != false)
 		{
+			// It's a HIT!
+
 			var normal = colldata[0];
 			var displacement = colldata[1];
 			
@@ -451,6 +453,29 @@ World = {
 				normal[1]*displacement,
 				normal[2]*displacement
 				];
+			
+			// Alert possible collision listeners and see if they want to cancel it
+			var cancel = false;
+			for(var i = 0; i < 2; i++)
+			{
+				var cur   = i==0?o1:o2;
+				var other = i==0?o2:o1;
+				if(cur.collision_listener)
+				{
+					var mul = i==0?1:-1;
+					var ret = cur.collision_listener(cur, other, [normal[0]*mul,normal[1]*mul,normal[2]*mul], displacement);
+					if(ret == false)
+					{
+						cancel = true;
+					}
+					else if(ret.length)
+					{
+						force[0] -= ret[0] * mul;
+						force[1] -= ret[1] * mul;
+						force[2] -= ret[2] * mul;
+					}
+				}
+			}
 
 			for(var i = 0; i < 3; i++)
 			{

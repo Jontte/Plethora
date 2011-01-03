@@ -41,10 +41,38 @@ Base =
 		
 		return obj;
 	},
-	createConveyorBeltY : function(position,static)
+	createConveyorBeltX : function(position,direction,static)
 	{
+		if(direction == undefined)direction = 1;
+		var obj = World.createObject(Graphics.ConveyorBeltX, position, static);
+		obj.frameMaxTicks = 3 * direction;
+		obj.direction = direction;
+		obj.collision_listener = function(self, other, normal, displacement)
+		{
+			if(normal[2] != -1)return true;
+			var area =
+				 1.0 - ((other.pos[0]-self.pos[0])*(other.pos[0]-self.pos[0]) +
+						(other.pos[1]-self.pos[1])*(other.pos[1]-self.pos[1]));
+			var force = 0.1*self.direction - other.vel[0] + self.vel[0];
+			return [force/10*area*other.mass, 0, 0];
+		}
+		return obj;
+	},
+	createConveyorBeltY : function(position,direction,static)
+	{
+		if(direction == undefined)direction = 1;
 		var obj = World.createObject(Graphics.ConveyorBeltY, position, static);
-		obj.frameMaxTicks = -3;
+		obj.frameMaxTicks = -3 * direction;
+		obj.direction = direction;
+		obj.collision_listener = function(self, other, normal, displacement)
+		{
+			if(normal[2] != -1)return true;
+			var area =
+				 1.0 - ((other.pos[0]-self.pos[0])*(other.pos[0]-self.pos[0]) +
+						(other.pos[1]-self.pos[1])*(other.pos[1]-self.pos[1]));
+			var force = 0.1*self.direction - other.vel[1] + self.vel[1];
+			return [0, force/10*area*other.mass, 0];
+		}
 		return obj;
 	},
 	step : function()
