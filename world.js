@@ -13,7 +13,7 @@ World = {
 	_depth_func: function(a)
 	{
 		// Depth formula. Used to calculate depth for each object based on their xyz-coordinates
-		return a[0] + a[1] + 0.95 * a[2];
+		return a[0] + a[1] + 1.25 * a[2];
 	},
 	reset : function()
 	{
@@ -533,8 +533,7 @@ World = {
 		if(o1.pos[1]+1.1 < o2.pos[1]) return false;
 		if(o1.pos[1]-1.1 > o2.pos[1]) return false;
 
-		// Treshold for topdown contact :
-		var topdown_treshold = 0.2;
+		// Distance to move the objects on top of eachother< :
 		var topdown_distance = Math.min(
 			 Math.abs((o1.pos[2]+o1.tiles.c.h)-o2.pos[2]),
 			 Math.abs(o1.pos[2]-(o2.pos[2]+o2.tiles.c.h))
@@ -542,6 +541,18 @@ World = {
 		// determine which of the objs is on top..
 		var topdown_normal = [0,0,
 			((o1.pos[2]+o1.tiles.c.h/2) > (o2.pos[2]+o2.tiles.c.h/2))?1:-1];
+
+		var collided = false;
+		var ret = [topdown_normal, topdown_distance];
+
+		function apply(current, candidate)
+		{
+			if(candidate[1] < current[1])
+			{
+				current[0] = candidate[0];
+				current[1] = candidate[1];
+			}
+		}
 
 		// XY-check:
 		if(o1.tiles.c.s == 'cylinder' && o2.tiles.c.s == 'cylinder')
@@ -553,14 +564,13 @@ World = {
 				);
 			if(d < (o1.tiles.c.r + o2.tiles.c.r))
 			{
-				if(topdown_distance < topdown_treshold)
-				 	return [topdown_normal, topdown_distance];
 				// calculate normal + normalize it
 				var normal = [o1.pos[0]-o2.pos[0],o1.pos[1]-o2.pos[1],0];
 				var len = Math.sqrt(normal[0]*normal[0]+normal[1]*normal[1]);
 				normal[0] /= len;
 				normal[1] /= len;
-				return [normal, o1.tiles.c.r+o2.tiles.c.r-d];
+				apply(ret, [normal, o1.tiles.c.r+o2.tiles.c.r-d]);
+				collided = true;
 			}
 		}
 		else if((o1.tiles.c.s == 'cylinder' && o2.tiles.c.s == 'box')
@@ -577,13 +587,15 @@ World = {
 			if((Math.abs(dx) < dist) && 
 			  (Math.abs(dy) < dist))
 			{
-				if(topdown_distance < topdown_treshold)
-				 	return [topdown_normal, topdown_distance];
-
 				if(Math.abs(dx) > Math.abs(dy))
-					return [[(o1.pos[0]>o2.pos[0])?1:-1,0,0], dist-Math.abs(dx)];
+				{
+					apply(ret, [[(o1.pos[0]>o2.pos[0])?1:-1,0,0], dist-Math.abs(dx)]);
+				}
 				else 
-					return [[0,(o1.pos[1]>o2.pos[1])?1:-1,0], dist-Math.abs(dy)];
+				{
+					apply(ret, [[0,(o1.pos[1]>o2.pos[1])?1:-1,0], dist-Math.abs(dy)]);
+				}
+				collided = true;
 			}
 			
 			var d = 0;
@@ -609,10 +621,9 @@ World = {
 				
 				if(d > 0)
 				{
-					if(topdown_distance < topdown_treshold)
-				 		return [topdown_normal, topdown_distance];
 				 	var mul = (o1.id == box.id)?1:-1;
-					return [[mul*dx/dist, mul*dy/dist, 0], d];
+					apply(ret, [[mul*dx/dist, mul*dy/dist, 0], d]);
+					collided = true;
 				}
 			}
 		}
@@ -624,18 +635,22 @@ World = {
 			
 			if(Math.abs(dx) < length && Math.abs(dy) < length)
 			{
-				if(topdown_distance<topdown_treshold)
-					return [topdown_normal, topdown_distance];
-				
 				if(Math.abs(dx) > Math.abs(dy))
-					return [[o1.pos[0]>o2.pos[0]?1:-1,0,0],length-Math.abs(dx)];
+				{
+					apply(ret, [[o1.pos[0]>o2.pos[0]?1:-1,0,0],length-Math.abs(dx)]);
+				}
 				else
-					return [[0,o1.pos[1]>o2.pos[1]?1:-1,0],length-Math.abs(dy)];
+				{
+					apply(ret, [[0,o1.pos[1]>o2.pos[1]?1:-1,0],length-Math.abs(dy)]);
+				}
+				collided = true;
 			}
 		}
 		else {
 			console.log('Unhandled collision for: ' + o1.tiles.c.s + ' vs ' + o2.tiles.c.s);
 		}
+		if(collided)
+			return ret;
 		return false;
 }
 };

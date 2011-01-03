@@ -49,10 +49,10 @@ Base.createGuy([6,6,1]);
 for(var i = 0; i < 5; i++)
 	Base.createLift([8,2,1+i], false);
 
-for(var i = 0; i < 10; i++)
+for(var i = 0; i < 5; i++)
 {
 	Base.createConveyorBeltY([0,11+i,0.5]);
-	Base.createConveyorBeltY([0,4,i*0.5], 1, false);
+	Base.createConveyorBeltY([0,4,1+i*0.5], 1, false);
 	World.createObject(Graphics.GroundRugged, [-1,11+i,0]);
 	World.createObject(Graphics.GroundRugged, [ 1,11+i,0]);
 }
