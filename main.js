@@ -152,9 +152,7 @@ function game_loop()
 	}
 
 	// Clear screen
-	//Graphics.ctx.globalAlpha = 1.0;
 	Graphics.ctx.fillRect (0, 0, 640, 480);  	
-	//Graphics.ctx.globalAlpha = 0.5;
 
 	World.render();
 	World.physicsStep();

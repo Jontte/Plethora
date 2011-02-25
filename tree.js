@@ -1,7 +1,7 @@
 
 
 /*
- * A KD-tree like data structure for static 3D objects
+ * A generic bounded KD-tree data structure for fixed points in 3D space
  */
 
 function KDTree ()

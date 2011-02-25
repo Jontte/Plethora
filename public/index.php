@@ -34,7 +34,8 @@
 		}
 		die();
 	}
-?><html>
+?><!DOCTYPE html>
+<html>
 	<head>
 		<title>Plethora</title>
 
@@ -56,7 +57,6 @@
 			echo '</script>';
 ?>		<style>
 			#background {
-				height: 100px;
 				background-color: #1a82f7;
 				background: -moz-linear-gradient(100% 100% 90deg, #2F2727, #1a82f7);
 				background: -webkit-gradient(linear, 0% 0%, 0% 100%, from(#1a82f7), to(#2F2727));
@@ -98,6 +98,11 @@
 			}
 			#about-text {
 				position:absolute; left:180; top:25;
+				width: 400px;
+			}
+			#tech-text {
+				position:absolute; left:180; top:25;
+				width: 400px;
 			}
 			#author-text {
 				position:absolute; left:180; top:25;
@@ -106,39 +111,71 @@
 			<script type="text/javascript">
 				function show_message(which)
 				{
-					var windows = ['about','author'];
+					var windows = ['about','tech','author'];
 					for(var i = 0; i < windows.length; i++)
 					{
+						var elem = document.getElementById(windows[i]+'-text');
 						if(which == windows[i])
-							document.getElementById(windows[i]+'-text').style.visibility='visible';
+						{
+							// Toggle
+							elem.style.visibility=(elem.style.visibility!='visible')?'visible':'hidden';
+						}
 						else
-							document.getElementById(windows[i]+'-text').style.visibility='hidden';
+							elem.style.visibility='hidden';
 					}
 				}	
 			</script>
-			<?php if(file_exists('ga_tracker.php')){echo file_get_contents('ga_tracker.php');} ?>
+			<?php 
+				/* Include Google Analytics tracker code */
+				if(file_exists('ga_tracker.php')){echo file_get_contents('ga_tracker.php');}
+			?>
 	</head>
 	<body onload="reset()" id="background">
 		<div id="container">
 			<div id="about-text" class="popup" onclick="show_message()">
 				<h2>About</h2><hr>
 				<p>
-					Plethora is an isometric game engine written in pure Javascript. It utilizes the new HTML5 &lt;canvas&gt; tag that allows for pixel-perfect (potentially hardware accelerated) drawing in the browser. 
+					Plethora is an isometric game engine written in pure Javascript. It utilizes the new HTML5 &lt;canvas&gt; tag that allows for pixel-perfect (and potentially hardware accelerated) drawing in the browser. 
+				</p>
+				<p>
+					It was written as a proof of concept: With today's web browser JavaScript performance it is possible to perform simple dynamics simulation and collision detection. 
+				</p>
+				<p>
+					But only barely as of February 2011. Only Google Chrome achieves reasonable frame rates while the latest Firefox crawls behind. Admittedly there is still much to optimize, but I'm comfident I'm soon reaching the limits of JS power. 
+				</p>
+				<p>
+					A couple of people have asked whether I'm releasing the source code as an open source JS library. Sure, but not before I've cleaned and documented the codebase. 
+				</p>
+			</div>
+			<div id="tech-text" class="popup" onclick="show_message()">
+				<h2>Tech</h2><hr>
+				<p>
+					In the future I hope to reduce performance requirements even further by:
+					<ul>
+						<li>Not redrawing every single block again and again every frame. Draw fixed objects to an offscreen canvas once and re-use it as much as possible.</li>
+						<li>Have a closer look at the depth-ordering code.</li>
+						<li>JS not being my major language I suspect there are some inefficient quirks left.</li>
+					</ul>
+					I have also thought about adding some online features such as a level editor and a way to publish, share and rate levels. Some intermediary language will be required however since I cannot allow people to run arbitrary Javascript code on other peoples' browsers.
+				</p>
+				<p>
+					No, real-time MMO-like gameplay with your friends is not possible with at least traditional web techniques.
 				</p>
 			</div>
 			<div id="author-text" class="popup" onclick="show_message()">
 				<h2>Author</h2><hr>
 				<p>
-					Plethora was written by Joonas Haapala. See his website <a href="http://sipuli.net/joonas/">here</a>.
+					Plethora was written by Joonas Haapala. His website is located <a href="http://sipuli.net/joonas/">here</a>.
 				</p>
 				<p>
-					I am no graphics artist, nor do I find general web design (HTML&amp;CSS) particularly enjoyable, so if you feel like contributing, please contact me at my email joonas[meow]haapa.la.
+					He is no graphics artist, nor does he find general web design (HTML&amp;CSS) particularly enjoyable, so if you feel like contributing, please contact him at his email joonas[meow]haapa.la. Wishes, ideas, comments, criticism welcome.
 				</p>
 			</div>
 			<div id="panel">
 				<h2>Plethora</h2>
 				
 				<a href="#" onclick="show_message('about')"><div class="menuitem">About</div></a>
+				<a href="#" onclick="show_message('tech')"><div class="menuitem">Tech</div></a>
 				<a href="#" onclick="show_message('author')"><div class="menuitem">Author</div></a>
 
 				<select name="Level selection" id="lselect" size="4" onchange="reset()">
@@ -152,7 +189,7 @@
 ?>
 				</select>
 				<input id="selector" type="button" onclick="reset()" value="Reset"/>
-				<div style="height: 200px;">
+				<div style="height: 100px;">
 				</div>
 				<a href="http://www.google.com/chrome">
 					<img src="worksbestwith.png" alt="Works best with Google Chrome"/>

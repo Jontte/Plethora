@@ -1,12 +1,12 @@
 
 World = {
 	_physicsIterations: 5,
-	_objects: new Array(),
-	_nonstatic: new Array(), // lists every moving object for quick access
-	_static : new Array(), // same for static objects
-	_proxy: new Array, // broadphase sweep & prune proxy array
+	_objects: [],
+	_mobile: [], // lists every moving object for quick access
+	_fixed : [], // same for fixed objects
+	_proxy: [], // broadphase sweep & prune proxy array
 	_tree: new KDTree(), // KD-Tree for static objects
-	_links: new Array(),
+	_links: [],
 	_cameraFocus: null,
 	_cameraPos: [0,0,0],
 	_objectCounter : 0, // Used to assign unique IDs to new objects
@@ -17,11 +17,11 @@ World = {
 	},
 	reset : function()
 	{
-		World._objects = new Array();
-		World._proxy = new Array();
-		World._links = new Array();
-		World._nonstatic = new Array();
-		World._static = new Array();
+		World._objects = [];
+		World._proxy = [];
+		World._links = [];
+		World._mobile = [];
+		World._fixed = [];
 		World._objectCounter = 0;
 		World._cameraFocus = null;
 		World._cameraPos = [0,0,0];
@@ -31,27 +31,20 @@ World = {
 	{
 		World._cameraFocus = obj;
 	},
-	loadFrom : function(url)
+	createObject : function(tiles, pos, fixed)
 	{
-			
-	},
-	save : function()
-	{
-	
-	},
-	createObject : function(tiles, pos, static)
-	{
-		if(static==undefined)
-			static=true;
+		if(fixed==undefined)
+			fixed = true;
+		
 		var obj = 
 		{
 			pos: pos,
 			vel: [0,0,0],
 			force: [0,0,0],
-			mass: 1, // ignored for static objects
+			mass: 1, // ignored for fixed objects
 			tiles: tiles,
 			direction: 0,
-			static: static, // partake in dynamics simulation if static=false
+			fixed: fixed, // partake in dynamics simulation if fixed=false
 			frame: 0, // current frame
 			frameTick: 0, // current tick
 			frameMaxTicks: 1, // ticks to reach until we switch to next frame (0 to disable animation)
@@ -64,7 +57,7 @@ World = {
 
 		World._objects.push(obj);
 
-		if(static==false)
+		if(fixed==false)
 		{
 			// Moving objects use sweep&prune
 			World._proxy.push({
@@ -78,18 +71,17 @@ World = {
 				obj: obj
 			});
 			// And can be accessed quickly thru a separate array as well
-			World._nonstatic.push(obj); 
+			World._mobile.push(obj); 
 		}
 		else {
-			// Whereas static objects go to a large kd-tree for collision testing
+			// Whereas fixed objects go to a large kd-tree for collision testing
 			World._tree.insert({pos: pos, obj: obj});
 
-			//debugger;
 			// ... And to their own quick-access array
 			// Strangely, it's at least 10x faster to sort the array with insertion sort
 			// every time an object is added than to binary search and insert
-			World._static.push(obj);
-			insertionSort(World._static, function(a,b){
+			World._fixed.push(obj);
+			insertionSort(World._fixed, function(a,b){
 				return World._depth_func(a.pos) < World._depth_func(b.pos);
 			});
 		}
@@ -135,14 +127,11 @@ World = {
 		World.drawBackground();
 
 		// Drawing order is important
-		// Sort all nonstatic objects by depth before rendering
+		// Sort all mobile objects by depth before rendering
 
 		//console.time('sort');
 		
-		//insertionSort(World._static, function(a,b){
-		//	return World._depth_func(a.pos) < World._depth_func(b.pos);
-		//});
-		insertionSort(World._nonstatic, function(a,b){
+		insertionSort(World._mobile, function(a,b){
 			return World._depth_func(a.pos) < World._depth_func(b.pos);
 		});
 		//console.timeEnd('sort');
@@ -153,29 +142,29 @@ World = {
 		var znear = -30 + cameradepth;
 		var zfar =   30 + cameradepth;
 		
-		// Find boundary indexes from static objs thru binary search
+		// Find boundary indexes from fixed objs thru binary search
 		
 		var znearindex = 0;
-		var zfarindex = World._static.length;
+		var zfarindex = World._fixed.length;
 		
-		znearindex = lower_bound(World._static, 0, World._static.length, znear, 
+		znearindex = lower_bound(World._fixed, 0, World._fixed.length, znear, 
 			function(a){return World._depth_func(a.pos);});
-		zfarindex =  lower_bound(World._static, 0, World._static.length, zfar, 
+		zfarindex =  lower_bound(World._fixed, 0, World._fixed.length, zfar, 
 			function(a){return World._depth_func(a.pos);});
 
 		if(znearindex == -1)znearindex = 0;
-		if(zfarindex == -1)zfarindex = World._static.length;
+		if(zfarindex == -1)zfarindex = World._fixed.length;
 
-		// For each nonstatic object, find an index on static objects
+		// For each mobile object, find an index on fixed objects' array
 
 		// TODO This is naive, we can do better
 		//console.time('mapping');
 		var indices = [];
-		for(var i = 0; i < World._nonstatic.length; i++)
+		for(var i = 0; i < World._mobile.length; i++)
 		{
-			var d = World._depth_func(World._nonstatic[i].pos);
+			var d = World._depth_func(World._mobile[i].pos);
 			indices.push(
-				lower_bound(World._static, 0, World._static.length, d,
+				lower_bound(World._fixed, 0, World._fixed.length, d,
 					function(a){return World._depth_func(a.pos);})
 			);
 		}
@@ -186,31 +175,31 @@ World = {
 		//
 		var currentpos = 0;
 
-		// Skip till first nonstatic...
-		while(currentpos < World._static.length && indices[currentpos] < znearindex)currentpos++;
+		// Skip till first mobile...
+		while(currentpos < World._fixed.length && indices[currentpos] < znearindex)currentpos++;
 
-		// Start drawing statics primarily, nonstatics as we bump into them
+		// Start drawing fixeds primarily, mobiles as we bump into them
 		for(var i = znearindex; i < zfarindex; i++)
 		{
-			while(currentpos < World._static.length && indices[currentpos] == i)
+			while(currentpos < World._fixed.length && indices[currentpos] == i)
 			{
-				World.drawSingleObject(World._nonstatic[currentpos]);
+				World.drawSingleObject(World._mobile[currentpos]);
 				currentpos++;
 			}
-			World.drawSingleObject(World._static[i]);
+			World.drawSingleObject(World._fixed[i]);
 		}
-		// Render rest of nonstatics
-		for(var i = currentpos; i < World._nonstatic.length; i++)
+		// Render rest of mobiles
+		for(var i = currentpos; i < World._mobile.length; i++)
 		{
-			World.drawSingleObject(World._nonstatic[i]);
-			if(World._depth_func(World._nonstatic[i].pos) > zfar)
+			World.drawSingleObject(World._mobile[i]);
+			if(World._depth_func(World._mobile[i].pos) > zfar)
 				break;
 		}
 
 		//console.timeEnd('traversing');
 		/*for(var i = znearindex; i < zfarindex; i++)
 		{
-			World.drawSingleObject(World._static[i]);
+			World.drawSingleObject(World._fixed[i]);
 		}*/
 		//console.timeEnd('render');
 		//console.log('Drew ' + (zfarindex-znearindex+1) + ' objects (out of '+World._objects.length+')');
@@ -248,11 +237,8 @@ World = {
 		// Change sky color
 		Graphics.ctx.fillStyle = 'rgb('+r+','+g+','+b+')';
 
-		//Graphics.ctx.globalAlpha = 1.0;
-		
 		// Clear with sky color
 		Graphics.ctx.fillRect (0, 0, 640, 480);		
-		//Graphics.ctx.globalAlpha = 0.5;
 		
 		// Draw stars
 		if(star_alpha > 0.001)
@@ -352,7 +338,7 @@ World = {
 			
 			/* 
 				This is the main body of the sweep & prune algorithm
-				We also collide to static objects stored in a kd-tree here
+				We also collide to fixed objects stored in a kd-tree here
 			*/
 
 			var objectbuffer = [];
@@ -379,11 +365,11 @@ World = {
 					// Add object to buffer 
 					objectbuffer[p.obj.id] = p;
 					
-					// Look for nearby static objects, collide
-					var statics = World._tree.getObjects(o1.pos, 2);
-					for(var a = 0; a < statics.length; a++)
+					// Look for nearby fixed objects, collide
+					var fixeds = World._tree.getObjects(o1.pos, 2);
+					for(var a = 0; a < fixeds.length; a++)
 					{
-						World._tryCollideAndResponse(o1, statics[a].obj);
+						World._tryCollideAndResponse(o1, fixeds[a].obj);
 					}
 				}
 			}
@@ -398,10 +384,6 @@ World = {
 					];
 					var d = 1.1;
 
-					// reduces twitching when error is low
-					//if(Math.abs(error[0])+Math.abs(error[1])+Math.abs(error[2]) < 0.2)
-						//d /= 2;
-
 					l.o1.force[0] -= error[0]*d;
 					l.o1.force[1] -= error[1]*d;
 					l.o1.force[2] -= error[2]*d;
@@ -410,9 +392,9 @@ World = {
 					l.o2.force[2] += error[2]*d;
 				}
 			// euler integrate
-			for(var i = 0; i < World._nonstatic.length; i++)
+			for(var i = 0; i < World._mobile.length; i++)
 			{
-				var obj = World._nonstatic[i];
+				var obj = World._mobile[i];
 				obj.vel[0] += obj.force[0]/obj.mass;
 				obj.vel[1] += obj.force[1]/obj.mass;
 				obj.vel[2] += obj.force[2]/obj.mass;
@@ -429,9 +411,9 @@ World = {
 				//while(Math.abs(obj.vel[2])>1)obj.vel[2] /= 2;
 			}
 			// reset forces & set gravity ready for next round
-			for(var i = 0; i < World._nonstatic.length; i++)
+			for(var i = 0; i < World._mobile.length; i++)
 			{
-				var obj = World._nonstatic[i];
+				var obj = World._mobile[i];
 				obj.force = [0,0, -0.04*obj.mass/World._physicsIterations];
 			}
 			
@@ -455,6 +437,7 @@ World = {
 				];
 			
 			// Alert possible collision listeners and see if they want to cancel it
+			// Collision listeners also have the possibility to add force to the collision (conveyor belts)
 			var cancel = false;
 			for(var i = 0; i < 2; i++)
 			{
@@ -481,37 +464,28 @@ World = {
 			{
 				o1.force[i] += force[i];
 				o2.force[i] -= force[i];
-/*				
-				if(!o1.static && !o2.static)
-				{
-					o1.pos[i] += force[i]*(o2.mass/(o1.mass+o2.mass));
-					o2.pos[i] -= force[i]*(o1.mass/(o1.mass+o2.mass));
-				}
-				else if(o1.static)
-				{
-					o2.pos[i] -= force[i];
-				}
-				else if(o2.static)
-				{
-					o1.pos[i] += force[i];
-				}*/
 			}
-			
 
-			var mean = [
-				o1.vel[0]*o1.mass + o2.vel[0]*o2.mass,
-				o1.vel[1]*o1.mass + o2.vel[1]*o2.mass,
-				o1.vel[2]*o1.mass + o2.vel[2]*o2.mass
+			var mean = [0,0,0];
+
+			if(!o1.fixed && !o2.fixed)
+			{
+				mean = [
+					o1.vel[0]*o1.mass + o2.vel[0]*o2.mass,
+					o1.vel[1]*o1.mass + o2.vel[1]*o2.mass,
+					o1.vel[2]*o1.mass + o2.vel[2]*o2.mass
 				];
 
-			mean[0] /= o1.mass + o2.mass;
-			mean[1] /= o1.mass + o2.mass;
-			mean[2] /= o1.mass + o2.mass;
+				mean[0] /= o1.mass + o2.mass;
+				mean[1] /= o1.mass + o2.mass;
+				mean[2] /= o1.mass + o2.mass;
+			}
 
 			// Velocities should equal each other on the axis defined by normal
-			// Easy.
+			// Easy
 			for(var i = 0; i < 3; i++)
 			{
+				// a+(b-a)*c, linear combination
 				o1.vel[i] = o1.vel[i]+(mean[i]-o1.vel[i])*Math.abs(normal[i]);
 				o2.vel[i] = o2.vel[i]+(mean[i]-o2.vel[i])*Math.abs(normal[i]);
 			}
@@ -533,7 +507,7 @@ World = {
 		if(o1.pos[1]+1.1 < o2.pos[1]) return false;
 		if(o1.pos[1]-1.1 > o2.pos[1]) return false;
 
-		// Distance to move the objects on top of eachother< :
+		// Distance to move the objects on top of eachother 
 		var topdown_distance = Math.min(
 			 Math.abs((o1.pos[2]+o1.tiles.c.h)-o2.pos[2]),
 			 Math.abs(o1.pos[2]-(o2.pos[2]+o2.tiles.c.h))
@@ -545,6 +519,8 @@ World = {
 		var collided = false;
 		var ret = [topdown_normal, topdown_distance];
 
+		// Function used to update the best candidate normal and displacement
+		// Note, ret is only returned when collision is verified (collided=true)
 		function apply(current, candidate)
 		{
 			if(candidate[1] < current[1])
@@ -584,46 +560,45 @@ World = {
 			var dist = box.tiles.c.l/2 + cyl.tiles.c.r;
 
 			// check sides
-			if((Math.abs(dx) < dist) && 
-			  (Math.abs(dy) < dist))
+			if((Math.abs(dx) < dist) && Math.abs(dy) < box.tiles.c.l/2)
 			{
-				if(Math.abs(dx) > Math.abs(dy))
-				{
-					apply(ret, [[(o1.pos[0]>o2.pos[0])?1:-1,0,0], dist-Math.abs(dx)]);
-				}
-				else 
-				{
-					apply(ret, [[0,(o1.pos[1]>o2.pos[1])?1:-1,0], dist-Math.abs(dy)]);
-				}
+				apply(ret, [[(o1.pos[0]>o2.pos[0])?1:-1,0,0], dist-Math.abs(dx)]);
 				collided = true;
 			}
-			
-			var d = 0;
-
-			// check corners
-			var corners = [[1,1],[-1,1],[1,-1],[-1,-1]];
-			for(var i = 0; i < 4; i++)
+			else if((Math.abs(dy) < dist) && Math.abs(dx) < box.tiles.c.l/2)
 			{
-				var xmul = corners[i][0];
-				var ymul = corners[i][1];
-				
-				var corner = [
-					box.pos[0] + xmul*box.tiles.c.l/2,
-					box.pos[1] + ymul*box.tiles.c.l/2
-				];
-				
-				dx = corner[0] - cyl.pos[0];
-				dy = corner[1] - cyl.pos[1];
-				
-				dist = Math.sqrt(dx*dx+dy*dy);
-				
-				d = cyl.tiles.c.r - dist;
-				
-				if(d > 0)
+				apply(ret, [[0,(o1.pos[1]>o2.pos[1])?1:-1,0], dist-Math.abs(dy)]);
+				collided = true;
+			}
+			else
+			{
+				var d = 0;
+	
+				// check corners
+				var corners = [[1,1],[-1,1],[1,-1],[-1,-1]];
+				for(var i = 0; i < 4; i++)
 				{
-				 	var mul = (o1.id == box.id)?1:-1;
-					apply(ret, [[mul*dx/dist, mul*dy/dist, 0], d]);
-					collided = true;
+					var xmul = corners[i][0];
+					var ymul = corners[i][1];
+					
+					var corner = [
+						box.pos[0] + xmul*box.tiles.c.l/2,
+						box.pos[1] + ymul*box.tiles.c.l/2
+					];
+					
+					dx = corner[0] - cyl.pos[0];
+					dy = corner[1] - cyl.pos[1];
+					
+					dist = Math.sqrt(dx*dx+dy*dy);
+					
+					d = cyl.tiles.c.r - dist;
+					
+					if(d > 0)
+					{
+					 	var mul = (o1.id == box.id)?1:-1;
+						apply(ret, [[mul*dx/dist, mul*dy/dist, 0], d]);
+						collided = true;
+					}
 				}
 			}
 		}
