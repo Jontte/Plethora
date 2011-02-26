@@ -12,6 +12,7 @@ Base =
 		
 		var plr = World.createObject(Graphics.DudeBottom, x, y, z, false);
 		plr.head = World.createObject(Graphics.DudeTop, x, y, z+1, false);
+		plr.walkx = plr.walky = 0;
 
 		plr.frameMaxTicks=5;
 		plr.head.frameMaxTicks=5;
@@ -21,8 +22,20 @@ Base =
 		World.setCameraFocus(plr);
 		
 		plr.allowjump = allowjump;
-		Base.player = plr;
+		plr.collision_listener = function(self, other, nx, ny, nz, displacement){
+			if(nz>0.5)
+			{
+				return {
+					x: -self.walkx/5 + (self.vx-other.vx)/10,
+					y: -self.walky/5 + (self.vy-other.vy)/10,
+					z: 0
+				};
+			}
+			return true;
+		};
 		
+		
+		Base.player = plr;
 		return plr;
 	},
 	
@@ -153,8 +166,8 @@ Base =
 				movement[1] += d;
 			}
 
-			plr.fx += movement[0] - plr.vx/20;
-			plr.fy += movement[1] - plr.vy/20;
+			plr.walkx = movement[0] - plr.vx/20;
+			plr.walky = movement[1] - plr.vy/20;
 
 			if(Key.get(KEY_LEFT) && Key.get(KEY_UP))
 			{

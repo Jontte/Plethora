@@ -529,6 +529,10 @@ World = {
 		{
 			if(candidate.displacement < current.displacement)
 			{
+				// Enable stepping. This two-line addition disables fine xy-plane collisions
+				// If we only have to jump less than 0.2 units to satisfy vertical collision
+				if(current.nz>0.99 && current.displacement < 0.2)
+					return;
 				current.nx = candidate.nx;
 				current.ny = candidate.ny;
 				current.nz = candidate.nz;

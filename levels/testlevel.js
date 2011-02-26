@@ -13,24 +13,11 @@ for(var y = 0; y < 10; y++)
 	}
 }
 
-for(var i = 0; i < 10; i++)
-{
-	World.createObject(Graphics.BarrelWooden, 5, 5, 1+i, false);
-	World.createObject(Graphics.BarrelWooden, 6, 5, 1+i, false);
-}
-
-
 var prev = null;
-for(var i = 0; i < 11; i++)
-{
-	var obj = World.createObject(Graphics.Crate, i, 10, 0, prev==null);
-	if(prev != null)
-		World.linkObjects(obj, prev);
-	prev = obj;
-}
 for(var i = 0; i < 50; i++)
 {
-	var obj = World.createObject(Graphics.Crate, 10, 9-i, 0, false);
+	var obj = World.createObject(Graphics.Crate, 10, 9-i, 0, prev==null);
+	if(prev != null)
 	World.linkObjects(obj, prev);
 	prev = obj;
 }
@@ -49,12 +36,12 @@ Base.createGuy(6,6,1);
 for(var i = 0; i < 5; i++)
 	Base.createLift(8,2,1+i, false);
 
-for(var i = 0; i < 5; i++)
+for(var i = 0; i < 10; i++)
 {
-	Base.createConveyorBeltY(0,11+i,0.5);
-	Base.createConveyorBeltY(0,4,1+i*0.5, 1, false);
-	World.createObject(Graphics.GroundRugged, -1,11+i,0);
-	World.createObject(Graphics.GroundRugged,  1,11+i,0);
+	Base.createConveyorBeltY(0,10+i,0.5-0.1*i);
+	Base.createConveyorBeltX(i,20,-0.5-0.1*i);
+	World.createObject(Graphics.GroundRugged, -1,10+i,0);
+	World.createObject(Graphics.GroundRugged,  1,10+i,0);
 }
 // This function gets called each frame
 function level_loop()
