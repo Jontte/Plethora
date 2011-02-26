@@ -14,8 +14,8 @@ Base =
 		plr.head = World.createObject(Graphics.DudeTop, x, y, z+1, false);
 		plr.walkx = plr.walky = 0;
 
-		plr.frameMaxTicks=5;
-		plr.head.frameMaxTicks=5;
+		plr.frameMaxTicks=0;
+		plr.head.frameMaxTicks=0;
 
 		World.linkObjects(plr, plr.head);
 
@@ -25,6 +25,7 @@ Base =
 		plr.collision_listener = function(self, other, nx, ny, nz, displacement){
 			if(nz>0.5)
 			{
+				
 				return {
 					vx: -self.walkx,
 					vy: -self.walky,
@@ -145,7 +146,7 @@ Base =
 		{
 			var plr = Base.player;
 			var head = Base.player.head;
-			var d = 0.04;
+			var d = 0.10;
 	
 			var movement = [0,0];
 	
@@ -187,7 +188,7 @@ Base =
 			}
 
 			var speed = (plr.vx*plr.vx+plr.vy*plr.vy);
-			var maxticks = (speed<0.001) ? 0 : 0.05/speed;
+			var maxticks = (speed<0.001) ? 0 : 0.10/speed;
 			plr.frameMaxTicks = maxticks;
 			plr.head.frameMaxTicks = maxticks;
 

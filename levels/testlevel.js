@@ -36,6 +36,8 @@ Base.createGuy(6,6,1);
 for(var i = 0; i < 5; i++)
 	Base.createLift(8,2,1+i, false);
 
+
+World.createObject(Graphics.Duck, 0,9,1, false);
 for(var i = 0; i < 10; i++)
 {
 	Base.createConveyorBeltY(0,10+i,0.5-0.1*i);
