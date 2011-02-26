@@ -99,14 +99,10 @@ function World2Screen(x,y,z)
 	};
 }
 
-if(!window.console || !window.console.log)
-{
-	window.console = {
-		log : function(){},
-		time : function(){},
-		timeEnd : function(){}
-	};
-}
+if(!window.console)window.console = {};
+if(!window.console.log)window.console.log = function(){};
+if(!window.console.time)window.console.time = function(){};
+if(!window.console.timeEnd)window.console.timeEnd = function(){};
 
 function deepCopy (dupeObj)
 {
