@@ -250,7 +250,7 @@ World = {
 		// Draw wrapping clouds. We can skip drawing altogether if alpha = 0
 		if(cloud_alpha > 0.001)
 		{
-			var camerapos = World2Screen(World._cameraPosX, World._cameraposY, World._cameraposZ);
+			var camerapos = World2Screen(World._cameraPosX, World._cameraPosY, World._cameraPosZ);
 	
 			// Calculate alpha for clouds
 			Graphics.ctx.globalAlpha = cloud_alpha;
