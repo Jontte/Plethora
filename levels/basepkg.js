@@ -26,9 +26,9 @@ Base =
 			if(nz>0.5)
 			{
 				return {
-					x: -self.walkx/5 + (self.vx-other.vx)/10,
-					y: -self.walky/5 + (self.vy-other.vy)/10,
-					z: 0
+					vx: -self.walkx,
+					vy: -self.walky,
+					vz: 0
 				};
 			}
 			return true;
@@ -66,11 +66,11 @@ Base =
 			var area =
 				 1.0 - ((other.x-self.x)*(other.x-self.x) +
 						(other.y-self.y)*(other.y-self.y));
-			var force = 0.05*self.direction - other.vx + self.vx;
+			var force = 0.05*self.direction;
 			return {
-				x: force/10*area, 
-				y: 0, 
-				z: 0
+				vx: force*area, 
+				vy: 0, 
+				vz: 0
 			};
 		}
 		return obj;
@@ -87,11 +87,11 @@ Base =
 			var area =
 				 1.0 - ((other.x-self.x)*(other.x-self.x) +
 						(other.y-self.y)*(other.y-self.y));
-			var force = 0.05*self.direction - other.vy + self.vy;
+			var force = 0.05*self.direction;
 			return {
-				x: 0, 
-				y: force/10*area, 
-				z: 0
+				vx: 0, 
+				vy: force*area, 
+				vz: 0
 			};
 		}
 		return obj;

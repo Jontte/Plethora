@@ -432,9 +432,15 @@ World = {
 			var fy = ny * displacement;
 			var fz = nz * displacement;
 			
-			// Alert possible collision listeners and see if they want to cancel it
-			// Collision listeners also have the possibility to add force to the collision (conveyor belts)
+			// Alert possible collision listeners, that can either:
+			// - cancel the collision
+			// - calculate surface velocity (conveyor belt)
+			// - do nothing
+
 			var cancel = false;
+			var vx = 0;
+			var vy = 0;
+			var vz = 0;
 			for(var i = 0; i < 2; i++)
 			{
 				var cur   = i==0?o1:o2;
@@ -447,15 +453,20 @@ World = {
 					{
 						cancel = true;
 					}
-					else if(ret.x != undefined)
+					else if(ret.vx != undefined)
 					{
-						fx -= ret.x * mul;
-						fy -= ret.y * mul;
-						fz -= ret.z * mul;
+						vx += ret.vx * mul;
+						vy += ret.vy * mul;
+						vz += ret.vz * mul;
 					}
 				}
 			}
-
+			if(vx!=0||vy!=0||vz!=0)
+			{
+				fx -= vx/20 + (o1.vx-o2.vx)/50;
+				fy -= vy/20 + (o1.vy-o2.vy)/50;
+				fz -= vz/20 + (o1.vz-o2.vz)/50;
+			}
 			o1.fx += fx;
 			o1.fy += fy;
 			o1.fz += fz;
@@ -655,10 +666,10 @@ World.Entity = function(tiles, x, y, z, fixed)
 	this.id = World._objectCounter++; // Unique id is assigned to each object
 }
 
-World.Entity.prototype.vx = 0;
+World.Entity.prototype.vx = 0; // velocity
 World.Entity.prototype.vy = 0;
 World.Entity.prototype.vz = 0;
-World.Entity.prototype.fx = 0;
+World.Entity.prototype.fx = 0; // force
 World.Entity.prototype.fy = 0;
 World.Entity.prototype.fz = 0;
 World.Entity.prototype.mass = 1;
