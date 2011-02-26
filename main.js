@@ -5,7 +5,23 @@
 var Config = {
 	graphics : 'tileset.png',
 	gamestate : 'halt',
-	FPS: 20
+	FPS: 30,
+	timer: false,
+	frame: 0,
+	advance_frame : function()
+	{
+		if(this.frame % 100 == 0 && this.timer == true)
+		{
+			console.timeEnd('100 frames');
+			this.timer = false;
+		}
+		if(this.timer == false)
+		{
+			console.time('100 frames');
+			this.timer = true;
+		}
+		this.frame++;
+	}
 };
 
 /* 
@@ -150,6 +166,8 @@ function game_loop()
 		Config.gamestate = 'halt';
 		return;
 	}
+
+	Config.advance_frame();
 
 	// Clear screen
 	Graphics.ctx.fillRect (0, 0, 640, 480);  	
