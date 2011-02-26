@@ -262,7 +262,7 @@ World = {
 				['cloud2.png', 200, 600],
 				['cloud3.png', 10, 300],
 				['cloud4.png', 500, 100],
-				['cloud5.png', 800, 400],
+				['cloud5.png', 800, 400]
 			];
 			function clampwrap(x, loop){/*x -= loop*Math.floor(x/loop); } //*/while(x<0)x+= loop; return x % loop;}
 			for(var i = 0; i < clouds.length; i++)

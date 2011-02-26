@@ -108,6 +108,8 @@
 				position:absolute; left:180; top:25;
 			}
 		</style>
+			<!-- Crude canvas support for IE family browsers. Many thanks to Google.-->
+			<!--[if IE]><script type="text/javascript" src="excanvas.js"></script><![endif]-->
 			<script type="text/javascript">
 				function show_message(which)
 				{
@@ -197,7 +199,7 @@
 			</div>
 			<div id="game">
 				<canvas id="canvas" width="640" height="480">
-					You browser doesn't support the new HTML5 &lt;canvas&gt; element. <a href="http://getfirefox.org/">Try getting a real browser from Google: http://www.google.com/chrome/</a>
+					<p><h2>You browser doesn't support the new HTML5 &lt;canvas&gt; element.</h2></p><p>Try getting a real browser from Google: <b><a href="http://getfirefox.org/">http://www.google.com/chrome/</a></b></p>
 				</canvas>
 			</div>
 		</div>

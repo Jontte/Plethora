@@ -123,3 +123,59 @@ function deepCopy (dupeObj)
 	return retObj;
 }
 
+/*
+	Array.indexOf is not present in IE.
+	After this code has run, it is.
+	Source: MDC
+*/
+
+if (!Array.prototype.indexOf)
+{
+  Array.prototype.indexOf = function(searchElement /*, fromIndex */)
+  {
+    "use strict";
+
+    if (this === void 0 || this === null)
+      throw new TypeError();
+
+    var t = Object(this);
+    var len = t.length >>> 0;
+    if (len === 0)
+      return -1;
+
+    var n = 0;
+    if (arguments.length > 0)
+    {
+      n = Number(arguments[1]);
+      if (n !== n) // shortcut for verifying if it's NaN
+        n = 0;
+      else if (n !== 0 && n !== (1 / 0) && n !== -(1 / 0))
+        n = (n > 0 || -1) * Math.floor(Math.abs(n));
+    }
+
+    if (n >= len)
+      return -1;
+
+    var k = n >= 0
+          ? n
+          : Math.max(len - Math.abs(n), 0);
+
+    for (; k < len; k++)
+    {
+      if (k in t && t[k] === searchElement)
+        return k;
+    }
+    return -1;
+  };
+}
+
+
+// This function will detect browser flavor and version
+navigator.browserData = (function(){
+  var N= navigator.appName, ua= navigator.userAgent, tem;
+  var M= ua.match(/(opera|chrome|safari|firefox|msie)\/?\s*(\.?\d+(\.\d+)*)/i);
+  if(M && (tem= ua.match(/version\/([\.\d]+)/i))!= null) M[2]= tem[1];
+  M= M? [M[1], M[2]]: [N, navigator.appVersion,'-?'];
+  return {name: M[0], version: M[1]};
+ })();
+
