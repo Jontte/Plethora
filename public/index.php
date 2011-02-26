@@ -107,6 +107,15 @@
 			#author-text {
 				position:absolute; left:180; top:25;
 			}
+			#browser-warning {
+				visibility: hidden;
+				background-color: #60A0FF;
+				border: 1px black solid;
+				position: absolute;
+				width: 598px;
+				height: 438px;
+				padding: 20px 20px 20px 20px;
+			}
 		</style>
 			<!-- Crude canvas support for IE family browsers. Many thanks to Google.-->
 			<!--[if IE]><script type="text/javascript" src="excanvas.js"></script><![endif]-->
@@ -143,7 +152,7 @@
 					It was written as a proof of concept: With today's web browser JavaScript performance it is possible to perform simple dynamics simulation and collision detection. 
 				</p>
 				<p>
-					But only barely as of February 2011. Only Google Chrome achieves reasonable frame rates while the latest Firefox crawls behind. Admittedly there is still much to optimize, but I'm comfident I'm soon reaching the limits of JS power. 
+					But only barely as of 2011. Only Google Chrome achieves reasonable frame rates while even the latest Firefox crawls behind. Admittedly there is still much to optimize on my side, but I'm comfident I'm soon reaching the limits of what JS can do. 
 				</p>
 				<p>
 					A couple of people have asked whether I'm releasing the source code as an open source JS library. Sure, but not before I've cleaned and documented the codebase. 
@@ -152,7 +161,7 @@
 			<div id="tech-text" class="popup" onclick="show_message()">
 				<h2>Tech</h2><hr>
 				<p>
-					In the future I hope to reduce performance requirements even further by:
+					In the future I hope to improve performance even further by:
 					<ul>
 						<li>Not redrawing every single block again and again every frame. Draw fixed objects to an offscreen canvas once and re-use it as much as possible.</li>
 						<li>Have a closer look at the depth-ordering code.</li>
@@ -198,8 +207,13 @@
 				</a>
 			</div>
 			<div id="game">
+				<div id='browser-warning'>
+					<h2>Suboptimal browser detected</h2>
+					Plethora is likely to perform very poorly on your web browser. This may result into crashes and instability in your system. Are you sure you want to continue? <input type="submit" value="Yes!" onclick="reset('yes')"/><input type="submit" value="No!" onclick="document.location = 'http://www.google.com/chrome/';"/>
+					<div><img src="plethora.jpg"/></div>
+				</div>
 				<canvas id="canvas" width="640" height="480">
-					<p><h2>You browser doesn't support the new HTML5 &lt;canvas&gt; element.</h2></p><p>Try getting a real browser from Google: <b><a href="http://getfirefox.org/">http://www.google.com/chrome/</a></b></p>
+					<p><h2>You browser doesn't support the new HTML5 &lt;canvas&gt; element.</h2></p><p>Try getting a real browser from Google: <b><a href="http://www.google.com/chrome/">http://www.google.com/chrome/</a></b></p>
 				</canvas>
 			</div>
 		</div>

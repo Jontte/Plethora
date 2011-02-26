@@ -5,7 +5,8 @@
 var Config = {
 	graphics : 'tileset.png',
 	gamestate : 'halt',
-	FPS: 20
+	FPS: 20,
+	areyousure: false //Whether the user is willing to try plethora despite using browsers with poor performance
 };
 
 /* 
@@ -73,8 +74,27 @@ var Graphics = {
 };
 
 
-function reset()
+function reset(areyousure)
 {
+	// areyousure comes from a callback where we ask the user if they really want to run plethora under their underpowered browser
+	
+	if(navigator.browserData.name == 'MSIE')
+	{
+		if(areyousure == undefined && !Config.areyousure)
+		{
+			document.getElementById('browser-warning').style.visibility = 'visible';
+			document.getElementById('canvas').style.visibility = 'hidden';
+			return;
+		}
+		else
+		{
+			// Let's remember the user option for now.
+			Config.areyousure = true;
+			document.getElementById('browser-warning').style.visibility = 'hidden';
+			document.getElementById('canvas').style.visibility = 'visible';
+		}
+	}
+	
 	if(Config.gamestate == 'online')
 	{
 		Config.gamestate = 'reset';
