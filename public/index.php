@@ -104,6 +104,10 @@
 				position:absolute; left:180; top:25;
 				width: 400px;
 			}
+			#todo-text {
+				position:absolute; left:180; top:25;
+				width: 400px;
+			}
 			#author-text {
 				position:absolute; left:180; top:25;
 			}
@@ -122,7 +126,7 @@
 			<script type="text/javascript">
 				function show_message(which)
 				{
-					var windows = ['about','tech','author'];
+					var windows = ['about','tech','todo','author'];
 					for(var i = 0; i < windows.length; i++)
 					{
 						var elem = document.getElementById(windows[i]+'-text');
@@ -173,6 +177,21 @@
 					No, real-time MMO-like gameplay with your friends is not possible with at least traditional web techniques.
 				</p>
 			</div>
+			<div id="todo-text" class="popup" onclick="show_message()">
+				<h2>TODO</h2><hr>
+				<p>
+					Plethora is still far from being a full game. Below is a list of important tasks/objectives waiting for me.
+					<ul>
+						<li>More graphics: Character animation, logo, landscapes, everything. Maybe You can help?</li>
+						<li>A safe level format that allows for basic scripting</li>
+						<li>A level editor</li>
+						<li>A level sharing system</li>
+						<li>Wider browser support</li>
+						<li>More collision shapes for the physics engine. Spheres, Ellipsoids, Tilted surfaces, ...</li>
+						<li>Sound effects and background music?</li>
+					</ul>
+				</p>
+			</div>
 			<div id="author-text" class="popup" onclick="show_message()">
 				<h2>Author</h2><hr>
 				<p>
@@ -187,6 +206,7 @@
 				
 				<a href="#" onclick="show_message('about')"><div class="menuitem">About</div></a>
 				<a href="#" onclick="show_message('tech')"><div class="menuitem">Tech</div></a>
+				<a href="#" onclick="show_message('todo')"><div class="menuitem">Todo</div></a>
 				<a href="#" onclick="show_message('author')"><div class="menuitem">Author</div></a>
 
 				<select name="Level selection" id="lselect" size="4" onchange="reset()">
