@@ -102,11 +102,11 @@ function mkMaze(offset, dimensions)
 
 		if(grid[x][y])
 		{
-			var obj = World.createObject(Graphics.DarkBlock, [x+offset[0], y+offset[1], 1+offset[2]]);
+			var obj = World.createObject(Graphics.DarkBlock, x+offset[0], y+offset[1], 1+offset[2]);
 		}
 		else
 		{
-			var obj = World.createObject(Graphics.GroundBlock, [x+offset[0], y+offset[1], 0+offset[2]]);
+			var obj = World.createObject(Graphics.GroundBlock, x+offset[0], y+offset[1], 0+offset[2]);
 		}
 	}
 }
@@ -116,7 +116,6 @@ var pos = [0,0];
 for(var i=0;i<levels;i++)
 {
 	//progressbar(i,levels, "loading");
-	console.log('level.. '+i);
 	var width = 2+Math.floor(Math.random()*10);
 	var height = 2+Math.floor(Math.random()*10);
 
@@ -124,11 +123,11 @@ for(var i=0;i<levels;i++)
 	pos[0] += 2*width-2;
 	pos[1] += 2*height-2;
 }
-World.createObject(Graphics.GroundBlock, [pos[0]+1,pos[1]+1, -2*levels-2]);
-var duck = World.createObject(Graphics.Duck, [pos[0]+1,pos[1]+1, -2*levels+1], false);
+World.createObject(Graphics.GroundBlock, pos[0]+1,pos[1]+1, -2*levels-2);
+var duck = World.createObject(Graphics.Duck, pos[0]+1,pos[1]+1, -2*levels+1, false);
 
 
-Base.createGuy([1,1,1], false); // No jumping on mazes ;)
+Base.createGuy(1,1,1, false); // No jumping on mazes ;)
 
 function level_loop()
 {

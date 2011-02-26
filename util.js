@@ -91,14 +91,22 @@ function lower_bound(arr, min, max, threshold, func)
 }
 
 // Transform world coordinates to screen coordinates
-function World2Screen(p)
+function World2Screen(x,y,z)
 {
-	return [
-		(p[0]-p[1])*16,
-		(p[0]+p[1]-2*p[2])*8
-	];
+	return {
+		x: (x-y)*16,
+		y: (x+y-2*z)*8
+	};
 }
 
+if(!window.console || !window.console.log)
+{
+	window.console = {
+		log : function(){},
+		time : function(){},
+		timeEnd : function(){}
+	};
+}
 
 function deepCopy (dupeObj)
 {

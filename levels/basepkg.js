@@ -6,12 +6,12 @@
 Base = 
 {
 	lifts: [],
-	createGuy : function(position, allowjump)
+	createGuy : function(x, y, z, allowjump)
 	{
 		if(allowjump == undefined)allowjump=true;
 		
-		var plr = World.createObject(Graphics.DudeBottom, position, false);
-		plr.head = World.createObject(Graphics.DudeTop, [position[0],position[1],position[2]+1], false);
+		var plr = World.createObject(Graphics.DudeBottom, x, y, z, false);
+		plr.head = World.createObject(Graphics.DudeTop, x, y, z+1, false);
 
 		plr.frameMaxTicks=5;
 		plr.head.frameMaxTicks=5;
@@ -26,9 +26,9 @@ Base =
 		return plr;
 	},
 	
-	createLift : function(position, static)
+	createLift : function(x, y, z, fixed)
 	{
-		var obj = World.createObject(Graphics.Lift, position, static);
+		var obj = World.createObject(Graphics.Lift, x, y, z, fixed);
 		obj.frameMaxTicks = 0; // Disable automatic animation
 		
 		obj.mode = 'automatic'; // Nox-style
@@ -41,37 +41,45 @@ Base =
 		
 		return obj;
 	},
-	createConveyorBeltX : function(position,direction,static)
+	createConveyorBeltX : function(x, y, z, direction, fixed)
 	{
 		if(direction == undefined)direction = 1;
-		var obj = World.createObject(Graphics.ConveyorBeltX, position, static);
+		var obj = World.createObject(Graphics.ConveyorBeltX, x, y, z, fixed);
 		obj.frameMaxTicks = 1 * direction;
 		obj.direction = direction;
-		obj.collision_listener = function(self, other, normal, displacement)
+		obj.collision_listener = function(self, other, nx, ny, nz, displacement)
 		{
-			if(normal[2] != -1)return true;
+			if(Math.abs(nz+1) > 0.01)return true;
 			var area =
-				 1.0 - ((other.pos[0]-self.pos[0])*(other.pos[0]-self.pos[0]) +
-						(other.pos[1]-self.pos[1])*(other.pos[1]-self.pos[1]));
-			var force = 0.05*self.direction - other.vel[0] + self.vel[0];
-			return [force/10*area*other.mass, 0, 0];
+				 1.0 - ((other.x-self.x)*(other.x-self.x) +
+						(other.y-self.y)*(other.y-self.y));
+			var force = 0.05*self.direction - other.vx + self.vx;
+			return {
+				x: force/10*area, 
+				y: 0, 
+				z: 0
+			};
 		}
 		return obj;
 	},
-	createConveyorBeltY : function(position,direction,static)
+	createConveyorBeltY : function(x, y, z, direction, fixed)
 	{
 		if(direction == undefined)direction = 1;
-		var obj = World.createObject(Graphics.ConveyorBeltY, position, static);
+		var obj = World.createObject(Graphics.ConveyorBeltY, x, y, z, fixed);
 		obj.frameMaxTicks = 1 * direction;
 		obj.direction = direction;
-		obj.collision_listener = function(self, other, normal, displacement)
+		obj.collision_listener = function(self, other, nx, ny, nz, displacement)
 		{
-			if(normal[2] != -1)return true;
+			if(Math.abs(nz+1) > 0.01)return true;
 			var area =
-				 1.0 - ((other.pos[0]-self.pos[0])*(other.pos[0]-self.pos[0]) +
-						(other.pos[1]-self.pos[1])*(other.pos[1]-self.pos[1]));
-			var force = 0.05*self.direction - other.vel[1] + self.vel[1];
-			return [0, force/10*area*other.mass, 0];
+				 1.0 - ((other.x-self.x)*(other.x-self.x) +
+						(other.y-self.y)*(other.y-self.y));
+			var force = 0.05*self.direction - other.vy + self.vy;
+			return {
+				x: 0, 
+				y: force/10*area, 
+				z: 0
+			};
 		}
 		return obj;
 	},
@@ -124,7 +132,7 @@ Base =
 		{
 			var plr = Base.player;
 			var head = Base.player.head;
-			var d = 0.05;
+			var d = 0.04;
 	
 			var movement = [0,0];
 	
@@ -145,8 +153,8 @@ Base =
 				movement[1] += d;
 			}
 
-			plr.force[0] += movement[0] - plr.vel[0]/20;
-			plr.force[1] += movement[1] - plr.vel[1]/20;
+			plr.fx += movement[0] - plr.vx/20;
+			plr.fy += movement[1] - plr.vy/20;
 
 			if(Key.get(KEY_LEFT) && Key.get(KEY_UP))
 			{
@@ -165,7 +173,7 @@ Base =
 				plr.direction = SOUTH;
 			}
 
-			var speed = (plr.vel[0]*plr.vel[0]+plr.vel[1]*plr.vel[1]);
+			var speed = (plr.vx*plr.vx+plr.vy*plr.vy);
 			var maxticks = (speed<0.001) ? 0 : 0.05/speed;
 			plr.frameMaxTicks = maxticks;
 			plr.head.frameMaxTicks = maxticks;
@@ -173,8 +181,8 @@ Base =
 			if(plr.allowjump == true && Key.changed(KEY_SPACE) && Key.get(KEY_SPACE))
 			{
 				var f = 0.25;
-				plr.force[2] += f;
-				plr.head.force[2] += f;
+				plr.fz += f;
+				plr.head.fz += f;
 			}
 	
 			// Synch head movement to body movement
