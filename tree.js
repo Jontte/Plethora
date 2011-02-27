@@ -58,7 +58,7 @@ function KDTree ()
 	};
 }
 
-function mktree (points, depth)
+function mktree (points, depth, gracecounter)
 {
 	if(points.length == 0)
 	{
@@ -66,6 +66,7 @@ function mktree (points, depth)
 	}
 	if(depth==undefined)
 		depth=0;
+
 	if(points.length < 10)
 	{
 		return points;
@@ -94,8 +95,31 @@ function mktree (points, depth)
 		else
 			high.push(points[i]);
 	}
-	ret.low = mktree(low, depth+1);
-	ret.high = mktree(high, depth+1);
+	/* experimental:
+	 * If many objects are stashes close to each other, there are cases where 
+	 * picking median as the pivot will cause infinite recursion since high/low
+	 * arrays will not change.
+	 *
+	 * Solution: add a grace counter parameter to mktree, if it reaches 3 (all 
+	 * dimensions), return a plain array with all the objects in it and do not
+	 * recurse any further.
+	*/
+	if(high.length == 0 || low.length == 0)
+	{
+		if(gracecounter == undefined)
+			gracecounter = 1;
+		else
+		{
+			gracecounter++;
+			if(gracecounter==3)
+			{
+				return points;
+			}
+		}
+	}
+
+	ret.low = mktree(low, depth+1, gracecounter);
+	ret.high = mktree(high, depth+1, gracecounter);
 	return ret;
 }
 

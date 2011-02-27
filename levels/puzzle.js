@@ -53,29 +53,50 @@ for(var i = 0; i < levels; i++)
 }
 
 
-
+// long conveyor bridge
 for(var i = 0; i < 20; i++)
 {
-	//World.createObject(Graphics.DarkBlock, [21,i,1]);
-	Base.createConveyorBeltY(20,i,0.5);
-	Base.createConveyorBeltX(19,i,0.5);
-	Base.createConveyorBeltX(21,i,0.5, -1);
-	World.createObject(Graphics.FenceY, 22,i,0.5);
+	var h = 0; // we will rise in height 0.5
+	h = 0.5*i/19;
+	if(i<18)
+	{
+		Base.createConveyorBeltY(20,i,0.5+h);
+		Base.createConveyorBeltX(21,i,0.5+h, -1);
+		if(i>15)
+			Base.createConveyorBeltY(19,i,0.5+h);
+		else
+			Base.createConveyorBeltX(19,i,0.5+h);
+	}
+	else if(i==18)
+	{
+		Base.createConveyorBeltY(19,i,0.5+h);
+		for(var a=1;a<3;a++)
+			Base.createConveyorBeltX(19+a,i,0.5+h, -1);
+	}
+	else if(i==19)
+	{
+		for(var a=0;a<3;a++)
+			Base.createConveyorBeltX(19+a,i,0.5+h, -1);
+	}
+	World.createObject(Graphics.FenceY, 22,i,1);
 }
 
 Base.createGuy(0,0,1, false); // no jumping
+//Base.createGuy(20,20,5, false); // no jumping
 Base.createLift(15,0,0);
 World.createObject(Graphics.GroundRugged, 14,0,2);
 
 // part 2
 // four companion cubes will be required here
 
+// the big wall
 for(var i = 0; i < 10; i++)
 {
 	for(var z = 0; z < 6; z++)
 	{
-		World.createObject(Graphics.GroundRugged, 18, 20+i, z-2);
-		World.createObject(Graphics.GroundRugged, 18, 10+i, z-2);
+		if(i != 4 || z > 3 || z < 2)
+			World.createObject(Graphics.GroundRugged, 18-((z>2&&(i<5||z>=4))?1:0), 20+i, z-2);
+		World.createObject(Graphics.GroundRugged, 18-((z>2&&i>7)?1:0), 10+i, z-2);
 	}
 	for(var y = -1; y < 20; y++)
 	{
@@ -83,20 +104,30 @@ for(var i = 0; i < 10; i++)
 		World.createObject(Graphics.DarkBlock, 20+y, 20+i, -2);
 	}
 }
+// ridge
+for(var i=0;i<6;i++)
+	Base.createConveyorBeltY(18,18+i,1);
+Base.createConveyorBeltX(18,24,0.5,-1);
+World.createObject(Graphics.DarkBlock,18,24,0,-1);
+World.createObject(Graphics.DarkBlock,18,24,0,-1);
+
+
+
 // tunneling..
-World.createObject(Graphics.DarkBlock, 20, 19, 0);
-World.createObject(Graphics.DarkBlock, 19, 19, 0);
 World.createObject(Graphics.GroundRugged, 19, 19, -1);
 World.createObject(Graphics.GroundRugged, 19, 19, -2);
-World.createObject(Graphics.GroundRugged, 19, 18, -2);
+World.createObject(Graphics.GroundRugged, 21, 19, -1);
+World.createObject(Graphics.GroundRugged, 19, 19, 0);
+World.createObject(Graphics.GroundRugged, 20, 19, 0);
+World.createObject(Graphics.GroundRugged, 21, 19, 0);
+
 Base.createConveyorBeltY(20,20,-2,-1);
-Base.createConveyorBeltY(20,20, 0.5);
-Base.createConveyorBeltY(20,21, 0.5);
 Base.createConveyorBeltY(20,19,-2,-1);
 Base.createConveyorBeltY(29,17,-2);
 Base.createConveyorBeltX(20,17,-2);
 Base.createConveyorBeltX(21,17,-2);
 Base.createConveyorBeltY(22,17,-2);
+
 for(var i = 0; i < 20; i++)
 {
 	if(i<12)

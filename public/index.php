@@ -5,9 +5,9 @@
 	$source_directory = '/home/joonas/plethora/';
 	$levels =	
 		array(
-			'Testlevel'	=> array('basepkg.js', 'testlevel.js'),
+			'Puzzle' 	=> array('basepkg.js', 'puzzle.js'),
 			'Maze'		=> array('basepkg.js', 'maze.js'),
-			'Puzzle' 	=> array('basepkg.js', 'puzzle.js')
+			'Testlevel'	=> array('basepkg.js', 'testlevel.js')
 		);
 
 
