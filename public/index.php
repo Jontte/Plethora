@@ -41,11 +41,13 @@
 
 		<?php
 			$files = array('util.js', 'tree.js', 'key.js', 'world.js', 'main.js');
-			{
-				$selection = $levels[0];
-				if(isset($_COOKIE['level_selection']))
-					$selection = $_COOKIE['level_selection'];
-			}
+		
+			$selection = array_keys($levels);
+			$selection = $selection[0];
+				
+			$cookie = $_COOKIE['level_selection'];
+			if(isset($cookie) && strlen($cookie)>2)
+				$selection = $_COOKIE['level_selection'];
 			
 			echo '<script type="text/javascript">';
 			foreach($files as $file)
@@ -215,7 +217,7 @@
 <?php
 	foreach($levels as $key => $value)
 	{
-		$msg = $key==$selection?' selected="true"':'';
+		$msg = ($key==$selection)?' selected="true"':'';
 		echo "<option value=\"$key\"$msg>$key</option>\n";
 	}
 ?>
