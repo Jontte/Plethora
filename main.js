@@ -130,6 +130,9 @@ function reset(areyousure)
 	document.getElementById('lselect').blur();
 	document.getElementById('selector').blur();
 
+	// The level has been selected! Save it as a cookie
+	setCookie('level_selection', levelname);
+
 	// Load level and initialize
 	var head= document.getElementsByTagName('head')[0];
 	var script= document.createElement('script');

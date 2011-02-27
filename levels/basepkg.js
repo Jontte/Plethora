@@ -64,12 +64,9 @@ Base =
 		obj.collision_listener = function(self, other, nx, ny, nz, displacement)
 		{
 			if(Math.abs(nz+1) > 0.01)return true;
-			var area =
-				 1.0 - ((other.x-self.x)*(other.x-self.x) +
-						(other.y-self.y)*(other.y-self.y));
 			var force = 0.05*self.direction;
 			return {
-				vx: force*area, 
+				vx: force, 
 				vy: 0, 
 				vz: 0
 			};
@@ -85,13 +82,10 @@ Base =
 		obj.collision_listener = function(self, other, nx, ny, nz, displacement)
 		{
 			if(Math.abs(nz+1) > 0.01)return true;
-			var area =
-				 1.0 - ((other.x-self.x)*(other.x-self.x) +
-						(other.y-self.y)*(other.y-self.y));
 			var force = 0.05*self.direction;
 			return {
 				vx: 0, 
-				vy: force*area, 
+				vy: force, 
 				vz: 0
 			};
 		}

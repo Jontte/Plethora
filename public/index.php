@@ -43,6 +43,8 @@
 			$files = array('util.js', 'tree.js', 'key.js', 'world.js', 'main.js');
 			{
 				$selection = $levels[0];
+				if(isset($_COOKIE['level_selection']))
+					$selection = $_COOKIE['level_selection'];
 			}
 			
 			echo '<script type="text/javascript">';
@@ -211,11 +213,10 @@
 
 				<select name="Level selection" id="lselect" size="4" onchange="reset()">
 <?php
-	$first = ' selected="true"';
 	foreach($levels as $key => $value)
 	{
-		echo "<option value=\"$key\"$first>$key</option>\n";
-		$first = '';
+		$msg = $key==$selection?' selected="true"':'';
+		echo "<option value=\"$key\"$msg>$key</option>\n";
 	}
 ?>
 				</select>
