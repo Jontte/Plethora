@@ -16,7 +16,7 @@ var Key = {
 	_shouldFilter : function(keycode){
 		// It handles PgUp(33), PgDn(34), End(35), Home(36), Left(37), Up(38), Right(39), Down(40), Spacebar(32)
 		var ar=new Array(33,34,35,36,37,38,39,40,32);
-		return (ar.indexOf(keycode) == -1);
+		return (ar.indexOf(keycode) != -1);
 	},
 	timestep : function(){
 		// Set changed=false for every key. Called automatically from main.js every frame
