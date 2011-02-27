@@ -12,6 +12,48 @@ for(var i = 0; i < 19; i++)
 	}
 	if(i<4)World.createObject(Graphics.CompanionCube, i+1,0,1, false);
 }
+
+// Create escalator with animators
+function createEscalatorX(x,y,z,levels,usebelts)
+{
+for(var i = 0; i < levels; i++)
+{
+	var b;
+	if(usebelts==true)
+	{
+		b = Base.createConveyorBeltX(x+i,y,z+i-i%2, 1, i%2==0);
+	}
+	else
+	{
+		b = World.createObject(Graphics.DarkBlock, x+i,y,z+i-i%2,i%2==0);
+	}
+	if(i%2!=0)
+	{
+		var anim = Base.createAnimator(b, {
+			type : 'transfer',
+			target: [x+i,y,z+i+1],
+			time : 0.5,
+			sleep: 1
+		});
+		anim.link.maxforce = 0.5;
+	}
+	/*
+	var below1 = World.createObject(Graphics.GroundRugged, x+i, y, z+i-i%2-1, i%2==0);
+	var below2 = World.createObject(Graphics.GroundRugged, x+i, y, z+i-i%2-2, i%2==0);
+	if(i%2!=0)
+	{
+		World.linkObjects(b,below1);
+		World.linkObjects(below1,below2);
+		//below1.hasGravity = false;
+		//below2.hasGravity = false;
+		below1.fixedCollide = false;
+		below2.fixedCollide = false;
+	}*/
+}
+}
+
+
+
 for(var i = 0; i < 20; i++)
 {
 	//World.createObject(Graphics.DarkBlock, [21,i,1]);
@@ -110,6 +152,15 @@ for(var i=0;i<10;i++)
 	World.createObject(Graphics.DarkBlock,46+i,6,-2);
 }
 World.createObject(Graphics.Duck,55,6,1, false);
+
+createEscalatorX(56,6,-2, 15, false);
+
+// 3rd area
+for(var x=0;x<10;x++)
+for(var y=0;y<10;y++)
+{
+	World.createObject(Graphics.DarkBlock, 71+x, 0+y, 12);
+}
 
 function level_loop()
 {

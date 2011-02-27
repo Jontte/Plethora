@@ -6,6 +6,7 @@
 Base = 
 {
 	lifts: [],
+	animators: [],
 	createGuy : function(x, y, z, allowjump)
 	{
 		if(allowjump == undefined)allowjump=true;
@@ -91,6 +92,62 @@ Base =
 		}
 		return obj;
 	},
+	createAnimator : function(obj, params)
+	{
+		if(params.type == 'transfer')
+		{
+			obj.hasGravity = false; // animated objects needn't no gravity
+			obj.fixedCollide = false; // animated objects needn't collide with fixed objects
+			var anim = {
+				obj : obj,
+				link : World.linkObjects(obj, null),
+				current_frame : 0,
+				target_frame : params.time * Config.FPS,
+				state: 0, // 0 = moving forward, 1 = waiting, 2 = moving backward, 3 = waiting
+				srcX: obj.x,
+				srcY: obj.y,
+				srcZ: obj.z,
+				destX: params.target[0],
+				destY: params.target[1],
+				destZ: params.target[2],
+				movetime: params.time,
+				sleeptime: params.sleep,
+				step: function()
+				{
+					var d = 0;
+					if(this.state == 0)
+						d = this.current_frame / this.target_frame;
+					else if(this.state == 1)
+						d = 1;
+					else if(this.state == 2)
+						d = 1.0-this.current_frame / this.target_frame;
+					else if(this.state == 3)
+						d = 0;
+
+					this.link.dx = this.srcX + (this.destX-this.srcX) * d;
+					this.link.dy = this.srcY + (this.destY-this.srcY) * d;
+					this.link.dz = this.srcZ + (this.destZ-this.srcZ) * d;
+
+					if(++this.current_frame >= this.target_frame)
+					{
+						this.current_frame = 0;
+						if(++this.state>3)this.state=0;
+						if(this.state==0 || this.state==2)
+							this.target_frame = this.movetime * Config.FPS;
+						else
+							this.target_frame = this.sleeptime * Config.FPS;
+						
+					}
+				}
+			};
+			Base.animators.push(anim);
+			return anim;
+		}
+		else
+		{
+			throw 'unknown animator type';
+		}
+	},
 	step : function()
 	{
 		// Step any existing lifts...
@@ -132,6 +189,12 @@ Base =
 				}
 			}
 			lift.tiles.c.h = lift.frame/9;
+		}
+
+		// Step animators
+		for(var i = 0; i < Base.animators.length; i++)
+		{
+			Base.animators[i].step();
 		}
 		
 		

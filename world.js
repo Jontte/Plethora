@@ -82,13 +82,25 @@ World = {
 	{
 		// Negative maxforce = unbreakable link
 		if(maxforce == undefined)maxforce = -1;
+
+		// null may be passed to o2 to link o1 to the world instead
+		var dx = o1.x;
+		var dy = o1.y;
+		var dz = o1.z;
+		
+		if(o2 != null)
+		{
+			dx = o2.x-o1.x;
+			dy = o2.y-o1.y;
+			dz = o2.z-o1.z;
+		}
 		var lnk = {
 			o1 : o1,
 			o2 : o2,
 			maxforce : maxforce,
-			dx : o2.x-o1.x, 
-			dy : o2.y-o1.y,
-			dz : o2.z-o1.z
+			dx : dx, 
+			dy : dy,
+			dz : dz
 		};
 		World._links.push(lnk);
 		return lnk;
@@ -98,9 +110,9 @@ World = {
 		for(var i = 0; i < World._links.length; i++)
 		{
 			var l = World._links[i];
-			if(l.o1 = o1 && l.o2 == o2)
+			if(l.o1 == o1 && l.o2 == o2)
 			{
-				delete World._links[i];
+				World._links.splice(i,1);
 				i--;
 			}
 		}
@@ -364,11 +376,15 @@ World = {
 					// Add object to buffer 
 					objectbuffer[p.obj.id] = p;
 					
-					// Look for nearby fixed objects, collide
-					var fixeds = World._tree.getObjects([o1.x, o1.y, o1.z], 2);
-					for(var a = 0; a < fixeds.length; a++)
+					// Should this object collide with fixed objects?
+					if(o1.collideFixed)
 					{
-						World._tryCollideAndResponse(o1, fixeds[a].obj);
+						// Look for nearby fixed objects, collide
+						var fixeds = World._tree.getObjects([o1.x, o1.y, o1.z], 2);
+						for(var a = 0; a < fixeds.length; a++)
+						{
+							World._tryCollideAndResponse(o1, fixeds[a].obj);
+						}
 					}
 				}
 			}
@@ -378,17 +394,46 @@ World = {
 					var l = World._links[i];
 					var o1 = l.o1;
 					var o2 = l.o2;
-					var errorx = l.dx-(o2.x-o1.x);
-					var errory = l.dy-(o2.y-o1.y);
-					var errorz = l.dz-(o2.z-o1.z);
-					var d = 1.1;
+
+					var errorx, errory, errorz;
+
+					if(o2 != null)
+					{
+						errorx = l.dx-(o2.x-o1.x);
+						errory = l.dy-(o2.y-o1.y);
+						errorz = l.dz-(o2.z-o1.z);
+					}
+					else
+					{
+						errorx = -l.dx+o1.x;
+						errory = -l.dy+o1.y;
+						errorz = -l.dz+o1.z;
+					}
+					var d = 1.1; // tweakable multiplier
+
+					if(l.maxforce >= 0)
+					{
+						var totalforce = errorx*errorx+errory*errory+errorz*errorz;
+						if(totalforce*d*2 > l.maxforce)
+						{
+							// link force has exceeded maxforce. Drop it
+							World._links.splice(i,1);
+							i--;
+							continue;
+						}
+					}
+
+					if(o2 == null)d*=2;
 
 					o1.fx -= errorx*d;
 					o1.fy -= errory*d;
 					o1.fz -= errorz*d;
-					o2.fx += errorx*d;
-					o2.fy += errory*d;
-					o2.fz += errorz*d;
+					if(o2 != null)
+					{
+						o2.fx += errorx*d;
+						o2.fy += errory*d;
+						o2.fz += errorz*d;
+					}
 				}
 			// euler integrate
 			for(var i = 0; i < World._mobile.length; i++)
@@ -411,7 +456,7 @@ World = {
 				var obj = World._mobile[i];
 				obj.fx = 0;
 				obj.fy = 0;
-				obj.fz = -0.04*obj.mass/World._physicsIterations;
+				obj.fz = obj.hasGravity?-0.04*obj.mass/World._physicsIterations : 0;
 			}
 		}
 		//console.timeEnd('physics');
@@ -672,6 +717,8 @@ World.Entity.prototype.vz = 0;
 World.Entity.prototype.fx = 0; // force
 World.Entity.prototype.fy = 0;
 World.Entity.prototype.fz = 0;
+World.Entity.prototype.hasGravity = true; // whether this object is affected by gravity 
+World.Entity.prototype.collideFixed = true; // should this object collide with fixed objects
 World.Entity.prototype.mass = 1;
 World.Entity.prototype.direction = 0;
 World.Entity.prototype.frame = 0; // current frame
