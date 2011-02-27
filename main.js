@@ -86,7 +86,9 @@ var Graphics = {
 	FenceX: {t: 0, g:[4,0], c: {s: 'box', l: 1, h: 1.0}},
 	FenceY: {t: 0, g:[5,0], c: {s: 'box', l: 1, h: 1.0}},
 	ConveyorBeltX: {t: ANIMATED, g:[[10,0],[11,0],[12,0],[13,0],[14,0]], c: {s: 'box', l: 1, h: 0.5}},
-	ConveyorBeltY: {t: ANIMATED, g:[[10,1],[11,1],[12,1],[13,1],[14,1]], c: {s: 'box', l: 1, h: 0.5}}
+	ConveyorBeltY: {t: ANIMATED, g:[[10,1],[11,1],[12,1],[13,1],[14,1]], c: {s: 'box', l: 1, h: 0.5}},
+	N64: {t: 0, g: [9,1]},
+	RedBlock: {t: ANIMATED, g: [[8,2],[9,2],[10,2],[11,2],[12,2],[13,2],[14,2],[15,2]]}
 };
 
 
