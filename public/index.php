@@ -43,8 +43,11 @@
 			$files = array('util.js', 'tree.js', 'key.js', 'world.js', 'main.js');
 			{
 				$selection = $levels[0];
-				if(isset($_COOKIE['level_selection']))
-					$selection = $_COOKIE['level_selection'];
+				$cookie = $_COOKIE['level_selection'];
+				if(isset($cookie) && strlen($cookie) > 2)
+				{
+					$selection = $cookie;
+				}
 			}
 			
 			echo '<script type="text/javascript">';
