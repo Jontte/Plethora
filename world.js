@@ -17,6 +17,11 @@ World = {
 		// Depth formula. Used to calculate depth for each object based on their xyz-coordinates
 		return x + y + 1.25 * z;
 	},
+	_depth_func_obj: function(obj)
+	{
+		// A shorthand for above
+		return obj.x + obj.y + 1.25 * obj.z
+	},
 	reset : function()
 	{
 		World._objects = [];
@@ -121,6 +126,7 @@ World = {
 	{
 		//console.time('render');
 
+
 		// Update camera position
 		if(World._cameraFocus != null)
 		{
@@ -151,69 +157,72 @@ World = {
 		var znear = -30 + cameradepth;
 		var zfar =   30 + cameradepth;
 		
-		// Find boundary indexes from fixed objs thru binary search
+		// Find boundary indexes from fixed and mobile objs thru binary search
 		
-		var znearindex = 0;
-		var zfarindex = World._fixed.length;
+		// fixed.
+		var f_znearindex;
+		var f_zfarindex;
 		
-		znearindex = lower_bound(World._fixed, 0, World._fixed.length, znear, 
-			function(a){return World._depth_func(a.x, a.y, a.z);});
-		zfarindex =  lower_bound(World._fixed, 0, World._fixed.length, zfar, 
-			function(a){return World._depth_func(a.x, a.y, a.z);});
+		f_znearindex = lower_bound(World._fixed, 0, World._fixed.length, znear, World._depth_func_obj);
+		f_zfarindex =  lower_bound(World._fixed, 0, World._fixed.length, zfar, World._depth_func_obj);
+		if(f_znearindex == -1)f_znearindex = 0;
+		if(f_zfarindex == -1)f_zfarindex = World._fixed.length;
 
-		if(znearindex == -1)znearindex = 0;
-		if(zfarindex == -1)zfarindex = World._fixed.length;
-
-		// For each mobile object, find an index on fixed objects' array
-
-		// TODO This is naive, we can do better
-		//console.time('mapping');
-		var indices = [];
-		for(var i = 0; i < World._mobile.length; i++)
-		{
-			var obj = World._mobile[i];
-			var d = World._depth_func(obj.x, obj.y, obj.z);
-			indices.push(
-				lower_bound(World._fixed, 0, World._fixed.length, d,
-					function(a){return World._depth_func(a.x, a.y, a.z);})
-			);
-		}
-		//console.timeEnd('mapping');
+		// mobile.
+		var m_znearindex;
+		var m_zfarindex;
 		
-		//console.time('traversing');
-		// Traverse those indices
-		//
-		var currentpos = 0;
+		m_znearindex = lower_bound(World._mobile, 0, World._mobile.length, znear, World._depth_func_obj);
+		m_zfarindex =  lower_bound(World._mobile, 0, World._mobile.length, zfar, World._depth_func_obj);
+		if(m_znearindex == -1)m_znearindex = 0;
+		if(m_zfarindex == -1)m_zfarindex = World._mobile.length;
 
-		// Skip till first mobile...
-		while(currentpos < World._fixed.length && indices[currentpos] < znearindex)currentpos++;
+		//console.log('going to draw '+(f_zfarindex-f_znearindex+1)+' + '+(m_zfarindex-m_znearindex+1));
+		// Now we have two arrays we want to merge&draw (just without the merge).
 
-		// Start drawing fixeds primarily, mobiles as we bump into them
-		for(var i = znearindex; i < zfarindex; i++)
+		var m_index = m_znearindex;
+		var f_index = f_znearindex;
+		while(true)
 		{
-			while(currentpos < World._fixed.length && indices[currentpos] == i)
-			{
-				World.drawSingleObject(World._mobile[currentpos]);
-				currentpos++;
-			}
-			World.drawSingleObject(World._fixed[i]);
-		}
-		// Render rest of mobiles
-		for(var i = currentpos; i < World._mobile.length; i++)
-		{
-			var o = World._mobile[i];
-			World.drawSingleObject(o);
-			if(World._depth_func(o.x, o.y, o.z) > zfar)
+			if(m_index >= m_zfarindex && f_index >= f_zfarindex)
 				break;
+
+			if(m_index == m_zfarindex)
+			{
+				for(var i=f_index;i<f_zfarindex;i++)
+					World.drawSingleObject(World._fixed[i]);
+				break;
+			}
+			if(f_index == f_zfarindex)
+			{
+				for(var i=m_index;i<m_zfarindex;i++)
+					World.drawSingleObject(World._mobile[i]);
+				break;
+			}
+
+			var f_d = World._depth_func_obj(World._fixed[f_index]);
+			var m_d = World._depth_func_obj(World._mobile[m_index]);
+
+			if(f_d < m_d)
+			{
+				World.drawSingleObject(World._fixed[f_index++]);
+			}
+			else
+			{
+				World.drawSingleObject(World._mobile[m_index++]);
+			}
 		}
 
-		//console.timeEnd('traversing');
-		/*for(var i = znearindex; i < zfarindex; i++)
-		{
-			World.drawSingleObject(World._fixed[i]);
-		}*/
+		var ctx = Graphics.ctx;
+
+		ctx.fillStyle    = '#000';
+		ctx.font         = '16px sans-serif';
+		ctx.textBaseline = 'top';
+		ctx.fillText  ('Drawing: Fixed: ' + (f_zfarindex-f_znearindex+1)+"/"+World._fixed.length+' Mobile: '+(m_zfarindex-m_znearindex+1)+"/"+World._mobile.length, 0, 0);
+		
 		//console.timeEnd('render');
 		//console.log('Drew ' + (zfarindex-znearindex+1) + ' objects (out of '+World._objects.length+')');
+		//console.log('going to draw '+(f_zfarindex-f_znearindex+1)+' + '+(m_zfarindex-m_znearindex+1));
 	},
 	drawBackground : function()
 	{
@@ -288,6 +297,9 @@ World = {
 	},
 	drawSingleObject : function(obj)
 	{
+		if(!obj.visible)
+			return;
+
 		var g = obj.tiles.g;
 		if((obj.tiles.t & DIRECTED))
 		{
@@ -380,7 +392,7 @@ World = {
 					if(o1.collideFixed)
 					{
 						// Look for nearby fixed objects, collide
-						var fixeds = World._tree.getObjects([o1.x, o1.y, o1.z], 2);
+						var fixeds = World._tree.getObjects([o1.x, o1.y, o1.z], 1.1);
 						for(var a = 0; a < fixeds.length; a++)
 						{
 							World._tryCollideAndResponse(o1, fixeds[a].obj);
@@ -449,14 +461,12 @@ World = {
 				obj.vx *= 0.99;
 				obj.vy *= 0.99;
 				obj.vz *= 0.99;
-			}
-			// reset forces & set gravity ready for next round
-			for(var i = 0; i < World._mobile.length; i++)
-			{
-				var obj = World._mobile[i];
+			
+				// reset forces & set gravity ready for next round
+
 				obj.fx = 0;
 				obj.fy = 0;
-				obj.fz = obj.hasGravity?-0.04*obj.mass/World._physicsIterations : 0;
+				obj.fz = (obj.hasGravity)?(-0.04*obj.mass/World._physicsIterations) : 0;
 			}
 		}
 		//console.timeEnd('physics');
@@ -719,6 +729,7 @@ World.Entity.prototype.fy = 0;
 World.Entity.prototype.fz = 0;
 World.Entity.prototype.hasGravity = true; // whether this object is affected by gravity 
 World.Entity.prototype.collideFixed = true; // should this object collide with fixed objects
+World.Entity.prototype.visible = true; // invisible objects are cheap to draw :)
 World.Entity.prototype.mass = 1;
 World.Entity.prototype.direction = 0;
 World.Entity.prototype.frame = 0; // current frame

@@ -170,11 +170,13 @@
 				<h2>Tech</h2><hr>
 				<p>
 					In the future I hope to improve performance even further by:
-					<ul>
-						<li>Not redrawing every single block again and again every frame. Draw fixed objects to an offscreen canvas once and re-use it as much as possible.</li>
-						<li>Have a closer look at the depth-ordering code.</li>
-						<li>JS not being my major language I suspect there are some inefficient quirks left.</li>
-					</ul>
+				</p>
+				<ul>
+					<li>Not redrawing every single block again and again every frame. Draw fixed objects to an offscreen canvas once and re-use it as much as possible.</li>
+					<li>Have a closer look at the depth-ordering code.</li>
+					<li>JS not being my major language I suspect there are some inefficient quirks left.</li>
+				</ul>
+				<p>
 					I have also thought about adding some online features such as a level editor and a way to publish, share and rate levels. Some intermediary language will be required however since I cannot allow people to run arbitrary Javascript code on other peoples' browsers.
 				</p>
 				<p>
@@ -185,16 +187,16 @@
 				<h2>TODO</h2><hr>
 				<p>
 					Plethora is still far from being a full game. Below is a list of important tasks/objectives waiting for me.
-					<ul>
-						<li>More graphics: Character animation, logo, landscapes, everything. Maybe You can help?</li>
-						<li>A safe level format that allows for basic scripting</li>
-						<li>A level editor</li>
-						<li>A level sharing system</li>
-						<li>Wider browser support</li>
-						<li>More collision shapes for the physics engine. Spheres, Ellipsoids, Tilted surfaces, ...</li>
-						<li>Sound effects and background music?</li>
-					</ul>
 				</p>
+				<ul>
+					<li>More graphics: Character animation, logo, landscapes, everything. Maybe You can help?</li>
+					<li>A safe level format that allows for basic scripting</li>
+					<li>A level editor</li>
+					<li>A level sharing system</li>
+					<li>Wider browser support</li>
+					<li>More collision shapes for the physics engine. Spheres, Ellipsoids, Tilted surfaces, ...</li>
+					<li>Sound effects and background music?</li>
+				</ul>
 			</div>
 			<div id="author-text" class="popup" onclick="show_message()">
 				<h2>Author</h2><hr>
@@ -232,11 +234,17 @@
 			<div id="game">
 				<div id='browser-warning'>
 					<h2>Suboptimal browser detected</h2>
-					Plethora is likely to perform very poorly on your web browser. This may result into crashes and instability in your system. Are you sure you want to continue? <input type="submit" value="Yes!" onclick="reset('yes')"/><input type="submit" value="No!" onclick="document.location = 'http://www.google.com/chrome/';"/>
+					<p>Plethora is likely to perform very poorly on your web browser. This may result into crashes and instability in your system. Are you sure you want to continue?</p>
+					<input type="submit" value="Yes!" onclick="reset('yes')"/>
+					<input type="submit" value="No!" onclick="document.location = 'http://www.google.com/chrome/';"/>
 					<div><img src="plethora.jpg"/></div>
 				</div>
 				<canvas id="canvas" width="640" height="480">
-					<p><h2>You browser doesn't support the new HTML5 &lt;canvas&gt; element.</h2></p><p>Try getting a real browser from Google: <b><a href="http://www.google.com/chrome/">http://www.google.com/chrome/</a></b></p>
+					<h2>You browser doesn't support the new HTML5 &lt;canvas&gt; element.</h2>
+					<p>
+						Try getting a real browser from Google: 
+						<b><a href="http://www.google.com/chrome/">http://www.google.com/chrome/</a></b>
+					</p>
 				</canvas>
 			</div>
 		</div>
