@@ -518,9 +518,21 @@ World = {
 			}
 			if(vx!=0||vy!=0||vz!=0)
 			{
-				fx -= vx/20 + (o1.vx-o2.vx)/50;
-				fy -= vy/20 + (o1.vy-o2.vy)/50;
-				fz -= vz/20 + (o1.vz-o2.vz)/50;
+				var maxf = 0.1; // max surface friction..
+				var xx = (vx + (o1.vx-o2.vx))/4;
+				var yy = (vy + (o1.vy-o2.vy))/4;
+				var zz = (vz + (o1.vz-o2.vz))/4;
+				var d = xx*xx+yy*yy+zz*zz;
+				if(d*d > maxf)
+				{
+					d = Math.sqrt(d);	
+					xx *= maxf/d;
+					yy *= maxf/d;
+					zz *= maxf/d;
+				}
+				fx -= xx;
+				fy -= yy;
+				fz -= zz;
 			}
 			o1.fx += fx;
 			o1.fy += fy;
