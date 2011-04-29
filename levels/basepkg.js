@@ -203,43 +203,39 @@ Base =
 		{
 			var plr = Base.player;
 			var head = Base.player.head;
-			var d = 0.10;
+			var d = 0.15;
 	
 			var movement = [0,0];
 	
 			if(Key.get(KEY_LEFT)){ 
 				movement[0] -= d;
-				movement[1] += d;
 			}
 			if(Key.get(KEY_RIGHT)){ 
 				movement[0] += d;
-				movement[1] -= d;
 			}
 			if(Key.get(KEY_UP)){
-				movement[0] -= d;
 				movement[1] -= d;
 			}
 			if(Key.get(KEY_DOWN)){ 
-				movement[0] += d;
 				movement[1] += d;
 			}
 
 			plr.walkx = movement[0] - plr.vx/20;
 			plr.walky = movement[1] - plr.vy/20;
 
-			if(Key.get(KEY_LEFT) && Key.get(KEY_UP))
+			if(Key.get(KEY_LEFT))
 			{
 				plr.direction = WEST;
 			}
-			else if(Key.get(KEY_UP) && Key.get(KEY_RIGHT))
+			else if(Key.get(KEY_UP))
 			{
 				plr.direction = NORTH;
 			}
-			else if(Key.get(KEY_RIGHT) && Key.get(KEY_DOWN))
+			else if(Key.get(KEY_RIGHT))
 			{
 				plr.direction = EAST;
 			}
-			else if(Key.get(KEY_DOWN) && Key.get(KEY_LEFT))
+			else if(Key.get(KEY_DOWN))
 			{
 				plr.direction = SOUTH;
 			}
