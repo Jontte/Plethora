@@ -205,23 +205,32 @@ Base =
 			var head = Base.player.head;
 			var d = 0.15;
 	
-			var movement = [0,0];
+			var movement_x = 0;
+			var movement_y = 0;
 	
 			if(Key.get(KEY_LEFT)){ 
-				movement[0] -= d;
+				movement_x -= 1;
 			}
 			if(Key.get(KEY_RIGHT)){ 
-				movement[0] += d;
+				movement_x += 1;
 			}
 			if(Key.get(KEY_UP)){
-				movement[1] -= d;
+				movement_y -= 1;
 			}
 			if(Key.get(KEY_DOWN)){ 
-				movement[1] += d;
+				movement_y += 1;
 			}
 
-			plr.walkx = movement[0] - plr.vx/20;
-			plr.walky = movement[1] - plr.vy/20;
+			// Inhibit diagonal movement
+			var dd = Math.sqrt(movement_x*movement_x+movement_y*movement_y);
+			if(dd>0)
+			{
+				movement_x *= d/dd;
+				movement_y *= d/dd;
+			}
+
+			plr.walkx = movement_x - plr.vx/20;
+			plr.walky = movement_y - plr.vy/20;
 
 			if(Key.get(KEY_LEFT))
 			{

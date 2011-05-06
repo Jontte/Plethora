@@ -11,13 +11,9 @@
 			'Testlevel'	=> array('basepkg.js', 'testlevel.js')
 		);
 
-
-	$minify = true;
-
-	$selection = $_GET['level'];
-
-	if(isset($selection))
+	if(isset($_GET['level']))
 	{
+		$selection = $_GET['level'];
 		header('Content-type: text/javascript');
 		
 		if(array_key_exists($selection, $levels))
