@@ -1,8 +1,9 @@
 <?php
 	require('jsmin.php');
 
-	// Configurables
-	$source_directory = '/home/joonas/plethora/';
+// Configurables
+	require('config.php');
+
 	$levels =	
 		array(
 			'Puzzle' 	=> array('basepkg.js', 'puzzle.js'),
