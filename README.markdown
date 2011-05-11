@@ -2,7 +2,7 @@ Plethora
 ========
 
 Plethora is an isometric game engine written in Javascript.
-Copyright 2011 Joonas Haapala. See COPYING for details.
+Plethora is published under the 3-clause BSD license. See COPYING for details.
 
 Level file format
 -----------------
@@ -13,7 +13,7 @@ sound effect, script, etc that levels are made of.
 Here's a sample:
 
 {
-	module: 'PlethoraOriginal',
+	module: 'PlethoraOriginal_v1.0',
 	
 	objects:
 	[
@@ -39,5 +39,9 @@ OBJECT_DEFINITION =
 Contributions
 -------------
 
-Thanks to Roope Isoaho for his contributions to the tileset.
+
+The following people have contributed a great deal of graphics:
+	* Roope "Furry" Isoaho
+	* Mika "GiftOfDeath" Pilssari
+
 

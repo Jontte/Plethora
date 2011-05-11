@@ -3,94 +3,41 @@
  */
 
 var Config = {
-	graphics : 'tileset.png',
 	gamestate : 'halt',
 	FPS: 30,
 	areyousure: false, //Whether the user is willing to try plethora despite using browsers with poor performance
-	timer: false,
-	frame: 0,
-	advance_frame : function()
-	{
-		if(this.frame % 100 == 0 && this.timer == true)
-		{
-			console.timeEnd('100 frames');
-			this.timer = false;
-		}
-		if(this.timer == false)
-		{
-			console.time('100 frames');
-			this.timer = true;
-		}
-		this.frame++;
-	}
+	editor: false //Whether we're in editor mode or not
 };
-
-/* 
- * Internal constants
- */
-
-var NORTH = 0;
-var EAST = 1;
-var SOUTH = 2;
-var WEST = 3;
-
-var DIRECTED		= 1; // Tiles that have separate frames for separate directions
-var ANIMATED		= 2; // Tiles that can be animated
-var ANIMATED_RANDOM = 4; // .. with random frame order
-/*
- * Engine
- */
 var Graphics = {
-	img: {}, // Loaded images are placed here
-	DudeTop :	{
-					t: DIRECTED | ANIMATED, // Animation type
-					g: [ // Tile indexes
-						[[0,3],[1,3],[2,3],[3,3]], // north
-						[[0,4],[1,4],[2,4],[3,4]], // east
-						[[0,2],[1,2],[2,2],[3,2]], // south
-						[[0,5],[1,5],[2,5],[3,5]] // west
-					],
-					c: { // Collision data (dfaults to solid 1x1x1 cube)
-						s: "cylinder", // Cylinder shape
-						r: 0.4, // Radius 
-						h: 1 // Height
-					} 
-				},
-	DudeBottom : {
-					t: DIRECTED | ANIMATED,
-					g: [
-						[[4,3],[5,3],[6,3],[7,3]],
-						[[4,4],[5,4],[6,4],[7,4]],
-						[[4,2],[5,2],[6,2],[7,2]],
-						[[4,5],[5,5],[6,5],[7,5]]
-					],
-					c: {
-						s: "cylinder",
-						r: 0.4,
-						h: 1
-					} 
-				 },
-	HillRugged : {t : DIRECTED, g: [[0,8],[0,10],[0,9],[1,8]]},
-	HillPlain : {t: DIRECTED, g: [[4,8],[4,10],[4,9],[5,8]]},
-	GroundRugged : {t: 0, g:[1,9]},
-	GroundPlain : {t: 0, g: [5,9]},
-	GroundBlock : {t: 0, g: [3,9]},
-	Lift : {t: ANIMATED, g: [[0,6],[1,6],[2,6],[3,6],[4,6],[5,6],[6,6],[7,6],[8,6],[9,6]]},
-	Water: {t: ANIMATED_RANDOM, g: [[2,0],[3,0]]},
-	BarrelWooden: {t: 0, g: [2,1], c: {s: "cylinder", r: 0.40, h: 1}},
-	Crate: {t: 0, g: [3,1], c: {s: "box", l: 1.0, h: 1.0}},
-	Duck: {t: 0, g: [5,1], c: {s: "cylinder", r: 0.2, h: 0.5}},
-	CompanionCube: {t: 0, g: [4,1], c: {s: "box", l: 1.0, h: 1.0}},
-	Shadow: {t: 0, g: [8,1], c: {s: "cylinder", r: 0.51, h: 5}},
-	DarkBlock: {t: 0, g:[0,11], c: {s: 'box', l: 1, h: 0.5}},
-	FenceX: {t: 0, g:[4,0], c: {s: 'box', l: 1, h: 1.0}},
-	FenceY: {t: 0, g:[5,0], c: {s: 'box', l: 1, h: 1.0}},
-	ConveyorBeltX: {t: ANIMATED, g:[[10,0],[11,0],[12,0],[13,0],[14,0]], c: {s: 'box', l: 1, h: 0.5}},
-	ConveyorBeltY: {t: ANIMATED, g:[[10,1],[11,1],[12,1],[13,1],[14,1]], c: {s: 'box', l: 1, h: 0.5}},
-	N64: {t: 0, g: [9,1]},
-	RedBlock: {t: ANIMATED, g: [[8,2],[9,2],[10,2],[11,2],[12,2],[13,2],[14,2],[15,2]]}
+	ctx : null,
+	img : []
 };
 
+$(document).ready(function(){
+
+	$.each(['about','tech','todo','author'], function(idx, dlg){
+		$('#'+dlg+'-text').dialog({
+				modal:true,
+				autoOpen: false,
+				maxHeight: 400,
+				width: 600,
+				resizable: false,
+				draggable: false,
+				show: 'slide',
+				hide: 'slide'
+		});
+		$('#'+dlg+'-button').button().click(function(){
+			$('#'+dlg+'-text').dialog('open');
+		});
+	});
+
+	$('#resetbutton').button().click(reset);
+
+	$('#sw-radio').buttonset();
+	$('#sw-radio-play').click(reset);
+	$('#sw-radio-edit').click(reset);
+	reset();
+});
 
 function reset(areyousure)
 {
@@ -129,20 +76,18 @@ function reset(areyousure)
 
 	// Select & load level
 	var levelname = document.getElementById('lselect').value;
-	document.getElementById('lselect').blur();
-	document.getElementById('selector').blur();
 
 	// The level has been selected! Save it as a cookie
 	setCookie('level_selection', levelname);
 
 	// Load level and initialize
-	var head= document.getElementsByTagName('head')[0];
-	var script= document.createElement('script');
-
-	script.type= 'text/javascript';
-	script.src='index.php?level='+levelname;
-
-	head.appendChild(script);
+	$.getJSON('index.php?level='+levelname, function(json){
+	
+		var use_editor = $('#sw-radio-edit').is(':checked');
+	
+		World.loadLevel(levelname, json, use_editor);
+		initialize();
+	});
 }
 function load_gfx(filename, onload)
 {
@@ -192,17 +137,11 @@ function game_loop()
 		return;
 	}
 
-	Config.advance_frame();
-
 	// Clear screen
 	Graphics.ctx.fillRect (0, 0, 640, 480);  	
 
 	World.render();
 	World.physicsStep();
-	
-	// User defined functions
-	if(level_loop != undefined)
-		level_loop();
 
 	// Reset key states
 	Key.timestep();

@@ -1,14 +1,13 @@
 
 
-function draw(x, y, tilex, tiley, ctx)
+function draw(x, y, tilex, tiley, source, dest)
 {
 	// If no canvas context was specified, use the main canvas
-	if(!ctx)ctx = Graphics.ctx;
-	
+	if(!dest)dest = Graphics.ctx;
 	if(x+32<0||y+32<0||x-32>640||y-32>480)return;
 	
-	ctx.drawImage(
-		Graphics.img['tileset.png'], 
+	dest.drawImage(
+		source, 
 		32*tilex, 32*tiley,	
 		32, 32,
 		Math.floor(x), Math.floor(y),

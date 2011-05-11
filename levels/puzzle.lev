@@ -1,0 +1,11 @@
+{
+	"module" : "PlethoraOriginal",
+	"objects" : [
+		["duck", [0,0,10], 1],
+		["groundrugged", [0,0,0], 0],
+		["groundrugged", [1,0,0], 0],
+		["groundrugged", [0,1,0], 0],
+		["groundrugged", [1,1,0], 0]
+	]	
+}
+

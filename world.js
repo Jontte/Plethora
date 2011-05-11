@@ -1,5 +1,28 @@
 
 World = {
+	/* 
+	 * Constants
+	 */
+	
+	// Directions
+	NORTH 	: 0,
+	EAST 	: 1,
+	SOUTH 	: 2,
+	WEST 	: 3,
+	
+	// Frame flags
+	DIRECTED 		: 1, // Tiles that have separate frames for separate facing directions
+	ANIMATED 		: 2, // Tiles that can be animated
+	ANIMATED_RANDOM : 4, // .. with random frame order
+	
+	// Shape enum
+	BOX: 0,
+	CYLINDER : 1,
+	HEIGTHMAP: 2,
+	
+	/* 
+	 * Internal variables 
+	 */
 	_physicsIterations: 5,
 	_objects: [],
 	_mobile: [], // lists every moving object for quick access
@@ -12,6 +35,11 @@ World = {
 	_cameraPosY: 0,
 	_cameraPosZ: 0,
 	_objectCounter : 0, // Used to assign unique IDs to new objects
+	_colliders: {}, // an array for collision handler functions
+	_classes: {}, // All loaded classes
+	_modules: {}, // All loaded modules
+	_level: '', // Name of currently loaded level
+	_editor: false, // Whether we're in editor mode or not
 	_depth_func: function(x,y,z)
 	{
 		// Depth formula. Used to calculate depth for each object based on their xyz-coordinates
@@ -35,21 +63,47 @@ World = {
 		World._cameraPosY = 0;
 		World._cameraPosZ = 0;
 		World._tree.reset();
+		World._classes = {};
 	},
 	setCameraFocus : function(obj)
 	{
 		World._cameraFocus = obj;
 	},
-	createObject : function(tiles, x, y, z, fixed)
+	addTileset : function(filename)
+	{
+		var img = new Image();
+		img.src = filename;
+		
+		return {
+			image : img
+			/*, other params*/
+		};
+	},
+	addModule : function(modid, object)
+	{
+		World._modules[modid] = object;
+	},
+	addSimpleClass : function(id, params)
+	{
+		if(params.shape == undefined)
+		{
+			// Physics shape defaults to 1x1x1 box
+			params.shape = World.BOX;
+			params.bbox = [[0,0,0],[1,1,1]];
+		}
+		if(params.flags == undefined)
+		{
+			params.flags = 0;
+		}
+		// TODO: Validate params here
+		World._classes[id] = params;
+	},
+	createObject : function(classid, x, y, z, fixed)
 	{
 		if(fixed==undefined)
 			fixed = true;
 		
-		var obj = new World.Entity(tiles, x, y, z, fixed);
-
-		// Physics shape defaults to 1x1x1 box:
-		if(tiles.c == undefined)
-			tiles.c = {s:'box', h:1, l:1};
+		var obj = new World.Entity(classid, x, y, z, fixed);
 
 		World._objects.push(obj);
 
@@ -300,20 +354,20 @@ World = {
 		if(!obj.visible)
 			return;
 
-		var g = obj.tiles.g;
-		if((obj.tiles.t & DIRECTED))
+		var g = obj.shape.tiles;
+		if((obj.shape.flags & World.DIRECTED))
 		{
 			g = g[obj.direction];
 		}
 		
-		if((obj.tiles.t & ANIMATED) || (obj.tiles.t & ANIMATED_RANDOM))
+		if((obj.shape.flags & World.ANIMATED) || (obj.shape.flags & World.ANIMATED_RANDOM))
 		{
 			// Increment frame tick counter
 			obj.frameTick ++;
 			if(obj.frameTick >= Math.abs(obj.frameMaxTicks) && obj.frameMaxTicks != 0)
 			{
 				obj.frameTick = 0;
-				if(obj.tiles.t & ANIMATED_RANDOM)
+				if(obj.shape.flags & World.ANIMATED_RANDOM)
 				{
 					obj.frame = Math.floor(Math.random() * g.length);
 				}
@@ -333,13 +387,16 @@ World = {
 
 		coords.x += 320-focus.x;
 		coords.y += 240-focus.y;
-		draw(coords.x, coords.y, g[0] ,g[1]);
+		draw(coords.x, coords.y, g[0] ,g[1], obj.shape.tileset.image);
 	},
 
 	physicsStep : function()
 	{
 		//console.time('physics');
 		World._tree.maybeOptimize();
+		
+		if(World._editor)
+			return;
 
 		for(var iter = 0; iter < World._physicsIterations; iter++)
 		{
@@ -576,6 +633,72 @@ World = {
 	_collide : function(o1, o2)
 	{
 		// Quick bounding volume checks to rule obvious cases out:
+
+		if(o1.x+1.01 < o2.x) return false;
+		if(o1.x-1.01 > o2.x) return false;
+		if(o1.y+1.01 < o2.y) return false;
+		if(o1.y-1.01 > o2.y) return false;
+		if(o1.z+1.01 < o2.z) return false;
+		if(o1.z-1.01 > o2.z) return false;
+		
+		// Dispatch to dedicated worker functions
+		var collisions = World._colliders[o1.shape.shape][o2.shape.shape](o1,o2);
+		if(collisions.length == 0)
+			return false;
+		
+		// We now have a list of points of collision. We select the one with 
+		// smallest displacement
+		var smallest = -1;
+		var smallestval = 10;
+		for(var i = 0; i < collisions.length; i++)
+		{
+			if(collisions[i].displacement < smallestval || smallest==-1)
+			{
+				smallestval = collisions[i].displacement;
+				smallest = i;
+			}
+		}
+		return collisions[smallest];
+	},
+	_registerCollider : function(type1, type2, fn)
+	{
+		if(World._colliders[type1] == undefined)
+			World._colliders[type1] = {};
+		if(World._colliders[type2] == undefined)
+			World._colliders[type2] = {};
+			
+		World._colliders[type1][type2] = fn;
+		
+		// TODO: Is creating a closure slow or is calling a closure slow?
+		// The alt. option is to have this switch done in each collision 
+		// function separately. That'd suck. 
+		World._colliders[type2][type1] = function(a,b){return fn(b,a);};
+	},
+	loadLevel : function(levelname, json, use_editor)
+	{
+		World._level = levelname;
+		World._editor = use_editor;
+		var module = World._modules[json.module];
+		if(!module)
+		{
+			alert('Module was not found');
+			return;
+		}
+		World.reset();
+		module.load();
+		var objects = json.objects;
+		for(var i = 0; i < objects.length; i++)
+		{
+			var obj = objects[i];
+			var classid = obj[0];
+			var pos = obj[1];
+			var mass = obj[2];
+			var instance = World.createObject(classid, pos[0], pos[1], pos[2], mass==0);
+		}
+	}
+	/*_collide : function(o1, o2)
+	{
+		// Quick bounding volume checks to rule obvious cases out:
 		if(o1.z+o1.tiles.c.h < o2.z)
 			return false;
 		if(o1.z > o2.z+o2.tiles.c.h)
@@ -719,18 +842,30 @@ World = {
 		if(collided)
 			return ret;
 		return false;
-}
+}*/
+	
 };
 
 
-World.Entity = function(tiles, x, y, z, fixed)
+World.Entity = function(classid, x, y, z, fixed)
 {
 	this.x = x; // position
 	this.y = y;
 	this.z = z;
-	this.tiles = tiles;
 	this.fixed = fixed; // take part in dynamics simulation if fixed=false
 	this.id = World._objectCounter++; // Unique id is assigned to each object
+	this.shape = null;
+	
+	// The tile better be loaded with loadTile by now
+	if(classid in World._classes)
+	{
+		this.shape = World._classes[classid];	
+	}
+	else
+	{
+		console.log('Warning: Unknown tile referenced: \''+classid+'\'');
+		throw 'Unknown tile!';
+	}
 }
 
 World.Entity.prototype.vx = 0; // velocity
@@ -747,4 +882,212 @@ World.Entity.prototype.direction = 0;
 World.Entity.prototype.frame = 0; // current frame
 World.Entity.prototype.frameTick = 0; // current tick
 World.Entity.prototype.frameMaxTicks = 1; // ticks to reach until we switch to next frame (0 to disable animation)
+World.Collision = function(nx,ny,nz, displacement)
+{
+	this.nx = nx;
+	this.ny = ny;
+	this.nz = nz;
+	this.displacement = displacement;
+};
+
+// Collision detector functions
+
+function BoxBoxCollision(o1,o2)
+{
+	var dx = o2.x-o1.x;
+	var dy = o2.y-o1.y;
+	var dz = o2.z-o1.z;
+	
+	// Try each axis
+	var d;
+	var ret = [];
+	var x_hit = false;
+	var y_hit = false;
+	var z_hit = false;
+	
+	d =  dx-o1.shape.bbox[1][0]+o2.shape.bbox[0][0];
+	if(d < 0) {
+		ret.push(new World.Collision(1,0,0,-d));
+		x_hit = true;
+	}
+	d =  -dx+o1.shape.bbox[0][0]-o2.shape.bbox[1][0];
+	if(d > 0) {
+		ret.push(new World.Collision(-1,0,0,d));
+		x_hit = true;
+	}
+	d = dy-o1.shape.bbox[1][1]+o2.shape.bbox[0][1];
+	if(d < 0) {
+		ret.push(new World.Collision(0,1,0,-d));
+		y_hit = true;
+	}
+	d = -dy+o1.shape.bbox[0][1]-o2.shape.bbox[1][1];
+	if(d > 0) {
+		ret.push(new World.Collision(0,-1,0,d));
+		y_hit = true;
+	}
+	d = dz-o1.shape.bbox[1][2]+o2.shape.bbox[0][2];
+	if(d < 0) {
+		ret.push(new World.Collision(0,0,1,-d));
+		z_hit = true;
+	}
+	d = -dz+o1.shape.bbox[0][2]-o2.shape.bbox[1][2];
+	if(d > 0) {
+		ret.push(new World.Collision(0,0,-1,d));
+		z_hit = true;
+	}
+	// A collision has to occur on all three axii
+	if(x_hit && y_hit && z_hit)
+		return ret;
+	return [];
+}
+function BoxCylinderCollision(box,cyl)
+{
+	var ret = [];
+
+	var dx = cyl.x-box.x;
+	var dy = cyl.y-box.y;
+	var dz = cyl.z-box.z;
+	
+	var z_hit = false;
+	var xy_hit = false;
+	
+	// Try z-axis
+	var d;
+	
+	d = dz-box.shape.bbox[1][2]+cyl.shape.height[0];
+	if(d <= 0)
+	{
+		z_hit = true;
+		ret.push(new World.Collision(0,0, 1,-d));
+	}
+	d = -dz+box.shape.bbox[0][2]-cyl.shape.height[1];
+	if(d >= 0)
+	{
+		z_hit = true;
+		ret.push(new World.Collision(0,0,-1, d));
+	}
+	if(!z_hit)
+		return [];
+	
+	// Try sides X&Y
+
+	if(	dx >= -0.5+box.shape.bbox[0][0] && 
+		dx <= -0.5+box.shape.bbox[1][0])
+	{
+		d = dy-(cyl.shape.radius-(-0.5-box.shape.bbox[0][1]));
+		if(d <= 0) {
+			xy_hit = true;
+			ret.push(new World.Collision(0, 1,0, -d));
+		}
+		d = dy-(cyl.shape.radius-(-0.5-box.shape.bbox[1][1]));
+		if(d >= 0) {
+			xy_hit = true;
+			ret.push(new World.Collision(0, -1,0, d));
+		}
+	}
+/*	if(	dy >= -0.5+box.tiles.c.bbox[0][1] && 
+		dy <= -0.5+box.tiles.c.bbox[1][1])
+	{
+		d = dx+0.5-box.tiles.c.bbox[0][0] + cyl.tiles.c.r;
+		if(d > 0) {
+			xy_hit = true;
+			ret.push(new World.Collision( 1,0,0, d));
+		}
+		d = -dx+0.5+box.tiles.c.bbox[1][0] - cyl.tiles.c.r;
+		if(d < 0) {
+			xy_hit = true;
+			ret.push(new World.Collision(-1,0,0,-d));
+		}
+	}*/
+	/*if(!xy_hit)
+	{
+		var corners = [
+			[-0.5+box.tiles.c.bbox[0][0],-0.5+box.tiles.c.bbox[0][1]],
+			[-0.5+box.tiles.c.bbox[0][0],-0.5+box.tiles.c.bbox[1][1]],
+			[-0.5+box.tiles.c.bbox[1][0],-0.5+box.tiles.c.bbox[0][1]],
+			[-0.5+box.tiles.c.bbox[1][0],-0.5+box.tiles.c.bbox[1][1]]
+		];
+		var rr = cyl.tiles.c.r * cyl.tiles.c.r;
+		for(var i = 0; i < 4; i++)
+		{
+			dx = cyl.x-(box.x+corners[i][0]);
+			dy = cyl.y-(box.y+corners[i][1]);
+			d = dx*dx+dy*dy;
+			if(d < rr && d > 0)
+			{
+				xy_hit = true;
+				dx /= d;
+				dy /= d;
+				
+				ret.push(new World.Collision(dx,dy,0,cyl.tiles.r-Math.sqrt(d)));
+				
+				break; 
+				// not possible to have collisions with more than one corner
+			}
+		}
+	}*/
+	if(z_hit && xy_hit)
+		return ret;
+	return [];
+}
+function BoxHeightmapCollision(box, hmap)
+{
+	return [];
+}
+function CylinderCylinderCollision(cyl1, cyl2)
+{
+	var ret = [];
+
+	var dx = cyl2.x-cyl1.x;
+	var dy = cyl2.y-cyl1.y;
+	var dz = cyl2.z-cyl1.z;
+	
+	// Try z-axis
+	var d;
+	var topdown = false; // z-axis hit was made
+	
+	d = dz-cyl1.shape.height[1]+cyl2.shape.height[0];
+	if(d <= 0)
+	{
+		topdown = true;
+		ret.push(new World.Collision(0,0, 1,-d));
+	}
+	d = -dz+cyl1.shape.height[0]-cyl2.shape.height[1];
+	if(d >= 0)
+	{
+		topdown = true;
+		ret.push(new World.Collision(0,0,-1, d));
+	}
+	if(!topdown)
+		return ret;
+	
+	var mindist = cyl1.shape.radius + cyl2.shape.radius;
+	
+	dist = dx*dx+dy*dy;
+	d = dist-mindist*mindist;
+	if(d <= 0)
+	{
+		dist = Math.sqrt(dist);
+		var xx = dx/dist;
+		var yy = dy/dist;
+		ret.push(new World.Collision(xx,yy,mindist-dist));
+	}
+	return ret;
+}
+function CylinderHeightmapCollision(cyl, hmap)
+{
+	return [];
+}
+function HeightmapHeightmapCollision(hmap1, hmap2)
+{
+	return [];
+}
+
+World._registerCollider(	World.BOX,			World.BOX,			BoxBoxCollision				);
+World._registerCollider(	World.BOX,			World.CYLINDER,		BoxCylinderCollision		);
+World._registerCollider(	World.BOX,			World.HEIGHTMAP, 	BoxHeightmapCollision		);
+World._registerCollider(	World.CYLINDER,		World.CYLINDER,		CylinderCylinderCollision	);
+World._registerCollider(	World.CYLINDER,		World.HEIGHTMAP,	CylinderHeightmapCollision	);
+World._registerCollider(	World.HEIGHTMAP,	World.HEIGHTMAP,	HeightmapHeightmapCollision	);
+
 
