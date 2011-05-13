@@ -1,41 +1,10 @@
 
-
-function draw(x, y, tilex, tiley, source, dest)
+function sign(x)
 {
-	// If no canvas context was specified, use the main canvas
-	if(!dest)dest = Graphics.ctx;
-	if(x+32<0||y+32<0||x-32>640||y-32>480)return;
-	
-	dest.drawImage(
-		source, 
-		32*tilex, 32*tiley,	
-		32, 32,
-		Math.floor(x), Math.floor(y),
-		32, 32
-	);
+	if(x>0)return 1;
+	else if(x<0)return -1;
+	return 0;
 }
-
-function progressbar(current, max, message)
-{
-	var w = 640;
-	var h = 480;
-
-	var ctx = Graphics.ctx;
-
-	ctx.fillStyle = 'black';
-	ctx.globalAlpha = 0.2;
-	ctx.fillRect (0, 0, 640, 480);		
-	ctx.globalAlpha = 1.0;
-	
-	ctx.fillStyle = 'black';
-	Graphics.ctx.fillRect(w/4,h/4,w/2,h/2);
-	ctx.fillStyle = 'red';
-	Graphics.ctx.fillRect(w/4+50,h/4+50,(w/2-100)*current/max,h/2-100);
-
-	// Force redraw of canvas..
-	document.getElementById('canvas').style.opacity = 1.0-0.001*Math.random();
-}
-
 
 // Sort sortMe by using compare as the comparison function
 function insertionSort(sortMe, compare)

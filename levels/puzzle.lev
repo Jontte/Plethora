@@ -1,11 +1,15 @@
 {
 	"module" : "PlethoraOriginal",
 	"objects" : [
-		["duck", [0,0,10], 1],
-		["groundrugged", [0,0,0], 0],
-		["groundrugged", [1,0,0], 0],
-		["groundrugged", [0,1,0], 0],
-		["groundrugged", [1,1,0], 0]
+		["famouscube", [0,0,4], [1,1,1], 1],
+		["famouscube", [1,0,6], [1,1,1], 1],
+		["famouscube", [0,1,8], [1,1,1], 1],
+		["famouscube", [1,1,10], [1,1,1], 1],
+		["famouscube", [0,0,12], [1,1,1], 1],
+		["groundrugged", [0,0,0], [1,1,1], 0],
+		["groundrugged", [1,0,0], [1,1,1], 0],
+		["groundrugged", [0,1,0], [1,1,1], 0],
+		["groundrugged", [1,1,0], [1,1,1], 0]
 	]	
 }
 
