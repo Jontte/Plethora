@@ -42,7 +42,31 @@ World = {
 	_editor: false, // Whether we're in editor mode or not
 	_depth_func: function(a,b)
 	{
-		// Depth function used to sort objects based on their drawing order
+		// This function answers the following question:
+		// "Is a behind b?" or "Should a be rendered before b?"
+		// Returns null when either way works
+		
+		// Screen projection rectangle check
+		var b1 = Cuboid2Screen(a.x,a.y,a.z,a.bx,a.by,a.bz);
+		var b2 = Cuboid2Screen(b.x,b.y,b.z,b.bx,b.by,b.bz);
+		if(b1.x+b1.w <= b2.x)return null;
+		if(b2.x+b2.w <= b1.x)return null;
+		if(b1.y+b1.h <= b2.y)return null;
+		if(b2.y+b2.h <= b1.y)return null;
+		
+		// check diagonals..
+
+		var mx = (a.bx+b.bx)/2;
+		var my = (a.by+b.by)/2;
+		var mz = (a.bz+b.bz)/2;
+		
+		var p1 = Math.abs(a.x-b.x) >= mx;
+		var p2 = Math.abs(a.y-b.y) >= my;
+		var p3 = Math.abs(a.z-b.z) >= mz;
+
+		if((p1 && p2) || (p2 && p3) || (p3 && p1))
+			return null;
+		
 		// Non-penetrated:
 		if(a.x+a.bx/2 <= b.x-b.bx/2)return true;
 		if(b.x+b.bx/2 <= a.x-a.bx/2)return false;
@@ -58,17 +82,11 @@ World = {
 		if(a.z+a.bz/2 <= b.z)return true;
 		if(b.z+b.bz/2 <= a.z)return false;
 		// Make an educated guess
-		var v = (a.x+a.y+a.z*1.25)-(b.x+b.y+b.z*1.25);
+		var v = (a.x+a.y+a.z)-(b.x+b.y+b.z);
 		if(v<0)return true;
 		if(v>0)return false;
-		if(a.x<b.x)return true;
-		if(a.x>b.x)return false;
-		if(a.y<b.y)return true;
-		if(a.y>b.y)return false;
-		if(a.z<b.z)return true;
-		if(a.z>b.z)return false;
 		// Indeterminate.
-		return !!(Math.round(Math.random()));
+		return null;
 	},
 	reset : function()
 	{
@@ -105,7 +123,7 @@ World = {
 	{
 		World._modules[modid] = object;
 	},
-	addSimpleClass : function(id, params)
+	addClass : function(id, params)
 	{
 		if(params.shape == undefined)
 		{
@@ -119,43 +137,49 @@ World = {
 		// TODO: Validate params here
 		World._classes[id] = params;
 	},
-	createObject : function(classid, pos, size, fixed)
+	createObject : function(classid, pos, size, options)
 	{
-		if(fixed==undefined)
-			fixed = true;
+		if(!options)options = {};
+		if(options.fixed==undefined)
+			options.fixed = true;
 		
-		var obj = new World.Entity(classid, pos, size, fixed);
+		var obj = new World.Entity(classid, pos, size, options.fixed);
 
 		World._objects.push(obj);
 
-		if(fixed==false)
+		if(options.fixed==false)
 		{
-			// Moving objects use sweep&prune
-			World._proxy.push({
-				begin: true,
-				d: 0,
-				obj: obj
-			});
-			World._proxy.push({
-				begin: false,
-				d: 0,
-				obj: obj
-			});
+			if(!options.phantom)
+			{
+				// Moving objects use sweep&prune for collision checking
+				World._proxy.push({
+					begin: true,
+					d: 0,
+					obj: obj
+				});
+				World._proxy.push({
+					begin: false,
+					d: 0,
+					obj: obj
+				});
+			}
 			// And can be accessed quickly thru a separate array as well
 			World._mobile.push(obj); 
 		}
 		else {
 			// Whereas fixed objects go to a large tree for fast broadphase collision testing
 			
-			World._tree.insert({
-				intervals: [
-					{a: pos[0]-size[0]/2, b: size[0]},
-					{a: pos[1]-size[1]/2, b: size[1]},
-					{a: pos[2]-size[2]/2, b: size[2]},
-				],
-				object: obj
-			});
-
+			if(!options.phantom)
+			{
+				World._tree.insert({
+					intervals: [
+						{a: pos[0]-size[0]/2, b: size[0]},
+						{a: pos[1]-size[1]/2, b: size[1]},
+						{a: pos[2]-size[2]/2, b: size[2]},
+					],
+					object: obj
+				});
+			}
 			// ... And to their own quick-access array
 			// Strangely, it's at least 10x faster to sort the array with insertion sort
 			// every time an object is added than to binary search and insert
@@ -222,7 +246,7 @@ World = {
 		// Sort all mobile objects by depth before rendering
 
 		//console.time('sort');
-		
+		/*
 		insertionSort(World._mobile, World._depth_func);
 		
 		var mi = 0;
@@ -231,19 +255,70 @@ World = {
 		{
 			if(World._depth_func(World._mobile[mi], World._fixed[fi]))
 			{
-				World.drawSingleObject(World._mobile[mi]);
+				World.drawObject(World._mobile[mi]);
 				mi++;
 			}
 			else
 			{
-				World.drawSingleObject(World._fixed[fi]);
+				World.drawObject(World._fixed[fi]);
 				fi++;
 			}
 		}
 		for(;mi < World._mobile.length; mi++)
-			World.drawSingleObject(World._mobile[mi]);
+			World.drawObject(World._mobile[mi]);
 		for(;fi < World._fixed.length; fi++)
-			World.drawSingleObject(World._fixed[fi]);
+			World.drawObject(World._fixed[fi]);*/
+		var all_objects = [];
+		all_objects = all_objects.concat(World._fixed);
+		all_objects = all_objects.concat(World._mobile);
+		for(var i = 0;i < all_objects.length; i++)
+		{
+			all_objects[i].internal = {
+				depends: [],
+				visited: false,
+				starter: true
+			};
+		}
+		for(var i = 0;i < all_objects.length; i++)
+		{
+			for(var a = i+1;a < all_objects.length; a++)
+			{
+				var o1 = all_objects[i];
+				var o2 = all_objects[a];
+				
+				var res = World._depth_func(o1, o2);
+				
+				if(res === false)
+				{
+					o2.internal.depends.push(o1);
+					o1.internal.starter = false;
+				}
+				else if(res === true)
+				{
+					o1.internal.depends.push(o2);
+					o2.internal.starter = false;
+				}
+			}
+		}
+		// Graph is built. now flatten it
+		var result = [];
+		
+		function visit(node){
+			if(!node.internal.visited)
+			{
+				node.internal.visited = true;
+				for(var i = 0; i < node.internal.depends.length; i++)
+					visit(node.internal.depends[i]);
+				result.push(node);
+			}
+		}
+		
+		for(var i = 0;i < all_objects.length; i++)
+			if(all_objects[i].internal.starter === true)
+				visit(all_objects[i]);
+		
+		for(var i = result.length-1;i >= 0; i--)
+			World.drawObject(result[i]);
 		//console.timeEnd('sort');
 
 		// Limit object visibility thru zfar and znear (relative to camera coordinates)
@@ -312,13 +387,13 @@ World = {
 			}
 		}*/
 
-		var ctx = Graphics.ctx;
+//		var ctx = Graphics.ctx;
 
-		ctx.fillStyle    = '#000';
-		ctx.font         = '16px sans-serif';
-		ctx.textBaseline = 'top';
+		//ctx.fillStyle    = '#000';
+		//ctx.font         = '16px sans-serif';
+	//	ctx.textBaseline = 'top';
 		//ctx.fillText  ('Drawing: Fixed: ' + (f_zfarindex-f_znearindex+1)+"/"+World._fixed.length+' Mobile: '+(m_zfarindex-m_znearindex+1)+"/"+World._mobile.length, 0, 0);
-		ctx.fillText  ('Drawing: Fixed: ' + fi +' Mobile: '+mi, 0, 0);
+//		ctx.fillText  ('Drawing: Fixed: ' + fi +' Mobile: '+mi, 0, 0);
 		
 		//console.timeEnd('render');
 		//console.log('Drew ' + (zfarindex-znearindex+1) + ' objects (out of '+World._objects.length+')');
@@ -634,8 +709,14 @@ World = {
 			var pos = obj[1];
 			var size = obj[2];
 			var mass = obj[3];
-			var instance = World.createObject(classid, pos, size, mass==0);
+			var instance = World.createObject(classid, pos, size, {fixed: mass==0});
 			instance.mass = mass;
+		}
+		
+		if(World._editor)
+		{
+			// In editor mode we'll need a couple of custom classes and instances
+			World.initEditor();
 		}
 	}
 };
@@ -663,6 +744,9 @@ World.Entity = function(classid, pos, size, fixed)
 		console.log('Warning: Unknown tile referenced: \''+classid+'\'');
 		throw 'Unknown tile!';
 	}
+	// Complex object initialization
+	if('init' in this.shape)
+		this.shape.init.call(this);
 }
 
 World.Entity.prototype.bx = 1; // bbox

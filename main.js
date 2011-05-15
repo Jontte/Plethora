@@ -30,6 +30,10 @@ $(document).ready(function(){
 			$('#'+dlg+'-text').dialog('open');
 		});
 	});
+	
+	var p = $.getUrlVar('editor');
+	if(typeof(p) != 'undefined')
+		$('#sw-radio-edit').attr('checked', 'checked');
 
 	$('#resetbutton').button().click(reset);
 

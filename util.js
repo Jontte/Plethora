@@ -1,4 +1,5 @@
 
+
 function sign(x)
 {
 	if(x>0)return 1;
@@ -65,6 +66,30 @@ function World2Screen(x,y,z)
 		x: (x-y)*16,
 		y: (x+y-2*z)*8
 	};
+}
+
+function Cuboid2Screen(x,y,z,bx,by,bz)
+{
+	var front = ((x+bx/2)+(y+by/2)-2*(z-bz/2))*8;
+	var left = ((x-bx/2)-(y+by/2))*16;
+	var right = ((x+bx/2)-(y-by/2))*16;
+	var top = ((x-bx/2)+(y-by/2)-2*(z+bz/2))*8;
+	return {
+		x: left+16,
+		y: top+16,
+		w: right-left,
+		h: front-top
+	};
+/*	var front = World2Screen(x+bx/2,y+by/2,z-bz/2);
+	var left = World2Screen(x-bx/2,y+by/2,z);
+	var right = World2Screen(x+bx/2,y-by/2,z);
+	var top = World2Screen(x-bx/2,y-by/2,z+bz/2);
+	return {
+		x: left.x+16,
+		y: top.y+16,
+		w: right.x-left.x,
+		h: front.y-top.y
+	};*/
 }
 
 if(!window.console)window.console = {};
@@ -174,4 +199,24 @@ function getCookie(c_name)
 	}
  }
 }
+
+$.extend({
+  getUrlVars: function(){
+    var vars = [], hash;
+    var hashes = window.location.href.slice(window.location.href.indexOf('?') + 1).split('&');
+    for(var i = 0; i < hashes.length; i++)
+    {
+      hash = hashes[i].split('=');
+      if(typeof(hash[1]) == 'undefined')
+      	hash[1] = null;
+      vars.push(hash[0]);
+      vars[hash[0]] = hash[1];
+    }
+    return vars;
+  },
+  getUrlVar: function(name){
+    return $.getUrlVars()[name];
+  }
+});
+
 

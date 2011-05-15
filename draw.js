@@ -112,7 +112,16 @@ World.drawBackground = function()
 		}
 };
 
-World.drawSingleObject = function(obj)
+World.drawObject = function(obj)
+{
+	// Check whether the object is simple or complex
+	if('step' in obj.shape)
+		obj.shape.step.call(obj);
+	else
+		World.drawSimpleObject(obj);
+}
+
+World.drawSimpleObject = function(obj)
 {
 	if(!obj.visible)
 		return;
@@ -151,5 +160,10 @@ World.drawSingleObject = function(obj)
 	coords.x += 320-focus.x;
 	coords.y += 240-focus.y;
 	draw(coords.x, coords.y, g[0] ,g[1], obj.shape.tileset.image);
+	Graphics.ctx.strokeStyle = 'red';
+	var rect = Cuboid2Screen(obj.x,obj.y,obj.z,obj.bx,obj.by,obj.bz);
+	rect.x += 320-focus.x;
+	rect.y += 240-focus.y;
+	Graphics.ctx.strokeRect(rect.x,rect.y,rect.w,rect.h);
 };
 

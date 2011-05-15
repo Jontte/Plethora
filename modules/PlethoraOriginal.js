@@ -9,14 +9,14 @@ World.addModule('PlethoraOriginal',
 	{
 		// Load tiles and graphics
 		var plethora_original = World.addTileset('tileset.png');
-		World.addSimpleClass('duck', {
+		World.addClass('duck', {
 			tileset: plethora_original,
 			tiles : [5,1],
 			shape: World.CYLINDER,
 			radius: 0.3,
 			height: [0,1]
 		});
-		World.addSimpleClass('dudetop', {
+		World.addClass('dudetop', {
 			tileset: plethora_original,
 			flags: World.DIRECTED | World.ANIMATED,
 			tiles: [
@@ -29,7 +29,7 @@ World.addModule('PlethoraOriginal',
 			radius : 0.4,
 			height: [0,1] 
 		});
-		World.addSimpleClass('dudebottom', {
+		World.addClass('dudebottom', {
 			tileset: plethora_original,
 			flags: World.DIRECTED | World.ANIMATED,
 			tiles: [
@@ -136,29 +136,29 @@ World.addModule('PlethoraOriginal',
 				plr.head.direction = plr.direction;
 			}
 		});*/
-		World.addSimpleClass('hillrugged', {
+		World.addClass('hillrugged', {
 			tileset: plethora_original,
 			flags: World.DIRECTED, 
 			tiles: [[0,8],[0,10],[0,9],[1,8]]
 		});
-		World.addSimpleClass('hillplain', {
+		World.addClass('hillplain', {
 			tileset: plethora_original,
 			flags: World.DIRECTED, 
 			tiles: [[4,8],[4,10],[4,9],[5,8]]
 		});
-		World.addSimpleClass('groundrugged', {
+		World.addClass('groundrugged', {
 			tileset: plethora_original,
 			tiles: [1,9]
 		});
-		World.addSimpleClass('groundplain', {
+		World.addClass('groundplain', {
 			tileset: plethora_original,
 			tiles: [5,9]
 		});
-		World.addSimpleClass('groundblock', {
+		World.addClass('groundblock', {
 			tileset: plethora_original,
 			tiles: [3,9]
 		});
-		World.addSimpleClass('lift_simple', {
+		World.addClass('lift_simple', {
 			tileset: plethora_original,
 			flags: World.ANIMATED,
 			tiles: [[0,6],[1,6],[2,6],[3,6],[4,6],[5,6],[6,6],[7,6],[8,6],[9,6]]
@@ -219,100 +219,100 @@ World.addModule('PlethoraOriginal',
 				lift.tiles.c.h = lift.frame/9;
 			}
 		});*/
-		World.addSimpleClass('water', {
+		World.addClass('water', {
 			tileset: plethora_original,
 			flags: World.ANIMATED_RANDOM,
 			tiles: [[2,0],[3,0]]
 		});
-		World.addSimpleClass('barrelwooden', {
+		World.addClass('barrelwooden', {
 			tileset: plethora_original,
 			tiles: [2,1],
 			shape: World.CYLINDER,
 			radius: 0.40, 
 			height: [0,1]
 		});
-		World.addSimpleClass('crate', {
+		World.addClass('crate', {
 			tileset: plethora_original,
 			tiles: [3,1]
 		});
-		World.addSimpleClass('duck', {
+		World.addClass('duck', {
 			tileset: plethora_original,
 			tiles: [5,1],
 			shape: World.CYLINDER,
 			radius: 0.3,
 			height: [0,1]
 		});
-		World.addSimpleClass('famouscube', {
+		World.addClass('famouscube', {
 			tileset: plethora_original,
 			tiles: [4,1]
 		});
-		World.addSimpleClass('shadow', {
+		World.addClass('shadow', {
 			tileset: plethora_original,
 			tiles: [8,1],
 			shape: World.CYLINDER, 
 			radius: 0.5, 
 			height: 1
 		});
-		World.addSimpleClass('darkblock', {
+		World.addClass('darkblock', {
 			tileset: plethora_original,
 			tiles: [0,11], 
 			shape: World.BOX, 
 			bbox: [[0,0,0],[1,1,0.5]]
 		});
-		World.addSimpleClass('fencex', {
+		World.addClass('fencex', {
 			tileset: plethora_original,
 			tiles:[4,0], 
 			shape: World.BOX, 
 			bbox: [[0,0.3,0],[1,0.7,1]]
 		});
-		World.addSimpleClass('fencey', {
+		World.addClass('fencey', {
 			tileset: plethora_original,
 			tiles:[5,0], 
 			shape: World.BOX,
 			bbox: [[0.3,0,0],[0.7,1,1]]
 		});
-		World.addSimpleClass('beltx', {
+		World.addClass('beltx', {
 			tileset: plethora_original,
 			flags: World.ANIMATED, 
 			tiles: [[10,0],[11,0],[12,0],[13,0],[14,0]], 
 			shape: World.BOX,
 			bbox: [[0,0,0],[1,1,0.5]]
 		});
-		World.addSimpleClass('belty', {
+		World.addClass('belty', {
 			tileset: plethora_original,
 			flags: World.ANIMATED, 
 			tiles: [[10,1],[11,1],[12,1],[13,1],[14,1]], 
 			shape: World.BOX, 
 			bbox: [[0,0,0],[1,1,0.5]]
 		});
-		World.addSimpleClass('famouslogo', {
+		World.addClass('famouslogo', {
 			tileset: plethora_original,
 			tiles: [9,1]
 		});
-		World.addSimpleClass('redblock', {
+		World.addClass('redblock', {
 			tileset: plethora_original,
 			flags: World.ANIMATED, 
 			tiles: [[8,2],[9,2],[10,2],[11,2],[12,2],[13,2],[14,2],[15,2]]
 		});
-		World.addSimpleClass('slopesouth', {
+		World.addClass('slopesouth', {
 			tileset: plethora_original,
 			tiles: [4, 8 ], 
 			shape: World.HEIGHTMAP, 
 			corners: [1,1,0,0]
 		});
-		World.addSimpleClass('slopeeast',  {
+		World.addClass('slopeeast',  {
 			tileset: plethora_original,
 			tiles: [5, 8 ], 
 			shape: World.HEIGHTMAP, 
 			corners: [1,0,0,1]
 		});
-		World.addSimpleClass('slopenorth', {
+		World.addClass('slopenorth', {
 			tileset: plethora_original,
 			tiles: [4, 9 ], 
 			shape: World.HEIGHTMAP, 
 			corners: [0,0,1,1]
 		});
-		World.addSimpleClass('slopewest',  {
+		World.addClass('slopewest',  {
 			tileset: plethora_original,
 			tiles: [4, 10], 
 			shape: World.HEIGHTMAP, 
