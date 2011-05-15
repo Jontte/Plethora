@@ -18,6 +18,7 @@ World.addModule('PlethoraOriginal',
 		});
 		World.addClass('dudetop', {
 			tileset: plethora_original,
+			internal: true,
 			flags: World.DIRECTED | World.ANIMATED,
 			tiles: [
 				[[0,3],[1,3],[2,3],[3,3]], // north
@@ -31,6 +32,7 @@ World.addModule('PlethoraOriginal',
 		});
 		World.addClass('dudebottom', {
 			tileset: plethora_original,
+			internal: true,
 			flags: World.DIRECTED | World.ANIMATED,
 			tiles: [
 				[[4,3],[5,3],[6,3],[7,3]],

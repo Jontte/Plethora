@@ -89,8 +89,8 @@ function Screen2WorldXY(x,y,z)
 //	x-=16;
 //	y-=16;
 	return {
-		x: Math.round((x+y-x/2)/16)+z-1,
-		y: Math.round(((y-x/2))/16)+z
+		x: Math.round((x+y-x/2)/16)-1,
+		y: Math.round(((y-x/2))/16)
 	};
 }
 

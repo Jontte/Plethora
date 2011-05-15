@@ -35,7 +35,7 @@
 		<script type="text/javascript" src="jquery-1.5.1.min.js"></script>
 		<script type="text/javascript" src="jquery-ui-1.8.12.custom.min.js"></script>
 		<?php
-			$files = array('util.js', 'jsbih.js', 'key.js', 'world.js', 'draw.js', 'editor.js', 'collision.js', 'audio.js', 'main.js');
+			$files = array('util.js', 'jsbih.js', 'key.js', 'effects.js', 'world.js', 'draw.js', 'editor.js', 'collision.js', 'audio.js', 'main.js');
 
 			$selection = array_keys($levels);
 			$selection = $selection[0];

@@ -38,78 +38,23 @@ function progressbar(current, max, message)
 	document.getElementById('canvas').style.opacity = 1.0-0.001*Math.random();
 }
 
-
-if(!World)World = {};
 World.drawBackground = function()
 {
-		// Clears the screen with a suitable color, renders clouds, etc.
-			
+		// Clears the screen with a suitable color, renders clouds, etc.			
 		// Update world sky color based on camera position
-		var r,g,b;
+		
 		var h = World._cameraPosZ;
 		// Color at zero height
-		var midpoint = [96,127,255];
-		var edges = [-50, 100];
 		
-		cloud_alpha = Math.min(1, Math.max(0, 5*(1-1*Math.abs((h-25)/50))));
-		star_alpha = Math.min(1, Math.max(0, (h-40)/20));
-
-		if(h > 0) {
-			if(h>edges[1])h=edges[1];
-			r = midpoint[0]+(0-midpoint[0])*(h/edges[1]);
-			g = midpoint[1]+(0-midpoint[1])*(h/edges[1]);
-			b = midpoint[2]+(0-midpoint[2])*(h/edges[1]);
-		}
-		else {
-			if(h<edges[0])h=edges[0];
-			r = midpoint[0]+(0-midpoint[0])*(h/edges[0]);
-			g = midpoint[1]+(0-midpoint[1])*(h/edges[0]);
-			b = midpoint[2]+(64-midpoint[2])*(h/edges[0]);
-		}
-		r=Math.floor(r);
-		g=Math.floor(g);
-		b=Math.floor(b);
-
-		// Change sky color
-		Graphics.ctx.fillStyle = 'rgb('+r+','+g+','+b+')';
-
-		// Clear with sky color
-		Graphics.ctx.fillRect (0, 0, 640, 480);		
+		h+=100;
+		h /= 100;
 		
-		// Draw stars
-		if(star_alpha > 0.001)
-		{
-			Graphics.ctx.globalAlpha = star_alpha;
-			Graphics.ctx.fillStyle = Graphics.ctx.createPattern(Graphics.img['stars.png'], 'repeat');
-			Graphics.ctx.fillRect (0, 0, 640, 480);		
-			Graphics.ctx.globalAlpha = 1.0;
-		}
-		// Draw wrapping clouds. We can skip drawing altogether if alpha = 0
-		if(cloud_alpha > 0.001)
-		{
-			var camerapos = World2Screen(World._cameraPosX, World._cameraPosY, World._cameraPosZ);
-	
-			// Calculate alpha for clouds
-			Graphics.ctx.globalAlpha = cloud_alpha;
-	
-			// Filenames and offsets I made up
-			var clouds = [
-				['cloud1.png', 800, 200],
-				['cloud2.png', 200, 600],
-				['cloud3.png', 10, 300],
-				['cloud4.png', 500, 100],
-				['cloud5.png', 800, 400]
-			];
-			function clampwrap(x, loop){while(x<0)x+= loop; return x % loop;}
-			for(var i = 0; i < clouds.length; i++)
-			{
-				Graphics.ctx.drawImage(
-					Graphics.img[clouds[i][0]], 
-					clampwrap(clouds[i][1]-camerapos.x,640*2)-320,
-					clampwrap(clouds[i][2]-camerapos.y,480*2)-240);
-			}
-			Graphics.ctx.globalAlpha = 1.0;
-		}
+		if(h<0)h=0;
+		if(h>1)h=1;	
+		
+		World.background.scene.draw(Graphics.ctx, 1.0-h);
+		//var camerapos = World2Screen(World._cameraPosX, World._cameraPosY, World._cameraPosZ);
+		
 };
 
 World.drawObject = function(obj)

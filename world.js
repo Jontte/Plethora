@@ -39,9 +39,15 @@ World = {
 	_classes: {}, // All loaded classes
 	_modules: {}, // All loaded modules
 	_level: '', // Name of currently loaded level
-	_editor: false, // Whether we're in editor mode or not
+	_editor: {
+		online: false // Whether we're in editor mode or not
+	},
 	mouseX: 0,
 	mouseY: 0,
+	background: { // Background rendering
+		scene : new Effects.SunsetBackground(0,0,640,480),
+		clouds: []
+	},
 	_depth_func: function(a,b)
 	{
 		// This function answers the following question:
@@ -66,7 +72,15 @@ World = {
 		var p2 = Math.abs(a.y-b.y) >= my;
 		var p3 = Math.abs(a.z-b.z) >= mz;
 
-		if((p1 && p2) || (p2 && p3) || (p3 && p1))
+
+		if((a.x-b.x >= mx) && 
+		   (a.y-b.y >= my) && 
+		   (a.z-b.z >= mz))return false;
+		if((b.x-a.x >= mx) && 
+		   (b.y-a.y >= my) && 
+		   (b.z-a.z >= mz))return true;
+
+		if(((p1 && p2) || (p2 && p3) || (p3 && p1)))
 			return null;
 		
 		// Non-penetrated:
@@ -137,15 +151,19 @@ World = {
 			params.flags = 0;
 		}
 		// TODO: Validate params here
+		params.id = id;
 		World._classes[id] = params;
 	},
 	createObject : function(classid, pos, size, options)
 	{
 		if(!options)options = {};
+		
 		if(options.fixed==undefined)
 			options.fixed = true;
 		
 		var obj = new World.Entity(classid, pos, size, options.fixed);
+		if(options.user!=undefined)
+			obj.user = options.user;
 
 		World._objects.push(obj);
 
@@ -170,7 +188,6 @@ World = {
 		}
 		else {
 			// Whereas fixed objects go to a large tree for fast broadphase collision testing
-			
 			if(!options.phantom)
 			{
 				World._tree.insert({
@@ -183,10 +200,7 @@ World = {
 				});
 			}
 			// ... And to their own quick-access array
-			// Strangely, it's at least 10x faster to sort the array with insertion sort
-			// every time an object is added than to binary search and insert
 			World._fixed.push(obj);
-			insertionSort(World._fixed, World._depth_func);
 		}
 		return obj;
 	},
@@ -270,23 +284,21 @@ World = {
 			World.drawObject(World._mobile[mi]);
 		for(;fi < World._fixed.length; fi++)
 			World.drawObject(World._fixed[fi]);*/
-		var all_objects = [];
-		all_objects = all_objects.concat(World._fixed);
-		all_objects = all_objects.concat(World._mobile);
-		for(var i = 0;i < all_objects.length; i++)
+		var wo = World._objects;
+		for(var i = 0;i < wo.length; i++)
 		{
-			all_objects[i].internal = {
+			wo[i].internal = {
 				depends: [],
 				visited: false,
 				starter: true
 			};
 		}
-		for(var i = 0;i < all_objects.length; i++)
+		for(var i = 0;i < wo.length; i++)
 		{
-			for(var a = i+1;a < all_objects.length; a++)
+			for(var a = i+1;a < wo.length; a++)
 			{
-				var o1 = all_objects[i];
-				var o2 = all_objects[a];
+				var o1 = wo[i];
+				var o2 = wo[a];
 				
 				var res = World._depth_func(o1, o2);
 				
@@ -315,97 +327,22 @@ World = {
 			}
 		}
 		
-		for(var i = 0;i < all_objects.length; i++)
-			if(all_objects[i].internal.starter === true)
-				visit(all_objects[i]);
+		for(var i = 0;i < wo.length; i++)
+			if(wo[i].internal.starter === true)
+				visit(wo[i]);
 		
 		for(var i = result.length-1;i >= 0; i--)
 			World.drawObject(result[i]);
 		//console.timeEnd('sort');
-
-		// Limit object visibility thru zfar and znear (relative to camera coordinates)
-		/*var cameradepth = World._depth_func(
-			World._cameraPosX,
-			World._cameraPosY,
-			World._cameraPosZ
-			);
-
-		var znear = -30 + cameradepth;
-		var zfar =   30 + cameradepth;
 		
-		// Find boundary indexes from fixed and mobile objs thru binary search
-		
-		// fixed.
-		var f_znearindex;
-		var f_zfarindex;
-		
-		f_znearindex = lower_bound(World._fixed, 0, World._fixed.length, znear, World._depth_func_obj);
-		f_zfarindex =  lower_bound(World._fixed, 0, World._fixed.length, zfar, World._depth_func_obj);
-		if(f_znearindex == -1)f_znearindex = 0;
-		if(f_zfarindex == -1)f_zfarindex = World._fixed.length;
-
-		// mobile.
-		var m_znearindex;
-		var m_zfarindex;
-		
-		m_znearindex = lower_bound(World._mobile, 0, World._mobile.length, znear, World._depth_func_obj);
-		m_zfarindex =  lower_bound(World._mobile, 0, World._mobile.length, zfar, World._depth_func_obj);
-		if(m_znearindex == -1)m_znearindex = 0;
-		if(m_zfarindex == -1)m_zfarindex = World._mobile.length;
-
-		//console.log('going to draw '+(f_zfarindex-f_znearindex+1)+' + '+(m_zfarindex-m_znearindex+1));
-		// Now we have two arrays we want to merge&draw (just without the merge).
-
-		var m_index = m_znearindex;
-		var f_index = f_znearindex;
-		while(true)
-		{
-			if(m_index >= m_zfarindex && f_index >= f_zfarindex)
-				break;
-
-			if(m_index == m_zfarindex)
-			{
-				for(var i=f_index;i<f_zfarindex;i++)
-					World.drawSingleObject(World._fixed[i]);
-				break;
-			}
-			if(f_index == f_zfarindex)
-			{
-				for(var i=m_index;i<m_zfarindex;i++)
-					World.drawSingleObject(World._mobile[i]);
-				break;
-			}
-
-			var f_d = World._depth_func_obj(World._fixed[f_index]);
-			var m_d = World._depth_func_obj(World._mobile[m_index]);
-
-			if(f_d < m_d)
-			{
-				World.drawSingleObject(World._fixed[f_index++]);
-			}
-			else
-			{
-				World.drawSingleObject(World._mobile[m_index++]);
-			}
-		}*/
-
-//		var ctx = Graphics.ctx;
-
-		//ctx.fillStyle    = '#000';
-		//ctx.font         = '16px sans-serif';
-	//	ctx.textBaseline = 'top';
-		//ctx.fillText  ('Drawing: Fixed: ' + (f_zfarindex-f_znearindex+1)+"/"+World._fixed.length+' Mobile: '+(m_zfarindex-m_znearindex+1)+"/"+World._mobile.length, 0, 0);
-//		ctx.fillText  ('Drawing: Fixed: ' + fi +' Mobile: '+mi, 0, 0);
-		
-		//console.timeEnd('render');
-		//console.log('Drew ' + (zfarindex-znearindex+1) + ' objects (out of '+World._objects.length+')');
-		//console.log('going to draw '+(f_zfarindex-f_znearindex+1)+' + '+(m_zfarindex-m_znearindex+1));
+		if(World._editor.online)
+			World.editorStep();
 	},
 	physicsStep : function()
 	{
 		//console.time('physics');
 		
-		if(World._editor)
+		if(World._editor.online)
 			return;
 
 		for(var iter = 0; iter < World._physicsIterations; iter++)
@@ -694,7 +631,7 @@ World = {
 	loadLevel : function(levelname, json, use_editor)
 	{
 		World._level = levelname;
-		World._editor = use_editor;
+		World._editor.online = use_editor;
 		var module = World._modules[json.module];
 		if(!module)
 		{
@@ -715,7 +652,7 @@ World = {
 			instance.mass = mass;
 		}
 		
-		if(World._editor)
+		if(World._editor.online)
 		{
 			// In editor mode we'll need a couple of custom classes and instances
 			World.initEditor();
