@@ -159,11 +159,15 @@ World.drawSimpleObject = function(obj)
 
 	coords.x += 320-focus.x;
 	coords.y += 240-focus.y;
+	
+	Graphics.ctx.globalAlpha = obj.alpha;
 	draw(coords.x, coords.y, g[0] ,g[1], obj.shape.tileset.image);
-	Graphics.ctx.strokeStyle = 'red';
+	Graphics.ctx.globalAlpha = 1;
+	/*Graphics.ctx.strokeStyle = 'red';
+	
 	var rect = Cuboid2Screen(obj.x,obj.y,obj.z,obj.bx,obj.by,obj.bz);
 	rect.x += 320-focus.x;
 	rect.y += 240-focus.y;
-	Graphics.ctx.strokeRect(rect.x,rect.y,rect.w,rect.h);
+	Graphics.ctx.strokeRect(rect.x,rect.y,rect.w,rect.h);*/
 };
 

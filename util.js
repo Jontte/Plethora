@@ -80,16 +80,18 @@ function Cuboid2Screen(x,y,z,bx,by,bz)
 		w: right-left,
 		h: front-top
 	};
-/*	var front = World2Screen(x+bx/2,y+by/2,z-bz/2);
-	var left = World2Screen(x-bx/2,y+by/2,z);
-	var right = World2Screen(x+bx/2,y-by/2,z);
-	var top = World2Screen(x-bx/2,y-by/2,z+bz/2);
+}
+
+function Screen2WorldXY(x,y,z)
+{
+	// Project (x,y) to a XY-plane in world with height Z
+	
+//	x-=16;
+//	y-=16;
 	return {
-		x: left.x+16,
-		y: top.y+16,
-		w: right.x-left.x,
-		h: front.y-top.y
-	};*/
+		x: Math.round((x+y-x/2)/16)+z-1,
+		y: Math.round(((y-x/2))/16)+z
+	};
 }
 
 if(!window.console)window.console = {};

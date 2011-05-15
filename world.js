@@ -40,6 +40,8 @@ World = {
 	_modules: {}, // All loaded modules
 	_level: '', // Name of currently loaded level
 	_editor: false, // Whether we're in editor mode or not
+	mouseX: 0,
+	mouseY: 0,
 	_depth_func: function(a,b)
 	{
 		// This function answers the following question:
@@ -758,6 +760,7 @@ World.Entity.prototype.vz = 0;
 World.Entity.prototype.fx = 0; // force
 World.Entity.prototype.fy = 0;
 World.Entity.prototype.fz = 0;
+World.Entity.prototype.alpha = 1; // alpha used in drawing. 0 = completely transparent, 1 = zero transparency
 World.Entity.prototype.hasGravity = true; // whether this object is affected by gravity 
 World.Entity.prototype.collideFixed = true; // should this object collide with fixed objects
 World.Entity.prototype.visible = true; // invisible objects are cheap to draw :)

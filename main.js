@@ -15,6 +15,13 @@ var Graphics = {
 
 $(document).ready(function(){
 
+	// Start capturing mouse position...
+	$('#canvas').mousemove(function(e){
+		var x = e.pageX - this.offsetLeft;
+		var y = e.pageY - this.offsetTop;
+		World.mouseX = x;
+		World.mouseY = y;
+  	}); 
 	$.each(['about','tech','todo','author'], function(idx, dlg){
 		$('#'+dlg+'-text').dialog({
 				modal:true,
