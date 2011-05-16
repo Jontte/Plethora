@@ -29,6 +29,7 @@ World = {
 	_fixed : [], // same for fixed objects
 	_proxy: [], // broadphase sweep & prune proxy array
 	_tree: new jsBIH(3), // Tree structure for static objects
+	_renderProxy: [], // proxy objects for separate sweep&prune used in rendering
 	_links: [],
 	_cameraFocus: null,
 	_cameraPosX: 0,
@@ -123,6 +124,7 @@ World = {
 		World._cameraPosY = 0;
 		World._cameraPosZ = 0;
 		World._tree = new jsBIH(3);
+		World._renderProxy = [];
 		World._classes = {};
 		World._level = '';
 	},
@@ -172,6 +174,18 @@ World = {
 
 		World._objects.push(obj);
 
+		// Objects have to be added to the renderProxy as well
+		World._renderProxy.push({
+			begin: true,
+			d: 0,
+			obj: obj
+		});
+		World._renderProxy.push({
+			begin: false,
+			d: 0,
+			obj: obj
+		});
+		
 		// If in editor mode, all objects appear movable
 		if(options.fixed==false || World._editor.online == true) 
 		{
@@ -216,6 +230,17 @@ World = {
 		if(idx != -1)
 			World._objects.remove(idx);	
 
+		// renderproxy
+		for(var i = 0; i < World._renderProxy.length; i++)
+		{	
+			var p = World._renderProxy[i];
+			if(p.obj == obj)
+			{
+				World._renderProxy.remove(i);
+				i--;
+				continue;
+			}
+		}
 		// If in editor mode, all objects appear movable
 		if(World._editor.online) 
 		{
@@ -283,8 +308,8 @@ World = {
 	},
 	render : function()
 	{
+		var ctx = Graphics.ctx;
 		//console.time('render');
-
 
 		// Update camera position
 		if(World._cameraFocus != null)
@@ -305,25 +330,62 @@ World = {
 				starter: true
 			};
 		}
-		for(var i = 0;i < wo.length; i++)
+		
+		// Initialize proxy array
+		for(var i = 0 ; i < World._renderProxy.length; i++)
 		{
-			for(var a = i+1;a < wo.length; a++)
+			var p = World._renderProxy[i];
+			var o = p.obj;
+			p.d = (o.x - o.y+1)*16 + ((p.begin==true)?-1:1) * 16*(o.bx+o.by)/2;
+			
+			/*
+			ctx.strokeStyle ='red';
+			ctx.beginPath();
+			ctx.moveTo(p.d, 0);
+			ctx.lineTo(p.d, 480);
+			ctx.closePath();
+			ctx.stroke();*/
+		}
+
+		// Sort it
+		insertionSort(World._renderProxy, function(a,b){
+			return a.d < b.d;
+		});
+		
+		// Thanks to sweep n prune, we dont have to check each object pair
+
+		var objectbuffer = {};
+		var comparisons  = 0;
+		for(var i = 0; i < World._renderProxy.length; i++)
+		{
+			var p = World._renderProxy[i];
+			if(p.begin == false)
+			{			
+				// Remove object from buffer
+				delete objectbuffer[p.obj.id];
+			}
+			else
 			{
-				var o1 = wo[i];
-				var o2 = wo[a];
-				
-				var res = World._depth_func(o1, o2);
-				
-				if(res === false)
-				{
-					o2.internal.depends.push(o1);
-					o1.internal.starter = false;
-				}
-				else if(res === true)
-				{
-					o1.internal.depends.push(o2);
-					o2.internal.starter = false;
-				}
+				$.each(objectbuffer, function(key, val){
+					// verify val collides p...
+					var o1 = p.obj;
+					var o2 = val.obj;
+					var res = World._depth_func(o1, o2);
+					comparisons++;
+					if(res === false)
+					{
+						o2.internal.depends.push(o1);
+						o1.internal.starter = false;
+					}
+					else if(res === true)
+					{
+						o1.internal.depends.push(o2);
+						o2.internal.starter = false;
+					}
+				});
+
+				// Add object to buffer 
+				objectbuffer[p.obj.id] = p;
 			}
 		}
 		// Graph is built. now flatten it
@@ -359,7 +421,7 @@ World = {
 		ctx.font         = '16px sans-serif';
 		ctx.textAlign = 'left';
 		ctx.textBaseline = 'top';
-		ctx.fillText  ('Objects: '+World._objects.length, 30, 30);
+		ctx.fillText  ('Objects: '+World._objects.length + ' depth comparisons: ' + comparisons, 30, 30);
 	},
 	physicsStep : function()
 	{

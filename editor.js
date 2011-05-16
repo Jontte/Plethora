@@ -31,6 +31,40 @@ World.initEditor = function()
 		},
 		step: function()
 		{
+			var wec = World._editor.classBrowser;
+			if(!wec.open)
+			{
+				// Keyboard movement
+				if(Key.changed(KEY_UP) && Key.get(KEY_UP))
+				{
+					this.z++;
+					World._cameraPosZ++;
+				}
+				if(Key.changed(KEY_DOWN) && Key.get(KEY_DOWN))
+				{
+					this.z--;
+					World._cameraPosZ--;
+				}
+			
+				
+				// mouse movement
+				var pos = Screen2WorldXY(World.mouseX-320, World.mouseY-240, this.z-0.5);
+				this.x = pos.x;
+				this.y = pos.y;
+			
+				// This object will control the alpha of all other objects..
+			
+				for(var i = 0; i < World._objects.length; i++)
+				{
+					var o = World._objects[i];
+					if(o.z-o.bz/2 > this.z)
+						o.alpha = 0.2;
+					else if(o.z+o.bz/2 <= this.z)
+						o.alpha = 1.0;
+					else
+						o.alpha = 1.0;
+				}
+			}
 			// fill screen with transparent tiling...
 			
 			Graphics.ctx.save();
@@ -54,39 +88,6 @@ World.initEditor = function()
 				draw(coords.x, coords.y, c[0], c[1], World._editor.tileset.image);
 			}
 			Graphics.ctx.restore();
-			
-			var wec = World._editor.classBrowser;
-			if(!wec.open)
-			{
-				// Keyboard movement
-				if(Key.changed(KEY_UP) && Key.get(KEY_UP))
-				{
-					this.z++;
-					World._cameraPosZ++;
-				}
-				if(Key.changed(KEY_DOWN) && Key.get(KEY_DOWN))
-				{
-					this.z--;
-					World._cameraPosZ--;
-				}
-			
-				var pos = Screen2WorldXY(World.mouseX-320, World.mouseY-240, this.z-0.5);
-				this.x = pos.x;
-				this.y = pos.y;
-			
-				// This object will control the alpha of all other objects..
-			
-				for(var i = 0; i < World._objects.length; i++)
-				{
-					var o = World._objects[i];
-					if(o.z-o.bz/2 > this.z)
-						o.alpha = 0.2;
-					else if(o.z+o.bz/2 <= this.z)
-						o.alpha = 1.0;
-					else
-						o.alpha = 1.0;
-				}
-			}
 		}
 	});
 	/* This class is a phantom that appears under mouse cursor*/
