@@ -11,6 +11,7 @@ World.addModule('PlethoraOriginal',
 		var plethora_original = World.addTileset('tileset.png');
 		World.addClass('duck', {
 			tileset: plethora_original,
+			category: 'misc',
 			tiles : [5,1],
 			shape: World.CYLINDER,
 			radius: 0.3,
@@ -138,30 +139,24 @@ World.addModule('PlethoraOriginal',
 				plr.head.direction = plr.direction;
 			}
 		});*/
-		World.addClass('hillrugged', {
-			tileset: plethora_original,
-			flags: World.DIRECTED, 
-			tiles: [[0,8],[0,10],[0,9],[1,8]]
-		});
-		World.addClass('hillplain', {
-			tileset: plethora_original,
-			flags: World.DIRECTED, 
-			tiles: [[4,8],[4,10],[4,9],[5,8]]
-		});
 		World.addClass('groundrugged', {
 			tileset: plethora_original,
+			category: 'terrain',
 			tiles: [1,9]
 		});
 		World.addClass('groundplain', {
 			tileset: plethora_original,
+			category: 'terrain',
 			tiles: [5,9]
 		});
 		World.addClass('groundblock', {
 			tileset: plethora_original,
+			category: 'terrain',
 			tiles: [3,9]
 		});
-		World.addClass('lift_simple', {
+		World.addClass('lift', {
 			tileset: plethora_original,
+			category: 'terrain',
 			flags: World.ANIMATED,
 			tiles: [[0,6],[1,6],[2,6],[3,6],[4,6],[5,6],[6,6],[7,6],[8,6],[9,6]]
 		});
@@ -223,11 +218,13 @@ World.addModule('PlethoraOriginal',
 		});*/
 		World.addClass('water', {
 			tileset: plethora_original,
+			category: 'terrain',
 			flags: World.ANIMATED_RANDOM,
 			tiles: [[2,0],[3,0]]
 		});
 		World.addClass('barrelwooden', {
 			tileset: plethora_original,
+			category: 'terrain',
 			tiles: [2,1],
 			shape: World.CYLINDER,
 			radius: 0.40, 
@@ -235,21 +232,17 @@ World.addModule('PlethoraOriginal',
 		});
 		World.addClass('crate', {
 			tileset: plethora_original,
+			category: 'misc',
 			tiles: [3,1]
-		});
-		World.addClass('duck', {
-			tileset: plethora_original,
-			tiles: [5,1],
-			shape: World.CYLINDER,
-			radius: 0.3,
-			height: [0,1]
 		});
 		World.addClass('famouscube', {
 			tileset: plethora_original,
+			category: 'misc',
 			tiles: [4,1]
 		});
 		World.addClass('shadow', {
 			tileset: plethora_original,
+			internal: true,
 			tiles: [8,1],
 			shape: World.CYLINDER, 
 			radius: 0.5, 
@@ -257,24 +250,28 @@ World.addModule('PlethoraOriginal',
 		});
 		World.addClass('darkblock', {
 			tileset: plethora_original,
-			tiles: [0,11], 
+			category: 'architecture',
+			tiles: [0,11],
 			shape: World.BOX, 
 			bbox: [[0,0,0],[1,1,0.5]]
 		});
 		World.addClass('fencex', {
 			tileset: plethora_original,
+			category: 'architecture',
 			tiles:[4,0], 
 			shape: World.BOX, 
 			bbox: [[0,0.3,0],[1,0.7,1]]
 		});
 		World.addClass('fencey', {
 			tileset: plethora_original,
+			category: 'architecture',
 			tiles:[5,0], 
 			shape: World.BOX,
 			bbox: [[0.3,0,0],[0.7,1,1]]
 		});
 		World.addClass('beltx', {
 			tileset: plethora_original,
+			category: 'transport',
 			flags: World.ANIMATED, 
 			tiles: [[10,0],[11,0],[12,0],[13,0],[14,0]], 
 			shape: World.BOX,
@@ -282,6 +279,7 @@ World.addModule('PlethoraOriginal',
 		});
 		World.addClass('belty', {
 			tileset: plethora_original,
+			category: 'transport',
 			flags: World.ANIMATED, 
 			tiles: [[10,1],[11,1],[12,1],[13,1],[14,1]], 
 			shape: World.BOX, 
@@ -289,33 +287,39 @@ World.addModule('PlethoraOriginal',
 		});
 		World.addClass('famouslogo', {
 			tileset: plethora_original,
+			category: 'misc',
 			tiles: [9,1]
 		});
 		World.addClass('redblock', {
 			tileset: plethora_original,
+			category: 'misc',
 			flags: World.ANIMATED, 
 			tiles: [[8,2],[9,2],[10,2],[11,2],[12,2],[13,2],[14,2],[15,2]]
 		});
 		World.addClass('slopesouth', {
 			tileset: plethora_original,
+			category: 'terrain',
 			tiles: [4, 8 ], 
 			shape: World.HEIGHTMAP, 
 			corners: [1,1,0,0]
 		});
 		World.addClass('slopeeast',  {
 			tileset: plethora_original,
+			category: 'terrain',
 			tiles: [5, 8 ], 
 			shape: World.HEIGHTMAP, 
 			corners: [1,0,0,1]
 		});
 		World.addClass('slopenorth', {
 			tileset: plethora_original,
+			category: 'terrain',
 			tiles: [4, 9 ], 
 			shape: World.HEIGHTMAP, 
 			corners: [0,0,1,1]
 		});
 		World.addClass('slopewest',  {
 			tileset: plethora_original,
+			category: 'terrain',
 			tiles: [4, 10], 
 			shape: World.HEIGHTMAP, 
 			corners: [0,1,1,0]

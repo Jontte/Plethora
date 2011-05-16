@@ -15,6 +15,12 @@ var Graphics = {
 
 $(document).ready(function(){
 
+	// Disable context menu on right click
+	$(function() {
+        $(this).bind("contextmenu", function(e) {
+            e.preventDefault();
+        });
+    }); 
 	// Start capturing mouse position...
 	$('#canvas').mousemove(function(e){
 		var x = e.pageX - this.offsetLeft;

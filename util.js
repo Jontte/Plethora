@@ -7,6 +7,13 @@ function sign(x)
 	return 0;
 }
 
+function wrap(val, max)
+{
+	while(val < 0)val += max;
+	while(val >= max)val -= max;
+	return val;
+}
+
 // Sort sortMe by using compare as the comparison function
 function insertionSort(sortMe, compare)
 {
@@ -89,8 +96,8 @@ function Screen2WorldXY(x,y,z)
 //	x-=16;
 //	y-=16;
 	return {
-		x: Math.round((x+y-x/2)/16)-1,
-		y: Math.round(((y-x/2))/16)
+		x: Math.round((x+y-x/2)/16)-2,
+		y: Math.round(((y-x/2))/16)-1
 	};
 }
 
@@ -201,6 +208,13 @@ function getCookie(c_name)
 	}
  }
 }
+
+// Array Remove - By John Resig (MIT Licensed)
+Array.prototype.remove = function(from, to) {
+  var rest = this.slice((to || from) + 1 || this.length);
+  this.length = from < 0 ? this.length + from : from;
+  return this.push.apply(this, rest);
+};
 
 $.extend({
   getUrlVars: function(){

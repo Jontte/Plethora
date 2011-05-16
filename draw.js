@@ -70,6 +70,8 @@ World.drawSimpleObject = function(obj)
 {
 	if(!obj.visible)
 		return;
+	if(obj.alpha <= 0.0001)
+		return;
 
 	var g = obj.shape.tiles;
 	if((obj.shape.flags & World.DIRECTED))

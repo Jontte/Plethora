@@ -40,7 +40,8 @@ World = {
 	_modules: {}, // All loaded modules
 	_level: '', // Name of currently loaded level
 	_editor: {
-		online: false // Whether we're in editor mode or not
+		online: false, // Whether we're in editor mode or not
+		proxy: [] // Separate object collision proxy for all objects in editor mode
 	},
 	mouseX: 0,
 	mouseY: 0,
@@ -68,20 +69,24 @@ World = {
 		var my = (a.by+b.by)/2;
 		var mz = (a.bz+b.bz)/2;
 		
-		var p1 = Math.abs(a.x-b.x) >= mx;
-		var p2 = Math.abs(a.y-b.y) >= my;
-		var p3 = Math.abs(a.z-b.z) >= mz;
+		var p1a = (a.x-b.x) >= mx;
+		var p2a = (a.y-b.y) >= my;
+		var p3a = (a.z-b.z) >= mz;
+			
+		var p1b = (a.x-b.x) <= -mx;
+		var p2b = (a.y-b.y) <= -my;
+		var p3b = (a.z-b.z) <= -mz;
 
-
-		if((a.x-b.x >= mx) && 
-		   (a.y-b.y >= my) && 
-		   (a.z-b.z >= mz))return false;
-		if((b.x-a.x >= mx) && 
-		   (b.y-a.y >= my) && 
-		   (b.z-a.z >= mz))return true;
-
-		if(((p1 && p2) || (p2 && p3) || (p3 && p1)))
-			return null;
+		// we always prefer nulls where possible since adding unnecessary 
+		// connections to the acyclic rendering graph can potentially make 
+		// calculation much more complicated
+		
+		if(p1a&&p2b)return null;
+		if(p2a&&p1b)return null;
+		if(p1a&&p3b)return null;
+		if(p2a&&p3b)return null;
+		if(p1b&&p3a)return null;
+		if(p2b&&p3a)return null;
 		
 		// Non-penetrated:
 		if(a.x+a.bx/2 <= b.x-b.bx/2)return true;
@@ -131,8 +136,8 @@ World = {
 		img.src = filename;
 		
 		return {
-			image : img
-			/* other params*/
+			image : img,
+			src: filename
 		};
 	},
 	addModule : function(modid, object)
@@ -167,7 +172,8 @@ World = {
 
 		World._objects.push(obj);
 
-		if(options.fixed==false)
+		// If in editor mode, all objects appear movable
+		if(options.fixed==false || World._editor.online == true) 
 		{
 			if(!options.phantom)
 			{
@@ -203,6 +209,38 @@ World = {
 			World._fixed.push(obj);
 		}
 		return obj;
+	},
+	removeObject : function(obj)
+	{
+		var idx = World._objects.indexOf(obj);
+		if(idx != -1)
+			World._objects.remove(idx);	
+
+		// If in editor mode, all objects appear movable
+		if(World._editor.online) 
+		{
+			for(var i = 0; i < World._proxy.length; i++)
+			{	
+				var p = World._proxy[i];
+				if(p.obj == obj)
+				{
+					World._proxy.remove(i);
+					i--;
+					continue;
+				}
+			}
+			idx = World._mobile.indexOf(obj);
+			if(idx != -1)
+				World._mobile.remove(idx);	
+		}
+		else {
+			World._tree.remove({
+				object: obj
+			});
+			idx = World._fixed.indexOf(obj);
+			if(idx != -1)
+				World._fixed.remove(idx);	
+		}
 	},
 	linkObjects: function(o1, o2, maxforce)
 	{
@@ -258,32 +296,6 @@ World = {
 
 		World.drawBackground();
 
-		// Drawing order is important
-		// Sort all mobile objects by depth before rendering
-
-		//console.time('sort');
-		/*
-		insertionSort(World._mobile, World._depth_func);
-		
-		var mi = 0;
-		var fi = 0;
-		while(mi < World._mobile.length && fi < World._fixed.length)
-		{
-			if(World._depth_func(World._mobile[mi], World._fixed[fi]))
-			{
-				World.drawObject(World._mobile[mi]);
-				mi++;
-			}
-			else
-			{
-				World.drawObject(World._fixed[fi]);
-				fi++;
-			}
-		}
-		for(;mi < World._mobile.length; mi++)
-			World.drawObject(World._mobile[mi]);
-		for(;fi < World._fixed.length; fi++)
-			World.drawObject(World._fixed[fi]);*/
 		var wo = World._objects;
 		for(var i = 0;i < wo.length; i++)
 		{
@@ -335,8 +347,19 @@ World = {
 			World.drawObject(result[i]);
 		//console.timeEnd('sort');
 		
+		var ctx = Graphics.ctx;
+		
 		if(World._editor.online)
+		{
+			ctx.save();
 			World.editorStep();
+			ctx.restore();
+		}
+		ctx.fillStyle    = '#000';
+		ctx.font         = '16px sans-serif';
+		ctx.textAlign = 'left';
+		ctx.textBaseline = 'top';
+		ctx.fillText  ('Objects: '+World._objects.length, 30, 30);
 	},
 	physicsStep : function()
 	{
