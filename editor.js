@@ -38,19 +38,25 @@ World.initEditor = function()
 				if(Key.changed(KEY_UP) && Key.get(KEY_UP))
 				{
 					this.z++;
+					this.dirty = true;
 					World._cameraPosZ++;
 				}
 				if(Key.changed(KEY_DOWN) && Key.get(KEY_DOWN))
 				{
 					this.z--;
+					this.dirty = true;
 					World._cameraPosZ--;
 				}
 			
 				
 				// mouse movement
 				var pos = Screen2WorldXY(World.mouseX-320, World.mouseY-240, this.z-0.5);
+				
+				var prev = [this.x, this.y];
 				this.x = pos.x;
 				this.y = pos.y;
+				if(this.x != prev[0] || this.y != prev[1])
+					this.dirty = true;
 			
 				// This object will control the alpha of all other objects..
 			
@@ -102,9 +108,12 @@ World.initEditor = function()
 		},
 		step: function()
 		{
+			var prev = [this.x, this.y, this.z];
 			this.x = this.user.layer.x;
 			this.y = this.user.layer.y;
-			this.z = this.user.layer.z+this.bz/2;
+			this.z = this.user.layer.z+this.bz/2;			
+			if(this.x != prev[0] || this.y != prev[1] || this.z != prev[2])
+				this.dirty = true;
 			
 			Graphics.ctx.save();
 			

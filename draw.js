@@ -107,9 +107,37 @@ World.drawSimpleObject = function(obj)
 	coords.x += 320-focus.x;
 	coords.y += 240-focus.y;
 	
-	Graphics.ctx.globalAlpha = obj.alpha;
+	var ctx = Graphics.ctx;
+/*	ctx.strokeStyle ='yellow';
+	ctx.beginPath();
+	ctx.moveTo(coords.x+16, coords.y);
+	ctx.lineTo(coords.x+16, coords.y+16);
+	ctx.lineTo(coords.x+32, coords.y+24);
+	ctx.moveTo(coords.x+16, coords.y+16);
+	ctx.lineTo(coords.x, coords.y+24);
+	ctx.closePath();
+	ctx.stroke();
+	*/
+	ctx.globalAlpha = obj.alpha;
 	draw(coords.x, coords.y, g[0] ,g[1], obj.shape.tileset.image);
-	Graphics.ctx.globalAlpha = 1;
+	ctx.globalAlpha = 1;
+	
+/*	ctx.beginPath();
+	ctx.moveTo(coords.x+32, coords.y+8);
+	ctx.lineTo(coords.x+32, coords.y+24);
+	ctx.lineTo(coords.x+16, coords.y+32);
+	ctx.lineTo(coords.x+0, coords.y+24);
+	ctx.lineTo(coords.x+0, coords.y+8);
+	ctx.lineTo(coords.x+16, coords.y+0);
+	ctx.lineTo(coords.x+32, coords.y+8);
+	
+	ctx.lineTo(coords.x+16, coords.y+16);
+	ctx.lineTo(coords.x+16, coords.y+32);
+	ctx.moveTo(coords.x+16, coords.y+16);
+	ctx.lineTo(coords.x+0, coords.y+8);
+	ctx.closePath();
+	ctx.stroke();
+*/	
 	/*Graphics.ctx.strokeStyle = 'red';
 	
 	var rect = Cuboid2Screen(obj.x,obj.y,obj.z,obj.bx,obj.by,obj.bz);

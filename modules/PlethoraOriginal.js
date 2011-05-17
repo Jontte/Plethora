@@ -9,6 +9,11 @@ World.addModule('PlethoraOriginal',
 	{
 		// Load tiles and graphics
 		var plethora_original = World.addTileset('tileset.png');
+		World.addClass('groundplain', {
+			tileset: plethora_original,
+			category: 'terrain',
+			tiles: [5,9]
+		});
 		World.addClass('duck', {
 			tileset: plethora_original,
 			category: 'misc',
@@ -143,11 +148,6 @@ World.addModule('PlethoraOriginal',
 			tileset: plethora_original,
 			category: 'terrain',
 			tiles: [1,9]
-		});
-		World.addClass('groundplain', {
-			tileset: plethora_original,
-			category: 'terrain',
-			tiles: [5,9]
 		});
 		World.addClass('groundblock', {
 			tileset: plethora_original,

@@ -2,13 +2,11 @@
 	require('config.php');
 	require('jsmin.php');
 
+	$files = array('util.js', 'jsbih.js', 'key.js', 'effects.js', 'world.js', 'draw.js', 'editor.js', 'collision.js', 'audio.js', 'main.js', 'modules/PlethoraOriginal.js');
+	
 	$levels =	
 		array(
 			'Puzzle' 	=> 'puzzle.lev'
-		);
-	$modules =
-		array(
-			'PlethoraOriginal' => 'PlethoraOriginal.js'
 		);
 
 	if(isset($_GET['level']))
@@ -19,7 +17,17 @@
 		if(array_key_exists($selection, $levels))
 		{
 			$file = $levels[$selection];
-			echo file_get_contents($source_directory.'levels/'.$file);
+			die(file_get_contents($source_directory.'levels/'.$file));
+		}
+		die();
+	}
+	else if(isset($_GET['get']) && $minify === false)
+	{
+		header('Content-type: application/x-javascript');
+		$file = $_GET['get'];
+		if(in_array($file, $files))
+		{
+			die(file_get_contents($source_directory.$file));
 		}
 		die();
 	}
@@ -35,7 +43,6 @@
 		<script type="text/javascript" src="jquery-1.5.1.min.js"></script>
 		<script type="text/javascript" src="jquery-ui-1.8.12.custom.min.js"></script>
 		<?php
-			$files = array('util.js', 'jsbih.js', 'key.js', 'effects.js', 'world.js', 'draw.js', 'editor.js', 'collision.js', 'audio.js', 'main.js');
 
 			$selection = array_keys($levels);
 			$selection = $selection[0];
@@ -46,21 +53,24 @@
 			 	if(strlen($cookie)>2)
 					$selection = $cookie;
 			}
-			foreach($modules as $name => $filename)
-			{
-				array_push($files, 'modules/'.$filename);
-			}
+
 			
-			echo '<script type="text/javascript">';
-			foreach($files as $file)
+			if($minify === true)
 			{
-				$src = file_get_contents($source_directory.$file);
-				if($minify === true)
-					echo JSMin::minify($src);
-				else
-					echo $src;
+				echo '<script type="text/javascript">';
+				foreach($files as $file)
+				{
+					echo JSMin::minify(file_get_contents($source_directory.$file));
+				}
+				echo '</script>';
 			}
-			echo '</script>';
+			else
+			{
+				foreach($files as $file)
+				{
+					echo '<script type="text/javascript" src="index.php?get='.$file.'"></script>'."\n";
+				}
+			}
 ?>		<style>
 			body {
 				background-color: #1a82f7;

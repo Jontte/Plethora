@@ -266,6 +266,19 @@ World = {
 			if(idx != -1)
 				World._fixed.remove(idx);	
 		}
+		
+		// We also need to remove any references in the render graph
+		if(typeof(obj.internal.after) != 'undefined')				
+		{
+			$.each(obj.internal.after, function(idx, other){
+				var idx = other.internal.depends.indexOf(obj);
+				if(idx!=-1)other.internal.depends.remove(idx);
+			});
+			$.each(obj.internal.depends, function(idx, other){
+				var idx = other.internal.after.indexOf(obj);
+				if(idx!=-1)other.internal.after.remove(idx);
+			});
+		}
 	},
 	linkObjects: function(o1, o2, maxforce)
 	{
@@ -322,87 +335,113 @@ World = {
 		World.drawBackground();
 
 		var wo = World._objects;
+		
+		// Find dirty objects...
+		var dirty = [];
 		for(var i = 0;i < wo.length; i++)
 		{
-			wo[i].internal = {
-				depends: [],
-				visited: false,
-				starter: true
-			};
+			if(wo[i].dirty)
+				dirty.push(wo[i]);
 		}
-		
-		// Initialize proxy array
-		for(var i = 0 ; i < World._renderProxy.length; i++)
-		{
-			var p = World._renderProxy[i];
-			var o = p.obj;
-			p.d = (o.x - o.y+1)*16 + ((p.begin==true)?-1:1) * 16*(o.bx+o.by)/2;
-			
-			/*
-			ctx.strokeStyle ='red';
-			ctx.beginPath();
-			ctx.moveTo(p.d, 0);
-			ctx.lineTo(p.d, 480);
-			ctx.closePath();
-			ctx.stroke();*/
-		}
-
-		// Sort it
-		insertionSort(World._renderProxy, function(a,b){
-			return a.d < b.d;
-		});
-		
-		// Thanks to sweep n prune, we dont have to check each object pair
-
-		var objectbuffer = {};
 		var comparisons  = 0;
-		for(var i = 0; i < World._renderProxy.length; i++)
+			
+		// we must make changes to the render graph...
+		if(dirty.length > 0)
 		{
-			var p = World._renderProxy[i];
-			if(p.begin == false)
-			{			
-				// Remove object from buffer
-				delete objectbuffer[p.obj.id];
-			}
-			else
+			// first, remove all dirty objects from it..
+			for(var i = 0; i < dirty.length; i++)
 			{
-				$.each(objectbuffer, function(key, val){
-					// verify val collides p...
-					var o1 = p.obj;
-					var o2 = val.obj;
-					var res = World._depth_func(o1, o2);
-					comparisons++;
-					if(res === false)
-					{
-						o2.internal.depends.push(o1);
-						o1.internal.starter = false;
-					}
-					else if(res === true)
-					{
-						o1.internal.depends.push(o2);
-						o2.internal.starter = false;
-					}
-				});
+				var o = dirty[i];
+				
+				if(typeof(o.internal) == 'undefined')
+					o.internal = {};
+				
+				if(typeof(o.internal.after) != 'undefined')				
+				{
+					$.each(o.internal.after, function(idx, other){
+						var idx = other.internal.depends.indexOf(o);
+						if(idx!=-1)other.internal.depends.remove(idx);
+					});
+					$.each(o.internal.depends, function(idx, other){
+						var idx = other.internal.after.indexOf(o);
+						if(idx!=-1)other.internal.after.remove(idx);
+					});
+				}
+				o.internal.depends = [];
+				o.internal.after = [];
+			}
+			
+			// next we prepare the proxy array
+			for(var i = 0 ; i < World._renderProxy.length; i++)
+			{
+				var p = World._renderProxy[i];
+				var o = p.obj;
+				p.d = (o.x - o.y+1)*16 + ((p.begin==true)?-1:1) * 16*(o.bx+o.by)/2;
+			}
 
-				// Add object to buffer 
-				objectbuffer[p.obj.id] = p;
+			// Sort it
+			insertionSort(World._renderProxy, function(a,b){
+				return a.d < b.d;
+			});
+		
+			// Thanks to sweep n prune, we dont have to check each object pair
+			var objectbuffer = {};
+			for(var i = 0; i < World._renderProxy.length; i++)
+			{
+				var p = World._renderProxy[i];
+				if(p.begin == false)
+				{			
+					// Remove object from buffer
+					delete objectbuffer[p.obj.id];
+				}
+				else
+				{
+					$.each(objectbuffer, function(key, val){
+						var o1 = p.obj;
+						var o2 = val.obj;
+						if(!o1.dirty && !o2.dirty)return;
+						var res = World._depth_func(o1, o2);
+						comparisons++;
+						if(res === false)
+						{
+							o2.internal.after.push(o1);
+							o1.internal.depends.push(o2);
+						}
+						else if(res === true)
+						{
+							o1.internal.after.push(o2);
+							o2.internal.depends.push(o1);
+						}
+					});
+
+					// Add object to buffer 
+					objectbuffer[p.obj.id] = p;
+				}
+			}
+			for(var i = 0; i < dirty.length; i++)
+			{
+				dirty[i].dirty = false;
 			}
 		}
-		// Graph is built. now flatten it
+		// Graph is ok. now flatten it and render
 		var result = [];
+
+		for(var i = 0; i < World._objects.length; i++){
+			World._objects[i].internal.visited = false;
+		};
 		
 		function visit(node){
 			if(!node.internal.visited)
 			{
 				node.internal.visited = true;
-				for(var i = 0; i < node.internal.depends.length; i++)
-					visit(node.internal.depends[i]);
+				for(var i = 0; i < node.internal.after.length; i++)
+					visit(node.internal.after[i]);
 				result.push(node);
 			}
 		}
 		
 		for(var i = 0;i < wo.length; i++)
-			if(wo[i].internal.starter === true)
+			if(wo[i].internal.depends.length == 0)
 				visit(wo[i]);
 		
 		for(var i = result.length-1;i >= 0; i--)
@@ -782,6 +821,7 @@ World.Entity.prototype.vz = 0;
 World.Entity.prototype.fx = 0; // force
 World.Entity.prototype.fy = 0;
 World.Entity.prototype.fz = 0;
+World.Entity.prototype.dirty = true; // Whether the render graph should be rebuilt
 World.Entity.prototype.alpha = 1; // alpha used in drawing. 0 = completely transparent, 1 = zero transparency
 World.Entity.prototype.hasGravity = true; // whether this object is affected by gravity 
 World.Entity.prototype.collideFixed = true; // should this object collide with fixed objects
@@ -791,6 +831,32 @@ World.Entity.prototype.direction = 0;
 World.Entity.prototype.frame = 0; // current frame
 World.Entity.prototype.frameTick = 0; // current tick
 World.Entity.prototype.frameMaxTicks = 1; // ticks to reach until we switch to next frame (0 to disable animation)
+World.Entity.prototype.setPos = function(x,y,z)
+{
+	if(typeof(x)!='number')
+	{
+		z = x[2];
+		y = x[1];
+		x = x[0];
+	}
+	this.x = x;
+	this.y = y;
+	this.z = z;
+	this.dirty = true;
+}
+World.Entity.prototype.setSize = function(bx,by,bz)
+{
+	if(typeof(bx)!='number')
+	{
+		bz = bx[2];
+		by = bx[1];
+		bx = bx[0];
+	}
+	this.bx = bx;
+	this.by = by;
+	this.bz = bz;
+	this.dirty = true;
+}
 World.Collision = function(nx,ny,nz, displacement)
 {
 	this.nx = nx;
