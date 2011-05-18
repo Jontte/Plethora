@@ -91,7 +91,13 @@ World.initEditor = function()
 				var c = [1,11];
 				if(x == 7 && y == 7)
 					c = [2,11];
-				draw(coords.x, coords.y, c[0], c[1], World._editor.tileset.image);
+				draw({
+					x: coords.x, 
+					y: coords.y, 
+					tilex: c[0], 
+					tiley: c[1], 
+					src: World._editor.tileset.image
+				});
 			}
 			Graphics.ctx.restore();
 		}
@@ -108,26 +114,43 @@ World.initEditor = function()
 		},
 		step: function()
 		{
-			var prev = [this.x, this.y, this.z];
-			this.x = this.user.layer.x;
-			this.y = this.user.layer.y;
-			this.z = this.user.layer.z+this.bz/2;			
+			var we = World._editor;
+			var prev;
+			
+			prev = [this.x, this.y, this.z];
+			this.x = we.layer.x;
+			this.y = we.layer.y;
+			this.z = we.layer.z+this.bz/2;			
 			if(this.x != prev[0] || this.y != prev[1] || this.z != prev[2])
 				this.dirty = true;
 			
 			Graphics.ctx.save();
 			
 			var focus = World2Screen(World._cameraPosX, World._cameraPosY, World._cameraPosZ);
-			var coords = World2Screen(this.x, this.y, this.z);
+			var coords = Cuboid2Screen(this.x, this.y, this.z, this.bx, this.by, this.bz);
 			coords.x += 320-focus.x;
 			coords.y += 240-focus.y;
 			
 			Graphics.ctx.globalAlpha = 0.5;
 			var wec = World._editor.classBrowser;
 			var c = wec.classes[wec.selectedCategory][wec.selectedClass[wec.selectedCategory]].c;
+			prev = [this.bx, this.by, this.bz];
+			this.bx = c.size[0];
+			this.by = c.size[1];
+			this.bz = c.size[2];
+			if(this.bx != prev[0] || this.by != prev[1] || this.bz != prev[2])
+				this.dirty = true;
 			var t = c.tiles;
 			while(typeof(t[0]) != 'number')t = t[0];
-			draw(coords.x, coords.y, t[0], t[1], c.tileset.image);
+			draw({
+				x: coords.x, 
+				y: coords.y, 
+				tilex: t[0], 
+				tiley: t[1], 
+				src: c.tileset.image,
+				tilew: coords.w,
+				tileh: coords.h
+			});
 			
 			Graphics.ctx.restore();
 			
@@ -138,9 +161,20 @@ World.initEditor = function()
 					size: [this.bx, this.by, this.bz],
 					classid: c.id,
 					callback: function(objects){
-						if(objects.length == 0)
+						var create = true;
+						// only create if nothing under mouse cursor
+						for(var i = 0; i < objects.length; i++)
 						{
-							World.createObject(this.classid, this.pos, this.size, {fixed: true});
+							var o = objects[i];
+							if(!o.shape.internal)
+							{
+								create = false;
+								break;
+							}
+						}
+						if(create == true)
+						{
+							World.createObject(this.classid, this.pos, {fixed: true});
 						}
 //						else alert('not added because ' + objects[0].shape.id + ' on the way');
 					}
@@ -153,7 +187,8 @@ World.initEditor = function()
 					size: [this.bx, this.by, this.bz],
 					callback: function(objects){
 						$.each(objects, function(idx, obj){
-							World.removeObject(obj);
+							if(!obj.shape.internal)
+								World.removeObject(obj);
 						});
 					}
 				});
@@ -166,10 +201,7 @@ World.initEditor = function()
 	});
 	World.createObject('E_ghost', [0,0,0], [1,1,1], {
 		fixed: false,
-		phantom: true,
-		user: {
-			layer: layer
-		}
+		phantom: true
 	});
 	
 	var we = World._editor;
@@ -432,7 +464,13 @@ World.editorStep = function()
 				var t = c.c.tiles;
 				while(typeof(t[0]) != 'number')t = t[0];
 
-				draw(c.x, c.y, t[0], t[1], c.c.tileset.image);
+				draw({
+					x:c.x, 
+					y:c.y, 
+					tilex: t[0], 
+					tiley: t[1], 
+					src: c.c.tileset.image
+				});
 			}
 		}
 	}

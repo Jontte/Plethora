@@ -1,8 +1,8 @@
 {
 	"module" : "PlethoraOriginal",
 	"objects" : [
-		["famouscube", [0,0,0], [1,1,1], 0],
-		["famouscube", [1,0,0], [1,1,1], 0]
+		["famouscube", [0,0,0], 0],
+		["famouscube", [6,0,0], 0]
 	]	
 }
 

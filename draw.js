@@ -2,18 +2,24 @@
 	Utility functions related to drawing
 */
 
-function draw(x, y, tilex, tiley, source, dest)
+function draw(opts)
 {
-	// If no canvas context was specified, use the main canvas
-	if(!dest)dest = Graphics.ctx;
-	if(x+32<0||y+32<0||x-32>640||y-32>480)return;
+	// target pos: opts.x, opts.y
+	// 
 	
-	dest.drawImage(
-		source, 
-		32*tilex, 32*tiley,	
-		32, 32,
-		Math.floor(x), Math.floor(y),
-		32, 32
+	// If no canvas context was specified, use the main canvas
+	if(typeof(opts.dest) == 'undefined')opts.dest = Graphics.ctx;
+	if(typeof(opts.tilew) == 'undefined')opts.tilew=32;
+	if(typeof(opts.tileh) == 'undefined')opts.tileh=32;
+	
+	if(opts.x+opts.tilew<0||opts.y+opts.tileh<0||opts.x-opts.tilew>640||opts.y-opts.tileh>480)return;
+	
+	opts.dest.drawImage(
+		opts.src, 
+		32*opts.tilex, 32*opts.tiley,	
+		opts.tilew, opts.tileh,
+		Math.floor(opts.x), Math.floor(opts.y),
+		opts.tilew, opts.tileh
 	);
 }
 
@@ -102,12 +108,7 @@ World.drawSimpleObject = function(obj)
 	}
 
 	var focus = World2Screen(World._cameraPosX, World._cameraPosY, World._cameraPosZ);
-	var coords = World2Screen(obj.x, obj.y, obj.z);
 
-	coords.x += 320-focus.x;
-	coords.y += 240-focus.y;
-	
-	var ctx = Graphics.ctx;
 /*	ctx.strokeStyle ='yellow';
 	ctx.beginPath();
 	ctx.moveTo(coords.x+16, coords.y);
@@ -117,9 +118,26 @@ World.drawSimpleObject = function(obj)
 	ctx.lineTo(coords.x, coords.y+24);
 	ctx.closePath();
 	ctx.stroke();
-	*/
+	*/	
+	
+	
+	var ctx = Graphics.ctx;
+
+	var coords = Cuboid2Screen(obj.x, obj.y, obj.z, obj.bx, obj.by, obj.bz);
+
+	coords.x += 320-focus.x;
+	coords.y += 240-focus.y;
+	
 	ctx.globalAlpha = obj.alpha;
-	draw(coords.x, coords.y, g[0] ,g[1], obj.shape.tileset.image);
+	draw({
+		x: coords.x, 
+		y: coords.y, 
+		tilex: g[0], 
+		tiley: g[1],
+		tilew: coords.w,
+		tileh: coords.h,
+		src: obj.shape.tileset.image
+	});
 	ctx.globalAlpha = 1;
 	
 /*	ctx.beginPath();

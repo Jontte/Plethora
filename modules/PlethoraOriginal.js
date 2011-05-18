@@ -14,6 +14,12 @@ World.addModule('PlethoraOriginal',
 			category: 'terrain',
 			tiles: [5,9]
 		});
+		World.addClass('bluewall', {
+			tileset: plethora_original,
+			category: 'obstacles',
+			tiles: [8,3],
+			size: [3,1,3]
+		});
 		World.addClass('duck', {
 			tileset: plethora_original,
 			category: 'misc',

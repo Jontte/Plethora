@@ -56,6 +56,7 @@ World = {
 		// "Is a behind b?" or "Should a be rendered before b?"
 		// Returns null when either way works
 		
+		if(a.x==b.x&&a.y==b.y&&a.z==b.z) return null;
 		// Screen projection rectangle check
 		var b1 = Cuboid2Screen(a.x,a.y,a.z,a.bx,a.by,a.bz);
 		var b2 = Cuboid2Screen(b.x,b.y,b.z,b.bx,b.by,b.bz);
@@ -89,25 +90,15 @@ World = {
 		if(p1b&&p3a)return null;
 		if(p2b&&p3a)return null;
 		
-		// Non-penetrated:
 		if(a.x+a.bx/2 <= b.x-b.bx/2)return true;
 		if(b.x+b.bx/2 <= a.x-a.bx/2)return false;
 		if(a.y+a.by/2 <= b.y-b.by/2)return true;
 		if(b.y+b.by/2 <= a.y-a.by/2)return false;
 		if(a.z+a.bz/2 <= b.z-b.bz/2)return true;
 		if(b.z+b.bz/2 <= a.z-a.bz/2)return false;
-		// Penetrated:
-		if(a.x+a.bx/2 <= b.x)return true;
-		if(b.x+b.bx/2 <= a.x)return false;
-		if(a.y+a.by/2 <= b.y)return true;
-		if(b.y+b.by/2 <= a.y)return false;
-		if(a.z+a.bz/2 <= b.z)return true;
-		if(b.z+b.bz/2 <= a.z)return false;
-		// Make an educated guess
-		var v = (a.x+a.y+a.z)-(b.x+b.y+b.z);
-		if(v<0)return true;
-		if(v>0)return false;
-		// Indeterminate.
+		
+		// Objects that penetrated each other cannot be put in a reliable rendering order
+		// -> it would cause loops in the render graph
 		return null;
 	},
 	reset : function()
@@ -148,27 +139,22 @@ World = {
 	},
 	addClass : function(id, params)
 	{
-		if(params.shape == undefined)
-		{
-			// Physics shape defaults to box
-			params.shape = World.BOX;
-		}
-		if(params.flags == undefined)
-		{
-			params.flags = 0;
-		}
+		// Physics shape defaults to box
+		if(typeof(params.shape) == 'undefined')params.shape = World.BOX;
+		if(typeof(params.flags) == 'undefined')params.flags = 0;
+		if(typeof(params.size) == 'undefined')params.size = [1,1,1];
 		// TODO: Validate params here
 		params.id = id;
 		World._classes[id] = params;
 	},
-	createObject : function(classid, pos, size, options)
+	createObject : function(classid, pos, options)
 	{
 		if(!options)options = {};
 		
 		if(options.fixed==undefined)
 			options.fixed = true;
 		
-		var obj = new World.Entity(classid, pos, size, options.fixed);
+		var obj = new World.Entity(classid, pos, options.fixed);
 		if(options.user!=undefined)
 			obj.user = options.user;
 
@@ -446,9 +432,71 @@ World = {
 		
 		for(var i = result.length-1;i >= 0; i--)
 			World.drawObject(result[i]);
-		//console.timeEnd('sort');
-		
+			
 		var ctx = Graphics.ctx;
+		// draw render graph...
+		ctx.beginPath();
+		ctx.lineWidth = 1;
+		ctx.strokeStyle = 'red';
+
+		var focus = World2Screen(World._cameraPosX, World._cameraPosY, World._cameraPosZ);
+		var c1,c2;	
+		/*
+		for(var i = 0; i < wo.length; i++)
+		{
+			var o = wo[i];
+			c1 = Cuboid2Screen(o.x, o.y, o.z, o.bx, o.by, o.bz);
+			c1.x += 320-focus.x;
+			c1.y += 240-focus.y;
+
+			c1.x += c1.w/2;
+			c1.y += c1.h/2;
+			
+			for(var a = 0; a < o.internal.after.length; a++)
+			{
+				var v = o.internal.after[a];
+			
+				ctx.moveTo(c1.x, c1.y);
+				c2 = Cuboid2Screen(v.x, v.y, v.z, v.bx, v.by, v.bz);
+				c2.x += 320-focus.x;
+				c2.y += 240-focus.y;
+				
+				c2.x += c2.w/2;
+				c2.y += c2.h/2;
+				
+				c2.x = c1.x+(c2.x-c1.x)*0.9;
+				c2.y = c1.y+(c2.y-c1.y)*0.9;
+				
+				ctx.lineTo(c2.x, c2.y);
+				ctx.arc(c2.x, c2.y, 3, 0, 2*Math.PI, true);
+			}
+			if(o.internal.depends.length == 0)
+			{
+				ctx.moveTo(c1.x, c1.y);
+				ctx.arc(c1.x, c1.y, 5, 0, 2*Math.PI, true);
+			}
+		}
+		ctx.closePath();
+		ctx.stroke();*//*
+		ctx.strokeStyle = 'blue';
+		ctx.beginPath();
+		for(var i = 0; i < result.length; i++)
+		{
+			var o = result[i];
+			c1 = Cuboid2Screen(o.x, o.y, o.z, o.bx, o.by, o.bz);
+			c1.x += 320-focus.x;
+			c1.y += 240-focus.y;
+
+			c1.x += c1.w/2;
+			c1.y += c1.h/2;
+			if(i==0)
+				ctx.moveTo(c1.x, c1.y);
+			else
+				ctx.lineTo(c1.x, c1.y);
+		}
+		ctx.closePath();
+		ctx.stroke();
+*/
 		
 		if(World._editor.online)
 		{
@@ -770,9 +818,8 @@ World = {
 			var obj = objects[i];
 			var classid = obj[0];
 			var pos = obj[1];
-			var size = obj[2];
-			var mass = obj[3];
-			var instance = World.createObject(classid, pos, size, {fixed: mass==0});
+			var mass = obj[2];
+			var instance = World.createObject(classid, pos, {fixed: mass==0});
 			instance.mass = mass;
 		}
 		
@@ -785,14 +832,14 @@ World = {
 };
 
 
-World.Entity = function(classid, pos, size, fixed)
+World.Entity = function(classid, pos, fixed)
 {
 	this.x = pos[0];
 	this.y = pos[1];
 	this.z = pos[2];
-	this.bx = size[0];
-	this.by = size[1];
-	this.bz = size[2];
+	this.bx = 1;
+	this.by = 1;
+	this.bz = 1;
 	this.fixed = fixed; // take part in dynamics simulation if fixed=false
 	this.id = World._objectCounter++; // Unique id is assigned to each object
 	this.shape = null;
@@ -801,6 +848,9 @@ World.Entity = function(classid, pos, size, fixed)
 	if(classid in World._classes)
 	{
 		this.shape = World._classes[classid];	
+		this.bx = this.shape.size[0];
+		this.by = this.shape.size[1];
+		this.bz = this.shape.size[2];
 	}
 	else
 	{
