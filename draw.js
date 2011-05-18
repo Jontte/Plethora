@@ -156,7 +156,7 @@ World.drawSimpleObject = function(obj)
 	ctx.closePath();
 	ctx.stroke();
 */	
-	/*Graphics.ctx.strokeStyle = 'red';
+/*	Graphics.ctx.strokeStyle = 'red';
 	
 	var rect = Cuboid2Screen(obj.x,obj.y,obj.z,obj.bx,obj.by,obj.bz);
 	rect.x += 320-focus.x;

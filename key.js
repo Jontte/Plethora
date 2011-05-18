@@ -43,7 +43,7 @@ var Key = {
 		$(document).keyup(Key.keyup);
 		$('#canvas').mousedown(Key.mousedown);
 		$('#canvas').mouseup(Key.mouseup);
-		$('#canvas').mouseleave(Key.mouseup);
+//		$('#canvas').mouseleave(Key.mouseup);
 	},
 	mousedown: function(evt){
 		     if(evt.which == 1)Key.keydown({keyCode:MOUSE_LEFT});

@@ -118,6 +118,7 @@ World = {
 		World._renderProxy = [];
 		World._classes = {};
 		World._level = '';
+		$('#cache').empty();
 	},
 	setCameraFocus : function(obj)
 	{
@@ -131,6 +132,17 @@ World = {
 		return {
 			image : img,
 			src: filename
+		};
+	},
+	addTilesetCanvas : function(width, height)
+	{
+		var canvas = document.createElement('canvas');
+		canvas.setAttribute("width", width);
+		canvas.setAttribute("height", height);
+		$('#cache').append(canvas);
+		return {
+			image : canvas,
+			ctx : canvas.getContext('2d')
 		};
 	},
 	addModule : function(modid, object)
@@ -151,12 +163,12 @@ World = {
 	{
 		if(!options)options = {};
 		
-		if(options.fixed==undefined)
+		if(typeof(options.fixed)=='undefined')
 			options.fixed = true;
 		
 		var obj = new World.Entity(classid, pos, options.fixed);
-		if(options.user!=undefined)
-			obj.user = options.user;
+		if(typeof(options.phantom)!='undefined')
+			obj.phantom = options.phantom;
 
 		World._objects.push(obj);
 
@@ -198,9 +210,9 @@ World = {
 			{
 				World._tree.insert({
 					intervals: [
-						{a: pos[0]-size[0]/2, b: size[0]},
-						{a: pos[1]-size[1]/2, b: size[1]},
-						{a: pos[2]-size[2]/2, b: size[2]},
+						{a: pos[0]-obj.bx/2, b: obj.bx[0]},
+						{a: pos[1]-obj.by/2, b: obj.by[1]},
+						{a: pos[2]-obj.bz/2, b: obj.bz[2]},
 					],
 					object: obj
 				});
@@ -265,6 +277,74 @@ World = {
 				if(idx!=-1)other.internal.after.remove(idx);
 			});
 		}
+	},
+	createObjectCompound : function(classid, pos, size, options)
+	{
+		// Used to create big objects that consist of many small tiles drawn together
+		// -> creates new classes on the fly as needed..
+		// Comes with an off-screen canvas 
+		
+		if(!(classid in World._classes))
+			throw 'Invalid class!';
+			
+		var c = World._classes[classid];
+		
+		// construct class name...
+		
+		var newclass = classid + '_compound.' + size[0] + '.' + size[1] + '.' + size[2];
+		
+		if(!(newclass in World._classes))
+		{
+			var rect = Cuboid2Screen(0,0,0,size[0],size[1],size[2]);
+		
+			var tileset = World.addTilesetCanvas(rect.w, rect.h);
+		
+			World.addClass(newclass, {
+				tileset: tileset,
+				category: 'dynamic',
+				internal: true,
+				tiles: [0, 0],
+				size: [size[0],size[1],size[2]]
+			});
+			
+			var ctx = tileset.ctx;
+			
+			// Find origin..
+			var zero = {
+				x: (size[1]-1)*16,
+				y: (size[2]-1)*16
+			};
+			
+			// Next we draw the cube filled with tiny objects..
+			for(var zz = 0; zz < size[2]; zz+=c.size[2])
+			for(var yy = 0; yy < size[1]; yy+=c.size[1])
+			for(var xx = 0; xx < size[0]; xx+=c.size[0])
+			{
+				var coords = Cuboid2Screen(
+					xx+(c.size[0]/2), 
+					yy+(c.size[1]/2), 
+					zz+(c.size[2]/2),
+					c.size[0], c.size[1], c.size[2]);
+			
+				coords.x += zero.x;
+				coords.y += zero.y;	
+						
+				var t = c.tiles;
+				while(typeof(t[0]) != 'number')t = t[0];
+				draw({
+					x: coords.x, 
+					y: coords.y, 
+					tilex: t[0], 
+					tiley: t[1], 
+					src: c.tileset.image,
+					dest: ctx,
+					tilew: coords.w,
+					tileh: coords.h
+				});
+			}
+		}
+		
+		return World.createObject(newclass, pos, options);
 	},
 	linkObjects: function(o1, o2, maxforce)
 	{
@@ -875,6 +955,7 @@ World.Entity.prototype.dirty = true; // Whether the render graph should be rebui
 World.Entity.prototype.alpha = 1; // alpha used in drawing. 0 = completely transparent, 1 = zero transparency
 World.Entity.prototype.hasGravity = true; // whether this object is affected by gravity 
 World.Entity.prototype.collideFixed = true; // should this object collide with fixed objects
+World.Entity.prototype.phantom = false; // Phantom objects cannot be collided to
 World.Entity.prototype.visible = true; // invisible objects are cheap to draw :)
 World.Entity.prototype.mass = 1;
 World.Entity.prototype.direction = 0;

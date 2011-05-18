@@ -115,92 +115,188 @@ World.initEditor = function()
 		step: function()
 		{
 			var we = World._editor;
-			var prev;
-			
-			prev = [this.x, this.y, this.z];
-			this.x = we.layer.x;
-			this.y = we.layer.y;
-			this.z = we.layer.z+this.bz/2;			
-			if(this.x != prev[0] || this.y != prev[1] || this.z != prev[2])
-				this.dirty = true;
+			var wec = World._editor.classBrowser;
+			var ctx = Graphics.ctx;
+			var prevpos, prevsize;
+			prevpos = [this.x, this.y, this.z];
+			prevsize= [this.bx, this.by, this.bz];
+			var c = wec.classes[wec.selectedCategory][wec.selectedClass[wec.selectedCategory]].c;
 			
 			Graphics.ctx.save();
 			
 			var focus = World2Screen(World._cameraPosX, World._cameraPosY, World._cameraPosZ);
-			var coords = Cuboid2Screen(this.x, this.y, this.z, this.bx, this.by, this.bz);
-			coords.x += 320-focus.x;
-			coords.y += 240-focus.y;
+
+			var xdir = 0;
+			var ydir = 0;
+			var zdir = 0;			
+			if(we.select.selecting == true)
+			{
+				// mouse movement
+				this.bx = Math.abs(we.select.x - we.layer.x)+1;
+				this.by = Math.abs(we.select.y - we.layer.y)+1;
+				this.bz = Math.abs(we.select.z - (we.layer.z + c.size[2]/2))+1;
+				
+				if(this.bx<c.size[0])this.bx=c.size[0];
+				if(this.by<c.size[1])this.by=c.size[1];
+				if(this.bz<c.size[2])this.bz=c.size[2];
+				this.bx = Math.floor(this.bx/c.size[0])*c.size[0];
+				this.by = Math.floor(this.by/c.size[1])*c.size[1];
+				this.bz = Math.floor(this.bz/c.size[2])*c.size[2];
+
+				xdir = sign(we.select.x - we.layer.x);
+				ydir = sign(we.select.y - we.layer.y);
+				zdir = sign(we.select.z - we.layer.z - c.size[2]/2);
+				
+				this.x = we.select.x - xdir * Math.max(0, this.bx/2-c.size[0]/2);
+				this.y = we.select.y - ydir * Math.max(0, this.by/2-c.size[1]/2);
+				this.z = we.select.z - zdir * Math.max(0, this.bz/2-c.size[2]/2);
+			}
+			else
+			{
+				this.bx = c.size[0];
+				this.by = c.size[1];
+				this.bz = c.size[2];
+				this.x = we.layer.x;
+				this.y = we.layer.y;
+				this.z = we.layer.z+this.bz/2;			
+			}
 			
-			Graphics.ctx.globalAlpha = 0.5;
-			var wec = World._editor.classBrowser;
-			var c = wec.classes[wec.selectedCategory][wec.selectedClass[wec.selectedCategory]].c;
-			prev = [this.bx, this.by, this.bz];
-			this.bx = c.size[0];
-			this.by = c.size[1];
-			this.bz = c.size[2];
-			if(this.bx != prev[0] || this.by != prev[1] || this.bz != prev[2])
-				this.dirty = true;
-			var t = c.tiles;
-			while(typeof(t[0]) != 'number')t = t[0];
-			draw({
-				x: coords.x, 
-				y: coords.y, 
-				tilex: t[0], 
-				tiley: t[1], 
-				src: c.tileset.image,
-				tilew: coords.w,
-				tileh: coords.h
-			});
+			// fill bx,by,bz cuboid with sprites..
+			for(var zz = 0; zz < this.bz; zz+=c.size[2])
+			for(var yy = 0; yy < this.by; yy+=c.size[1])
+			for(var xx = 0; xx < this.bx; xx+=c.size[0])
+			{
+				var coords = Cuboid2Screen(
+					this.x+xx-(this.bx/2-c.size[0]/2), 
+					this.y+yy-(this.by/2-c.size[1]/2), 
+					this.z+zz-(this.bz/2-c.size[2]/2), 
+					c.size[0], c.size[1], c.size[2]);
+				
+				coords.x += 320-focus.x;
+				coords.y += 240-focus.y;
+			
+				Graphics.ctx.globalAlpha = 0.5;
+			
+				var t = c.tiles;
+				while(typeof(t[0]) != 'number')t = t[0];
+				draw({
+					x: coords.x, 
+					y: coords.y, 
+					tilex: t[0], 
+					tiley: t[1], 
+					src: c.tileset.image,
+					tilew: coords.w,
+					tileh: coords.h
+				});
+			}
+			
+			ctx.fillStyle    = '#000';
+			ctx.font         = '16px sans-serif';
+			ctx.textAlign = 'left';
+			ctx.textBaseline = 'top';
+			ctx.fillText  ('bx,by,bz: ('+this.bx+', '+this.by+', '+this.bz+') x,y,z: ('+this.x+', '+this.y+', '+this.z+')', 30, 80);
 			
 			Graphics.ctx.restore();
-			
-			if(Key.get(MOUSE_LEFT) && !wec.online)
+			if(wec.online)
 			{
-				World.addScan({
-					pos : [this.x, this.y, this.z],
-					size: [this.bx, this.by, this.bz],
-					classid: c.id,
-					callback: function(objects){
-						var create = true;
-						// only create if nothing under mouse cursor
-						for(var i = 0; i < objects.length; i++)
-						{
-							var o = objects[i];
-							if(!o.shape.internal)
+				we.select.selecting = false;
+			}
+			else
+			{
+				if(Key.get(MOUSE_LEFT) && Key.changed(MOUSE_LEFT))
+				{
+					we.select.x = we.layer.x;
+					we.select.y = we.layer.y;
+					we.select.z = we.layer.z+c.size[2]/2;
+					we.select.selecting = true;
+				}
+				else if(!Key.get(MOUSE_LEFT) && Key.changed(MOUSE_LEFT))
+				{
+					we.select.selecting = false;
+					// create big object
+					World.addScan({
+						pos : [this.x, this.y, this.z],
+						size: [this.bx, this.by, this.bz],
+						c: c,
+						callback: function(objects){
+							var create = true;
+							// only create if nothing phantom under cursor
+							for(var i = 0; i < objects.length; i++)
 							{
-								create = false;
-								break;
+								var o = objects[i];
+								if(o.phantom === false)
+								{
+									create = false;
+									break;
+								}
+							}
+							if(create == true)
+							{
+								if(	this.size[0] != this.c.size[0] ||
+									this.size[1] != this.c.size[1] ||
+									this.size[2] != this.c.size[2] )
+								{
+									// a huge object compound..
+									World.createObjectCompound(this.c.id, this.pos, this.size, {fixed: true});
+								}
+								else
+								{
+									// just one object being dragged to place..
+									World.createObject(this.c.id, this.pos, {fixed: true});
+								}
 							}
 						}
-						if(create == true)
-						{
-							World.createObject(this.classid, this.pos, {fixed: true});
+					});
+				}
+				else if(Key.get(MOUSE_LEFT) && 0)
+				{
+/*					World.addScan({
+						pos : [this.x, this.y, this.z],
+						size: [this.bx, this.by, this.bz],
+						classid: c.id,
+						callback: function(objects){
+							var create = true;
+							// only create if nothing non-internal under cursor
+							for(var i = 0; i < objects.length; i++)
+							{
+								var o = objects[i];
+								if(!o.shape.internal)
+								{
+									create = false;
+									break;
+								}
+							}
+							if(create == true)
+							{
+								World.createObject(this.classid, this.pos, {fixed: true});
+							}
+	//						else alert('not added because ' + objects[0].shape.id + ' on the way');
 						}
-//						else alert('not added because ' + objects[0].shape.id + ' on the way');
-					}
-				});
+					});*/
+				}
+				else if(Key.get(MOUSE_RIGHT) && 0)
+				{
+					World.addScan({
+						pos : [this.x, this.y, this.z],
+						size: [this.bx, this.by, this.bz],
+						callback: function(objects){
+							$.each(objects, function(idx, obj){
+								if(!obj.shape.internal)
+									World.removeObject(obj);
+							});
+						}
+					});
+				}
 			}
-			else if(Key.get(MOUSE_RIGHT) && !wec.online)
-			{
-				World.addScan({
-					pos : [this.x, this.y, this.z],
-					size: [this.bx, this.by, this.bz],
-					callback: function(objects){
-						$.each(objects, function(idx, obj){
-							if(!obj.shape.internal)
-								World.removeObject(obj);
-						});
-					}
-				});
-			}
+			if(this.x != prevpos[0] || this.y != prevpos[1] || this.z != prevpos[2] ||
+			   this.bx != prevsize[0] || this.by != prevsize[1] || this.bz != prevsize[2])
+				this.dirty = true;
 		}
 	});
-	var layer = World.createObject('E_layer', [0,0,-0.5], [1,1,1], {
-		fixed: false,
+	var layer = World.createObject('E_layer', [0,0,-0.5], {
 		phantom: true
 	});
-	World.createObject('E_ghost', [0,0,0], [1,1,1], {
-		fixed: false,
+	World.createObject('E_ghost', [0,0,0], {
 		phantom: true
 	});
 	
@@ -208,6 +304,13 @@ World.initEditor = function()
 	
 	we.layer = layer;
 	we.selectedClass = 0;
+	
+	we.select = {
+		x: 0,
+		y: 0,
+		z: 0,
+		selecting : false
+	};
 	
 	we.classBrowser = {
 		classes: [], // by category

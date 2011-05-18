@@ -205,6 +205,8 @@ foreach($levels as $key => $value)
 					<b><a href="http://www.google.com/chrome/">http://www.google.com/chrome/</a></b>
 				</p>
 			</canvas>
+			<div id="cache">
+			</div>
 		</div>
 	</body>
 </html>
