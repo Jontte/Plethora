@@ -95,10 +95,15 @@ function Screen2WorldXY(x,y,z)
 	
 //	x-=16;
 //	y-=16;
-	return {
-		x: Math.round((x+y-x/2)/16)-2,
-		y: Math.round(((y-x/2))/16)-1
+	var obj = {
+		x: Math.round((x+y-x/2)/16)-1,
+		y: Math.round(((y-x/2))/16)
 	};
+	
+	obj.x += z;
+	obj.y += z;
+	
+	return obj;
 }
 
 if(!window.console)window.console = {};

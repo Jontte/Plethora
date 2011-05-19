@@ -12,7 +12,7 @@ function draw(opts)
 	if(typeof(opts.tilew) == 'undefined')opts.tilew=32;
 	if(typeof(opts.tileh) == 'undefined')opts.tileh=32;
 	
-	if(opts.x+opts.tilew<0||opts.y+opts.tileh<0||opts.x-opts.tilew>640||opts.y-opts.tileh>480)return;
+	if(opts.x+opts.tilew<0||opts.y+opts.tileh<0||opts.x-opts.tilew>opts.dest.width||opts.y-opts.tileh>opts.dest.height)return;
 	
 	opts.dest.drawImage(
 		opts.src, 

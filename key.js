@@ -7,6 +7,8 @@ var KEY_RIGHT = 39;
 var KEY_UP = 38;
 var KEY_DOWN = 40;
 var KEY_SPACE = 32;
+var KEY_PAGEUP = 33;
+var KEY_PAGEDOWN = 34;
 // Mouse codes are arbitrary
 var MOUSE_LEFT = 201;
 var MOUSE_MIDDLE = 202;

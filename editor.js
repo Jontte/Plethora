@@ -32,25 +32,25 @@ World.initEditor = function()
 		step: function()
 		{
 			var wec = World._editor.classBrowser;
+			var focus = World2Screen(World._cameraPosX, World._cameraPosY, World._cameraPosZ);
 			if(!wec.open)
 			{
 				// Keyboard movement
-				if(Key.changed(KEY_UP) && Key.get(KEY_UP))
+				if(Key.changed(KEY_PAGEUP) && Key.get(KEY_PAGEUP))
 				{
 					this.z++;
 					this.dirty = true;
 					World._cameraPosZ++;
 				}
-				if(Key.changed(KEY_DOWN) && Key.get(KEY_DOWN))
+				if(Key.changed(KEY_PAGEDOWN) && Key.get(KEY_PAGEDOWN))
 				{
 					this.z--;
 					this.dirty = true;
 					World._cameraPosZ--;
-				}
-			
-				
+				}				
 				// mouse movement
-				var pos = Screen2WorldXY(World.mouseX-320, World.mouseY-240, this.z-0.5);
+				focus = World2Screen(World._cameraPosX, World._cameraPosY, World._cameraPosZ);
+				var pos = Screen2WorldXY(World.mouseX+focus.x-320, World.mouseY+focus.y-240, this.z-0.5);
 				
 				var prev = [this.x, this.y];
 				this.x = pos.x;
@@ -75,7 +75,6 @@ World.initEditor = function()
 			
 			Graphics.ctx.save();
 			
-			var focus = World2Screen(World._cameraPosX, World._cameraPosY, World._cameraPosZ);
 			for(var x = 0; x < 15; x++)
 			for(var y = 0; y < 15; y++)
 			{
@@ -195,6 +194,8 @@ World.initEditor = function()
 			ctx.textAlign = 'left';
 			ctx.textBaseline = 'top';
 			ctx.fillText  ('bx,by,bz: ('+this.bx+', '+this.by+', '+this.bz+') x,y,z: ('+this.x+', '+this.y+', '+this.z+')', 30, 80);
+
+			ctx.fillText  ('mx,my: ('+focus.x+', '+focus.y+')', 30, 120);
 			
 			Graphics.ctx.restore();
 			if(wec.online)
@@ -248,40 +249,14 @@ World.initEditor = function()
 						}
 					});
 				}
-				else if(Key.get(MOUSE_LEFT) && 0)
-				{
-/*					World.addScan({
-						pos : [this.x, this.y, this.z],
-						size: [this.bx, this.by, this.bz],
-						classid: c.id,
-						callback: function(objects){
-							var create = true;
-							// only create if nothing non-internal under cursor
-							for(var i = 0; i < objects.length; i++)
-							{
-								var o = objects[i];
-								if(!o.shape.internal)
-								{
-									create = false;
-									break;
-								}
-							}
-							if(create == true)
-							{
-								World.createObject(this.classid, this.pos, {fixed: true});
-							}
-	//						else alert('not added because ' + objects[0].shape.id + ' on the way');
-						}
-					});*/
-				}
-				else if(Key.get(MOUSE_RIGHT) && 0)
+				else if(Key.get(MOUSE_RIGHT) && !we.select.selecting)
 				{
 					World.addScan({
 						pos : [this.x, this.y, this.z],
 						size: [this.bx, this.by, this.bz],
 						callback: function(objects){
 							$.each(objects, function(idx, obj){
-								if(!obj.shape.internal)
+								if(!obj.phantom)
 									World.removeObject(obj);
 							});
 						}
@@ -498,6 +473,31 @@ World.editorStep = function()
 		wec.open = false;
 		if(wec.alpha > 0.0)
 			wec.alpha /= 2;
+			
+			
+	
+		// Camera movement
+		var step = 1;
+		if(Key.get(KEY_LEFT))
+		{
+			World._cameraPosX -= step;
+			World._cameraPosY += step;
+		}
+		if(Key.get(KEY_RIGHT))
+		{
+			World._cameraPosX += step;
+			World._cameraPosY -= step;
+		}
+		if(Key.get(KEY_UP))
+		{
+			World._cameraPosX -= step;
+			World._cameraPosY -= step;
+		}
+		if(Key.get(KEY_DOWN))
+		{
+			World._cameraPosX += step;
+			World._cameraPosY += step;
+		}
 	}
 	if(wec.alpha>0.001)
 	{

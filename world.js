@@ -159,6 +159,18 @@ World = {
 		params.id = id;
 		World._classes[id] = params;
 	},
+	removeClass: function(id)
+	{
+		// Called manually or when the refcount of a class reaches 0...
+		if(!(id in World._classes))return;
+		var c = World._classes[id];
+		c.refcount = 0;
+		if(typeof(c.tileset.ctx) != 'undefined')
+		{
+			$(c.tileset.image).remove();
+		}
+		delete World._classes[id];
+	},
 	createObject : function(classid, pos, options)
 	{
 		if(!options)options = {};
@@ -227,6 +239,15 @@ World = {
 		var idx = World._objects.indexOf(obj);
 		if(idx != -1)
 			World._objects.remove(idx);	
+			
+		if(typeof(obj.shape.refcount) != 'undefined')
+		{
+			obj.shape.refcount--;
+			if(obj.shape.refcount <= 0)
+			{
+				World.removeClass(obj.shape.id);
+			}
+		}
 
 		// renderproxy
 		for(var i = 0; i < World._renderProxy.length; i++)
@@ -304,7 +325,8 @@ World = {
 				category: 'dynamic',
 				internal: true,
 				tiles: [0, 0],
-				size: [size[0],size[1],size[2]]
+				size: [size[0],size[1],size[2]],
+				refcount: 0
 			});
 			
 			var ctx = tileset.ctx;
@@ -931,6 +953,9 @@ World.Entity = function(classid, pos, fixed)
 		this.bx = this.shape.size[0];
 		this.by = this.shape.size[1];
 		this.bz = this.shape.size[2];
+		
+		if(typeof(this.shape.refcount) != 'undefined')
+			this.shape.refcount++;
 	}
 	else
 	{
