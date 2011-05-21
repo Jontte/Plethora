@@ -72,7 +72,78 @@ World.drawObject = function(obj)
 		World.drawSimpleObject(obj);
 }
 
-World.drawSimpleObject = function(obj)
+World.drawHighlight = function(obj)
+{
+	// draw transparent coolish planes around the object to make it appear significant
+	
+	var ctx = Graphics.ctx;
+	ctx.save();
+	
+	ctx.globalAlpha = 0.5;
+	
+	var focus = World2Screen(World._cameraPosX, World._cameraPosY, World._cameraPosZ);
+	var coords = Cuboid2Screen(obj.x, obj.y, obj.z, obj.bx, obj.by, obj.bz);
+	
+	coords.x += 320-focus.x;
+	coords.y += 240-focus.y;
+	
+	ctx.fillStyle = 'yellow';
+	ctx.lineWidth = 2;
+	ctx.strokeStyle = 'yellow';
+//	ctx.fillRect(coords.x, coords.y, coords.w, coords.h);
+	
+	// Find origin:
+	var zero = {
+		x: (obj.by)*16,
+		y: (obj.bz-1)*16
+	};
+	
+	var corners = [
+		[zero.x, 0],
+		[coords.w, 8*obj.bx],
+		[coords.w-zero.x, 8*(obj.bx+obj.by)],
+		[0, 8*obj.by],
+		[0, 8*obj.by + obj.bz*16],
+		[coords.w-zero.x, 8*(obj.bx+obj.by) + obj.bz*16],
+		[coords.w, 8*obj.bx+obj.bz*16]
+	];
+	for(var i = 0; i < 7; i++)
+	{
+		corners[i][0]+=coords.x;
+		corners[i][1]+=coords.y;
+	}
+	
+	ctx.beginPath();
+	ctx.moveTo(corners[0][0],corners[0][1]);
+	ctx.lineTo(corners[1][0],corners[1][1]);
+	ctx.lineTo(corners[2][0],corners[2][1]);
+	ctx.lineTo(corners[3][0],corners[3][1]);
+	ctx.closePath();
+//	ctx.fill();
+	ctx.stroke();
+	
+	ctx.beginPath();
+	ctx.moveTo(corners[2][0],corners[2][1]);
+	ctx.lineTo(corners[3][0],corners[3][1]);
+	ctx.lineTo(corners[4][0],corners[4][1]);
+	ctx.lineTo(corners[5][0],corners[5][1]);
+	ctx.closePath();
+//	ctx.fill();
+	ctx.stroke();
+	
+	ctx.beginPath();
+	ctx.moveTo(corners[1][0],corners[1][1]);
+	ctx.lineTo(corners[2][0],corners[2][1]);
+	ctx.lineTo(corners[5][0],corners[5][1]);
+	ctx.lineTo(corners[6][0],corners[6][1]);
+	ctx.closePath();
+	//ctx.fill();
+	ctx.stroke();
+	
+	ctx.restore();
+}
+
+World.drawSimpleObject = function(obj, transparency)
 {
 	if(!obj.visible)
 		return;

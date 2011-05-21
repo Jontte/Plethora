@@ -181,6 +181,8 @@ World = {
 		var obj = new World.Entity(classid, pos, options.fixed);
 		if(typeof(options.phantom)!='undefined')
 			obj.phantom = options.phantom;
+		if(typeof(options.significant)!='undefined')
+			obj.significant = options.significant;
 
 		World._objects.push(obj);
 
@@ -514,8 +516,11 @@ World = {
 		// Graph is ok. now flatten it and render
 		var result = [];
 
-		for(var i = 0; i < World._objects.length; i++){
-			World._objects[i].internal.visited = false;
+		for(var i = 0; i < World._objects.length; i++)
+		{
+			var o = World._objects[i];
+			o.alpha = 1.0;
+			o.internal.visited = false;
 		};
 		
 		function visit(node){
@@ -525,6 +530,11 @@ World = {
 				for(var i = 0; i < node.internal.after.length; i++)
 					visit(node.internal.after[i]);
 				result.push(node);
+			}
+			if(node.significant)
+			{
+				for(var i = 0; i < node.internal.after.length; i++)
+					node.internal.after[i].alpha = 0.25;
 			}
 		}
 		
@@ -982,6 +992,7 @@ World.Entity.prototype.hasGravity = true; // whether this object is affected by 
 World.Entity.prototype.collideFixed = true; // should this object collide with fixed objects
 World.Entity.prototype.phantom = false; // Phantom objects cannot be collided to
 World.Entity.prototype.visible = true; // invisible objects are cheap to draw :)
+World.Entity.prototype.significant = false; // Used to make covering objects transparent
 World.Entity.prototype.mass = 1;
 World.Entity.prototype.direction = 0;
 World.Entity.prototype.frame = 0; // current frame

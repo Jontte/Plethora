@@ -128,12 +128,12 @@ World.initEditor = function()
 			var xdir = 0;
 			var ydir = 0;
 			var zdir = 0;			
-			if(we.select.selecting == true)
+			if(we.drag.dragging == true)
 			{
 				// mouse movement
-				this.bx = Math.abs(we.select.x - we.layer.x)+1;
-				this.by = Math.abs(we.select.y - we.layer.y)+1;
-				this.bz = Math.abs(we.select.z - (we.layer.z + c.size[2]/2))+1;
+				this.bx = Math.abs(we.drag.x - we.layer.x)+1;
+				this.by = Math.abs(we.drag.y - we.layer.y)+1;
+				this.bz = Math.abs(we.drag.z - (we.layer.z + c.size[2]/2))+1;
 				
 				if(this.bx<c.size[0])this.bx=c.size[0];
 				if(this.by<c.size[1])this.by=c.size[1];
@@ -142,13 +142,13 @@ World.initEditor = function()
 				this.by = Math.floor(this.by/c.size[1])*c.size[1];
 				this.bz = Math.floor(this.bz/c.size[2])*c.size[2];
 
-				xdir = sign(we.select.x - we.layer.x);
-				ydir = sign(we.select.y - we.layer.y);
-				zdir = sign(we.select.z - we.layer.z - c.size[2]/2);
+				xdir = sign(we.drag.x - we.layer.x);
+				ydir = sign(we.drag.y - we.layer.y);
+				zdir = sign(we.drag.z - we.layer.z - c.size[2]/2);
 				
-				this.x = we.select.x - xdir * Math.max(0, this.bx/2-c.size[0]/2);
-				this.y = we.select.y - ydir * Math.max(0, this.by/2-c.size[1]/2);
-				this.z = we.select.z - zdir * Math.max(0, this.bz/2-c.size[2]/2);
+				this.x = we.drag.x - xdir * Math.max(0, this.bx/2-c.size[0]/2);
+				this.y = we.drag.y - ydir * Math.max(0, this.by/2-c.size[1]/2);
+				this.z = we.drag.z - zdir * Math.max(0, this.bz/2-c.size[2]/2);
 			}
 			else
 			{
@@ -176,17 +176,31 @@ World.initEditor = function()
 			
 				Graphics.ctx.globalAlpha = 0.5;
 			
-				var t = c.tiles;
-				while(typeof(t[0]) != 'number')t = t[0];
-				draw({
-					x: coords.x, 
-					y: coords.y, 
-					tilex: t[0], 
-					tiley: t[1], 
-					src: c.tileset.image,
-					tilew: coords.w,
-					tileh: coords.h
-				});
+				
+				if(Key.get(MOUSE_LEFT) && we.selectedObject != null)
+				{
+					draw({
+						x: coords.x,
+						y: coords.y,
+						tilex: 3,
+						tiley: 11,
+						src: we.tileset.image
+					});
+				}
+				else
+				{
+					var t = c.tiles;
+					while(typeof(t[0]) != 'number')t = t[0];
+					draw({
+						x: coords.x, 
+						y: coords.y, 
+						tilex: t[0], 
+						tiley: t[1], 
+						src: c.tileset.image,
+						tilew: coords.w,
+						tileh: coords.h
+					});
+				}
 			}
 			
 			ctx.fillStyle    = '#000';
@@ -200,57 +214,97 @@ World.initEditor = function()
 			Graphics.ctx.restore();
 			if(wec.online)
 			{
-				we.select.selecting = false;
+				we.drag.dragging = false;
 			}
 			else
 			{
 				if(Key.get(MOUSE_LEFT) && Key.changed(MOUSE_LEFT))
 				{
-					we.select.x = we.layer.x;
-					we.select.y = we.layer.y;
-					we.select.z = we.layer.z+c.size[2]/2;
-					we.select.selecting = true;
-				}
-				else if(!Key.get(MOUSE_LEFT) && Key.changed(MOUSE_LEFT))
-				{
-					we.select.selecting = false;
-					// create big object
+					World._editor.selectedObject = null;			
+					we.drag.dragging = false;
+					// look for object under cursor
+
 					World.addScan({
 						pos : [this.x, this.y, this.z],
 						size: [this.bx, this.by, this.bz],
 						c: c,
 						callback: function(objects){
-							var create = true;
-							// only create if nothing phantom under cursor
-							for(var i = 0; i < objects.length; i++)
+							
+							for(var i = 0; i < objects.length ; i++)
 							{
-								var o = objects[i];
-								if(o.phantom === false)
+								var obj = objects[i];
+								if(!obj.phantom)
 								{
-									create = false;
-									break;
+									World._editor.selectedObject = obj;
+									World._editor.selectionOffsetX = obj.x - this.x;
+									World._editor.selectionOffsetY = obj.y - this.y;
+									World._editor.selectionOffsetZ = obj.z - this.z;
+									return;
 								}
-							}
-							if(create == true)
-							{
-								if(	this.size[0] != this.c.size[0] ||
-									this.size[1] != this.c.size[1] ||
-									this.size[2] != this.c.size[2] )
-								{
-									// a huge object compound..
-									World.createObjectCompound(this.c.id, this.pos, this.size, {fixed: true});
-								}
-								else
-								{
-									// just one object being dragged to place..
-									World.createObject(this.c.id, this.pos, {fixed: true});
-								}
-							}
+							}				
+							// No object was selected: start dragging here
+							we.drag.x = we.layer.x;
+							we.drag.y = we.layer.y;
+							we.drag.z = we.layer.z+c.size[2]/2;
+							we.drag.dragging = true;
 						}
 					});
 				}
-				else if(Key.get(MOUSE_RIGHT) && !we.select.selecting)
+				else if(!Key.get(MOUSE_LEFT) && Key.changed(MOUSE_LEFT))
 				{
+					if(we.drag.dragging == true)
+					{
+						World.addScan({
+							pos : [this.x, this.y, this.z],
+							size: [this.bx, this.by, this.bz],
+							c: c,
+							callback: function(objects)
+							{
+								// If CTRL is held, kill all objects beneath cursor
+								// Otherwise only create if theres room
+								var create = true;
+								if(Key.get(KEY_CTRL))
+								{
+									$.each(objects, function(idx, obj){
+										if(!obj.phantom)
+											World.removeObject(obj);
+									});
+								}
+								else
+								{
+									for(var i = 0; i < objects.length; i++)
+									{
+										var o = objects[i];
+										if(!o.phantom)
+										{
+											create = false;
+											break;
+										}
+									}
+								}
+								if(create)
+								{
+									if(	this.size[0] != this.c.size[0] ||
+										this.size[1] != this.c.size[1] ||
+										this.size[2] != this.c.size[2] )
+									{
+										// a huge object compound..
+										World.createObjectCompound(this.c.id, this.pos, this.size, {fixed: true});
+									}
+									else
+									{
+										// just one object being dragged to place..
+										World.createObject(this.c.id, this.pos, {fixed: true});
+									}
+								}
+							}
+						});
+					}
+					we.drag.dragging = false;
+				}
+				else if(Key.get(MOUSE_RIGHT) && !we.drag.dragging)
+				{
+					we.selectedObject = null;
 					World.addScan({
 						pos : [this.x, this.y, this.z],
 						size: [this.bx, this.by, this.bz],
@@ -262,6 +316,20 @@ World.initEditor = function()
 						}
 					});
 				}
+				
+				
+				
+				if(Key.get(MOUSE_LEFT) && !Key.changed(KEY_LEFT) && we.selectedObject != null)
+				{
+					// While holding down, make selected object follow cursor
+					we.selectedObject.setPos(
+						this.x + we.selectionOffsetX,
+						this.y + we.selectionOffsetY,
+						this.z + we.selectionOffsetZ);
+				}
+				
+				
+				
 			}
 			if(this.x != prevpos[0] || this.y != prevpos[1] || this.z != prevpos[2] ||
 			   this.bx != prevsize[0] || this.by != prevsize[1] || this.bz != prevsize[2])
@@ -280,12 +348,16 @@ World.initEditor = function()
 	we.layer = layer;
 	we.selectedClass = 0;
 	
-	we.select = {
+	we.drag = {
 		x: 0,
 		y: 0,
 		z: 0,
-		selecting : false
+		dragging : false
 	};
+	we.selectedObject = null;
+	we.selectionOffsetX = 0;
+	we.selectionOffsetY = 0;
+	we.selectionOffsetZ = 0;
 	
 	we.classBrowser = {
 		classes: [], // by category
@@ -328,13 +400,20 @@ World.initEditor = function()
 
 World.editorStep = function()
 {
+	var we = World._editor;
+	var ctx = Graphics.ctx;	
+	
+	/* draw selection overlay .. */
+	
+	if(we.selectedObject != null)
+	{
+		World.drawHighlight(we.selectedObject);
+	}
+
 	/*	
 		In the next step we do a sweep&prune of all objects and execute any
 		scans
 	*/
-	var we = World._editor;
-	var ctx = Graphics.ctx;	
-	
 	if(we.scans.length > 0)
 	{
 		// Add decoys for each scan..
@@ -473,9 +552,7 @@ World.editorStep = function()
 		wec.open = false;
 		if(wec.alpha > 0.0)
 			wec.alpha /= 2;
-			
-			
-	
+		
 		// Camera movement
 		var step = 1;
 		if(Key.get(KEY_LEFT))
@@ -547,10 +624,7 @@ World.editorStep = function()
 				if(Math.abs(c.x-tx)<1)c.x=tx;
 				if(Math.abs(c.y-ty)<1)c.y=ty;
 				
-				ctx.fillRect(c.x, c.y, 32, 32);
-				if(x==wec.selectedClass[y])
-				{
-				}
+				ctx.fillRect(Math.floor(c.x), Math.floor(c.y), 32, 32);
 			}
 		}
 		for(var y = 0 ; y < wec.classes.length; y++)
@@ -562,7 +636,7 @@ World.editorStep = function()
 				{
 					ctx.strokeStyle = 'red';
 					ctx.lineWidth = 3;
-					ctx.strokeRect(c.x, c.y, 32, 32);
+					ctx.strokeRect(Math.floor(c.x), Math.floor(c.y), 32, 32);
 				}
 				var t = c.c.tiles;
 				while(typeof(t[0]) != 'number')t = t[0];

@@ -9,6 +9,9 @@ var KEY_DOWN = 40;
 var KEY_SPACE = 32;
 var KEY_PAGEUP = 33;
 var KEY_PAGEDOWN = 34;
+var KEY_CTRL = 17;
+var KEY_ALT = 18;
+
 // Mouse codes are arbitrary
 var MOUSE_LEFT = 201;
 var MOUSE_MIDDLE = 202;
@@ -48,14 +51,14 @@ var Key = {
 //		$('#canvas').mouseleave(Key.mouseup);
 	},
 	mousedown: function(evt){
-		     if(evt.which == 1)Key.keydown({keyCode:MOUSE_LEFT});
-		else if(evt.which == 2)Key.keydown({keyCode:MOUSE_MIDDLE});
-		else if(evt.which == 3)Key.keydown({keyCode:MOUSE_RIGHT});
+		     if(evt.which == 1)return Key.keydown({keyCode:MOUSE_LEFT});
+		else if(evt.which == 2)return Key.keydown({keyCode:MOUSE_MIDDLE});
+		else if(evt.which == 3)return Key.keydown({keyCode:MOUSE_RIGHT});
 	},
 	mouseup: function(evt){
-		     if(evt.which == 1)Key.keyup({keyCode:MOUSE_LEFT});
-		else if(evt.which == 2)Key.keyup({keyCode:MOUSE_MIDDLE});
-		else if(evt.which == 3)Key.keyup({keyCode:MOUSE_RIGHT});
+		     if(evt.which == 1)return Key.keyup({keyCode:MOUSE_LEFT});
+		else if(evt.which == 2)return Key.keyup({keyCode:MOUSE_MIDDLE});
+		else if(evt.which == 3)return Key.keyup({keyCode:MOUSE_RIGHT});
 	},
 	keydown : function(evt){
 		if(Key._key[evt.keyCode] != true)
