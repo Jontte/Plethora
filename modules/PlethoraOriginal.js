@@ -25,56 +25,40 @@ World.addModule('PlethoraOriginal',
 			category: 'misc',
 			tiles : [5,1],
 			shape: World.CYLINDER,
-			radius: 0.3,
-			height: [0,1]
+			size: [0.5,0.5,0.5]
 		});
-		World.addClass('dudetop', {
+		World.addClass('dude',
+		{
 			tileset: plethora_original,
-			internal: true,
 			flags: World.DIRECTED | World.ANIMATED,
 			tiles: [
-				[[0,3],[1,3],[2,3],[3,3]], // north
-				[[0,4],[1,4],[2,4],[3,4]], // east
+				[[0,4],[1,4],[2,4],[3,4]], // north
+				[[4,2],[5,2],[6,2],[7,2]], // east
 				[[0,2],[1,2],[2,2],[3,2]], // south
-				[[0,5],[1,5],[2,5],[3,5]] // west
+				[[4,4],[5,4],[6,4],[7,4]] // west
 			],
-			shape: World.CYLINDER,
-			radius : 0.4,
-			height: [0,1] 
-		});
-		World.addClass('dudebottom', {
-			tileset: plethora_original,
-			internal: true,
-			flags: World.DIRECTED | World.ANIMATED,
-			tiles: [
-				[[4,3],[5,3],[6,3],[7,3]],
-				[[4,4],[5,4],[6,4],[7,4]],
-				[[4,2],[5,2],[6,2],[7,2]],
-				[[4,5],[5,5],[6,5],[7,5]]
-			],
-			shape: World.CYLINDER,
-			radius: 0.4,
-			height: [0,1]
-		});
-/*		World.addComplexClass('dude',{
-			create: function(x,y,z,params){
-				if(params == undefined)params = {};
-				if(params.allowjump == undefined)params.allowjump=true;
+			//shape: World.CYLINDER,
+			size: [1,1,2],
+			category: 'characters',
+			init: function(params){
+				if(typeof(params) != 'object')params = {};
+				if(!('allowjump' in params))
+					params.allowjump=true;
 				
-				var plr = World.createObject('dudebottom', x, y, z,   {fixed: false});
-				plr.head = World.createObject('dudetop',   x, y, z+1, {fixed: false});
-				plr.walkx = plr.walky = 0;
+				params.fixed = false;
+				params.mass = 1;
+				
+				this.walkx = this.walky = 0;
 
-				plr.frameMaxTicks=0;
-				plr.head.frameMaxTicks=0;
+				this.frameMaxTicks=0;
+				this.frameMaxTicks=0;
 
-				World.linkObjects(plr, plr.head);
-
-				World.setCameraFocus(plr);
+				if(!World._editor.online)
+					World.setCameraFocus(this);
 		
-				plr.allowjump = allowjump;
-				plr.collision_listener = function(self, other, nx, ny, nz, displacement){
-					if(nz>0.5)
+				this.allowjump = params.allowjump;
+				this.collision_listener = function(self, other, nx, ny, nz, displacement){
+					if(nz>0)
 					{
 						return {
 							vx: -self.walkx,
@@ -87,7 +71,6 @@ World.addModule('PlethoraOriginal',
 			},
 			step: function(){
 				var plr = this;
-				var head = this.head;
 				var d = 0.15;
 	
 				var movement_x = 0;
@@ -119,37 +102,34 @@ World.addModule('PlethoraOriginal',
 
 				if(Key.get(KEY_LEFT))
 				{
-					plr.direction = WEST;
+					plr.direction = World.WEST;
 				}
 				else if(Key.get(KEY_UP))
 				{
-					plr.direction = NORTH;
+					plr.direction = World.NORTH;
 				}
 				else if(Key.get(KEY_RIGHT))
 				{
-					plr.direction = EAST;
+					plr.direction = World.EAST;
 				}
 				else if(Key.get(KEY_DOWN))
 				{
-					plr.direction = SOUTH;
+					plr.direction = World.SOUTH;
 				}
 	
 				var speed = (plr.vx*plr.vx+plr.vy*plr.vy);
 				var maxticks = (speed<0.001) ? 0 : 0.10/speed;
 				plr.frameMaxTicks = maxticks;
-				plr.head.frameMaxTicks = maxticks;
 	
 				if(plr.allowjump == true && Key.changed(KEY_SPACE) && Key.get(KEY_SPACE))
 				{
 					var f = 0.25;
 					plr.fz += f;
-					plr.head.fz += f;
 				}
-	
-				// Synch head movement to body movement
-				plr.head.direction = plr.direction;
+				
+				World.drawSimpleObject(this);
 			}
-		});*/
+		});
 		World.addClass('groundrugged', {
 			tileset: plethora_original,
 			category: 'terrain',
@@ -233,8 +213,6 @@ World.addModule('PlethoraOriginal',
 			category: 'terrain',
 			tiles: [2,1],
 			shape: World.CYLINDER,
-			radius: 0.40, 
-			height: [0,1]
 		});
 		World.addClass('crate', {
 			tileset: plethora_original,
@@ -250,30 +228,28 @@ World.addModule('PlethoraOriginal',
 			tileset: plethora_original,
 			internal: true,
 			tiles: [8,1],
-			shape: World.CYLINDER, 
-			radius: 0.5, 
-			height: 1
+			shape: World.CYLINDER
 		});
 		World.addClass('darkblock', {
 			tileset: plethora_original,
 			category: 'architecture',
 			tiles: [0,11],
 			shape: World.BOX, 
-			bbox: [[0,0,0],[1,1,0.5]]
+			size: [1,1,0.5]
 		});
 		World.addClass('fencex', {
 			tileset: plethora_original,
 			category: 'architecture',
 			tiles:[4,0], 
 			shape: World.BOX, 
-			bbox: [[0,0.3,0],[1,0.7,1]]
+			size: [1,0.4,1]
 		});
 		World.addClass('fencey', {
 			tileset: plethora_original,
 			category: 'architecture',
 			tiles:[5,0], 
 			shape: World.BOX,
-			bbox: [[0.3,0,0],[0.7,1,1]]
+			bbox: [0.4,1,1]
 		});
 		World.addClass('beltx', {
 			tileset: plethora_original,
@@ -281,7 +257,7 @@ World.addModule('PlethoraOriginal',
 			flags: World.ANIMATED, 
 			tiles: [[10,0],[11,0],[12,0],[13,0],[14,0]], 
 			shape: World.BOX,
-			bbox: [[0,0,0],[1,1,0.5]]
+			size: [1,1,0.5]
 		});
 		World.addClass('belty', {
 			tileset: plethora_original,
@@ -289,7 +265,7 @@ World.addModule('PlethoraOriginal',
 			flags: World.ANIMATED, 
 			tiles: [[10,1],[11,1],[12,1],[13,1],[14,1]], 
 			shape: World.BOX, 
-			bbox: [[0,0,0],[1,1,0.5]]
+			size: [1,1,0.5]
 		});
 		World.addClass('famouslogo', {
 			tileset: plethora_original,

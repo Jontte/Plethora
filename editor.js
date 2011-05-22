@@ -284,18 +284,15 @@ World.initEditor = function()
 								}
 								if(create)
 								{
+									var newid = this.c.id;
 									if(	this.size[0] != this.c.size[0] ||
 										this.size[1] != this.c.size[1] ||
 										this.size[2] != this.c.size[2] )
 									{
 										// a huge object compound..
-										World.createObjectCompound(this.c.id, this.pos, this.size, {fixed: true});
+										newid = 'compound('+newid+','+this.size[0]+','+this.size[1]+','+this.size[2]+')';
 									}
-									else
-									{
-										// just one object being dragged to place..
-										World.createObject(this.c.id, this.pos, {fixed: true});
-									}
+									World.createObject(newid, this.pos, {fixed: true});
 								}
 							}
 						});
@@ -369,13 +366,16 @@ World.initEditor = function()
 		open: false
 	};
 	$.each(World._classes, function(id, c){
-		if(typeof(c.internal) === 'undefined')
+		if(!('internal' in c) || c.internal === false)
 		{
 			var wec = we.classBrowser;
 
 			var cat = 'uncategorized';
-			if(typeof(c.category) != 'undefined')
+			if('category' in c)
 				cat = c.category;
+			
+			if(cat == 'dynamic')
+				return;
 			
 			if(typeof(wec.categories[cat]) == 'undefined')
 			{

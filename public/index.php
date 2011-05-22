@@ -6,24 +6,32 @@
 	
 	$levels =	
 		array(
-			'Puzzle' 	=> 'puzzle.lev'
+			array('name' => 'Puzzle',
+				  'src' => 'puzzle.lev',
+				  'author' => 'Joonas Haapala',
+				  'description' => 'A testing level')
 		);
 
-	if(isset($_GET['level']))
+	if(isset($_GET['level_list']))
+	{
+		header('Content-type: text/json');
+		die(json_encode($levels));
+	}
+	else if(isset($_GET['level']))
 	{
 		$selection = $_GET['level'];
 		header('Content-type: text/json');
 		
-		if(array_key_exists($selection, $levels))
+		foreach($levels as $lev)
 		{
-			$file = $levels[$selection];
-			die(file_get_contents($source_directory.'levels/'.$file));
+			if($lev['src'] == $selection)
+				die(file_get_contents($source_directory.'levels/'.$selection));
 		}
 		die();
 	}
 	else if(isset($_GET['get']) && $minify === false)
 	{
-		header('Content-type: application/x-javascript');
+		header('Content-type: application/javascript');
 		$file = $_GET['get'];
 		if(in_array($file, $files))
 		{
@@ -43,18 +51,6 @@
 		<script type="text/javascript" src="jquery-1.5.1.min.js"></script>
 		<script type="text/javascript" src="jquery-ui-1.8.12.custom.min.js"></script>
 		<?php
-
-			$selection = array_keys($levels);
-			$selection = $selection[0];
-				
-			if(isset($_COOKIE['level_selection']))
-			{
-				$cookie = $_COOKIE['level_selection'];
-			 	if(strlen($cookie)>2)
-					$selection = $cookie;
-			}
-
-			
 			if($minify === true)
 			{
 				echo '<script type="text/javascript">';
@@ -87,6 +83,9 @@
 				float: left;
 				text-align: center;
 			}
+			#panel-content {
+				height: 404px;
+			}
 			#browser-warning {
 				visibility: hidden;
 				background-color: #60A0FF;
@@ -95,6 +94,11 @@
 				width: 598px;
 				height: 438px;
 				padding: 20px 20px 20px 20px;
+			}
+			#worksbestwith {
+				position: absolute;
+				top: 450px;
+				left: 48px;	
 			}
 		</style>
 			<?php 
@@ -161,33 +165,31 @@
 		</div>
 		<div id="panel" class="ui-corner-all ui-widget">
 			<div class="ui-corner-all ui-widget-header"><h2>Plethora</h2></div>
-			<div class="ui-corner-all ui-widget-content">
+			<div id="panel-content" class="ui-corner-all ui-widget-content">
 				<input type="button" id="about-button" value="About"/>
 				<input type="button" id="tech-button" value="Tech"/>
 				<input type="button" id="todo-button" value="Todo"/>
 				<input type="button" id="author-button" value="Author"/>
 	
 				<hr/>
-				<select name="Level selection" id="lselect" size="4" onchange="reset()">
-<?php
-foreach($levels as $key => $value)
-{
-	$msg = ($key==$selection)?' selected="true"':'';
-	echo "<option value=\"$key\"$msg>$key</option>\n";
-}
-?>
+				<select name="Level selection" id="lselect" size="4">
 				</select>
 				
 				<input id="resetbutton" type="button" value="Reset"/>
 			
 				<div id="sw-radio">
-					<input type="radio" id="sw-radio-play" name="radio" checked="checked" /><label for="sw-radio-play">Play</label>
-					<input type="radio" id="sw-radio-edit" name="radio" /><label for="sw-radio-edit">Edit</label>
+					<input type="radio" id="sw-radio-play" name="radio" checked="checked" />
+					<label for="sw-radio-play">Play</label>
+					<input type="radio" id="sw-radio-edit" name="radio" />
+					<label for="sw-radio-edit">Edit</label>
 				</div>
-				<div style="height: 80px;"></div>
-				<a href="http://www.google.com/chrome">
-					<img src="worksbestwith.png" alt="Works best with Google Chrome"/>
-				</a>
+				<input id="save-btn" type="button" value="Save"/>
+				
+				<div id="worksbestwith">
+					<a href="http://www.google.com/chrome">
+						<img src="worksbestwith.png" alt="Works best with Google Chrome"/>
+					</a>
+				</div>
 			</div>
 		</div>
 		<div id="game">
@@ -205,8 +207,7 @@ foreach($levels as $key => $value)
 					<b><a href="http://www.google.com/chrome/">http://www.google.com/chrome/</a></b>
 				</p>
 			</canvas>
-			<div id="cache">
-			</div>
+			<div id="cache"></div>
 		</div>
 	</body>
 </html>

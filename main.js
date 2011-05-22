@@ -6,7 +6,8 @@ var Config = {
 	gamestate : 'halt',
 	FPS: 30,
 	areyousure: false, //Whether the user is willing to try plethora despite using browsers with poor performance
-	editor: false //Whether we're in editor mode or not
+	editor: false, //Whether we're in editor mode or not
+	level_cache : {}
 };
 var Graphics = {
 	ctx : null,
@@ -16,11 +17,9 @@ var Graphics = {
 $(document).ready(function(){
 
 	// Disable context menu on right click
-	$(function() {
-        $(this).bind("contextmenu", function(e) {
-            e.preventDefault();
-        });
-    }); 
+	$(this).bind("contextmenu", function(e) {
+        e.preventDefault();
+    });
 	// Start capturing mouse position...
 	$('#canvas').mousemove(function(e){
 		var x = e.pageX - this.offsetLeft;
@@ -28,6 +27,18 @@ $(document).ready(function(){
 		World.mouseX = x;
 		World.mouseY = y;
   	}); 
+  	// Hide unwanted elements
+  	$('#cache').hide();
+  	
+ 	$('#save-btn').button().hide().click(function(){
+		var level = World.saveLevel();
+		var src = 'custom_'+new Date().getTime();
+		var levelname = 'custom';
+		
+		Config.level_cache[src]=level;
+		$('#lselect').append('<option value="'+src+'">'+levelname+'</option>');	
+	});
+	
 	$.each(['about','tech','todo','author'], function(idx, dlg){
 		$('#'+dlg+'-text').dialog({
 				modal:true,
@@ -53,7 +64,23 @@ $(document).ready(function(){
 	$('#sw-radio').buttonset();
 	$('#sw-radio-play').click(reset);
 	$('#sw-radio-edit').click(reset);
-	reset();
+	
+	// Request list of levels from server
+	$.getJSON('index.php?level_list', function(json)
+	{
+		$.each(json, function(idx, level)
+		{
+			var s = '';
+			if(getCookie('level_selection') == level.src)
+			{
+				s = ' selected="true"';
+			}
+			$('#lselect').append('<option value="'+level.src+'"'+s+'>'+level.name+'</option>');	
+		});
+		reset();
+	});
+	
+	$('#lselect').change(reset);
 });
 
 function reset(areyousure)
@@ -64,16 +91,16 @@ function reset(areyousure)
 	{
 		if(areyousure == undefined && !Config.areyousure)
 		{
-			document.getElementById('browser-warning').style.visibility = 'visible';
-			document.getElementById('canvas').style.visibility = 'hidden';
+			$('#browser-warning').show();
+			$('#canvas').hide();
 			return;
 		}
 		else
 		{
 			// Let's remember the user option for now.
 			Config.areyousure = true;
-			document.getElementById('browser-warning').style.visibility = 'hidden';
-			document.getElementById('canvas').style.visibility = 'visible';
+			$('#browser-warning').hide();
+			$('#canvas').show();
 		}
 	}
 	
@@ -87,24 +114,50 @@ function reset(areyousure)
 	if(Config.gamestate != 'halt')
 		return;
 
-	Config.gamestate = 'initializing';
-
 	World.reset();
 
 	// Select & load level
 	var levelname = document.getElementById('lselect').value;
 
+	if(levelname == '')
+	{
+		return;
+	}
 	// The level has been selected! Save it as a cookie
 	setCookie('level_selection', levelname);
-
-	// Load level and initialize
-	$.getJSON('index.php?level='+levelname, function(json){
 	
+	
+	function fn(levelname)
+	{
+		var json = Config.level_cache[levelname];
+		Config.gamestate = 'initializing';
+		
 		var use_editor = $('#sw-radio-edit').is(':checked');
-	
+		
+		var savebtn = $('#save-btn');
+
+		if(use_editor)
+			savebtn.show();
+		else
+			savebtn.hide();
+		
 		World.loadLevel(levelname, json, use_editor);
 		initialize();
-	});
+	};
+	
+	// Not in level cache yet?
+	if(!(levelname in Config.level_cache))
+	{
+		// load it there
+		$.getJSON('index.php?level='+levelname, function(json){
+			Config.level_cache[levelname] = json;
+			fn(levelname);
+		});
+	}
+	else
+	{
+		fn(levelname);
+	}
 }
 function load_gfx(filename, onload)
 {

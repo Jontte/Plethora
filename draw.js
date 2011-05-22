@@ -75,7 +75,6 @@ World.drawObject = function(obj)
 World.drawHighlight = function(obj)
 {
 	// draw transparent coolish planes around the object to make it appear significant
-	
 	var ctx = Graphics.ctx;
 	ctx.save();
 	

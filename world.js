@@ -152,10 +152,13 @@ World = {
 	addClass : function(id, params)
 	{
 		// Physics shape defaults to box
-		if(typeof(params.shape) == 'undefined')params.shape = World.BOX;
-		if(typeof(params.flags) == 'undefined')params.flags = 0;
-		if(typeof(params.size) == 'undefined')params.size = [1,1,1];
-		// TODO: Validate params here
+		if(!('shape' in params))params.shape = World.BOX;
+		if(!('flags' in params))params.flags = 0;
+		if(!('size' in params))params.size = [1,1,1];
+		if(!('internal' in params))params.internal = false;
+		
+		if(!('tiles' in params) && !params.internal)throw 'Class definition '+id+' missing tiles attribute';
+		
 		params.id = id;
 		World._classes[id] = params;
 	},
@@ -173,17 +176,50 @@ World = {
 	},
 	createObject : function(classid, pos, options)
 	{
-		if(!options)options = {};
-		
-		if(typeof(options.fixed)=='undefined')
-			options.fixed = true;
-		
-		var obj = new World.Entity(classid, pos, options.fixed);
-		if(typeof(options.phantom)!='undefined')
-			obj.phantom = options.phantom;
-		if(typeof(options.significant)!='undefined')
-			obj.significant = options.significant;
+		// find out if classid is a compound classid..
+		var m = classid.match(/compound\(([a-zA-Z]+),([0-9.]+),([0-9.]+),([0-9.]+)\)/);
+		if(m != null)
+		{
+			World.createCompoundClass(m[1], [
+				parseInt(m[2]),
+				parseInt(m[3]),
+				parseInt(m[4])
+				]
+			);
+		}
+		if(typeof(options) == 'undefined')
+			options = {};
 
+		// Complex object initialization
+		var obj = new World.Entity(classid);
+		obj.x = pos[0];
+		obj.y = pos[1];
+		obj.z = pos[2];
+		
+		if('init' in obj.shape)
+			obj.shape.init.call(obj, options);
+			
+		// verify params
+		if(!('fixed' in options))
+		{
+			if(!('mass' in options))
+			{
+				options.mass = 0;
+			}
+			options.fixed = options.mass<=0;
+		}
+		if(!('mass' in options))
+		{
+			options.mass = options.fixed?0:1;
+		}
+		
+		// apply params
+		if('phantom' in options)
+			obj.phantom = options.phantom;
+		if('significant' in options)
+			obj.significant = options.significant;
+		obj.mass = options.mass;
+		obj.fixed = options.fixed;			
 		World._objects.push(obj);
 
 		// Objects have to be added to the renderProxy as well
@@ -220,13 +256,13 @@ World = {
 		}
 		else {
 			// Whereas fixed objects go to a large tree for fast broadphase collision testing
-			if(!options.phantom)
+			if(!('phantom' in options) || options.phantom == false)
 			{
 				World._tree.insert({
 					intervals: [
-						{a: pos[0]-obj.bx/2, b: obj.bx[0]},
-						{a: pos[1]-obj.by/2, b: obj.by[1]},
-						{a: pos[2]-obj.bz/2, b: obj.bz[2]},
+						{a: pos[0]-obj.bx/2, b: obj.bx},
+						{a: pos[1]-obj.by/2, b: obj.by},
+						{a: pos[2]-obj.bz/2, b: obj.bz},
 					],
 					object: obj
 				});
@@ -301,10 +337,9 @@ World = {
 			});
 		}
 	},
-	createObjectCompound : function(classid, pos, size, options)
+	createCompoundClass : function(classid, size)
 	{
-		// Used to create big objects that consist of many small tiles drawn together
-		// -> creates new classes on the fly as needed..
+		// Used to create big classes that consist of many small tiles drawn together
 		// Comes with an off-screen canvas 
 		
 		if(!(classid in World._classes))
@@ -312,10 +347,8 @@ World = {
 			
 		var c = World._classes[classid];
 		
-		// construct class name...
-		
-		var newclass = classid + '_compound.' + size[0] + '.' + size[1] + '.' + size[2];
-		
+		// construct class name...		
+		var newclass = 'compound('+classid + ',' + size[0] + ',' + size[1] + ',' + size[2] + ')';
 		if(!(newclass in World._classes))
 		{
 			var rect = Cuboid2Screen(0,0,0,size[0],size[1],size[2]);
@@ -325,7 +358,6 @@ World = {
 			World.addClass(newclass, {
 				tileset: tileset,
 				category: 'dynamic',
-				internal: true,
 				tiles: [0, 0],
 				size: [size[0],size[1],size[2]],
 				refcount: 0
@@ -367,8 +399,6 @@ World = {
 				});
 			}
 		}
-		
-		return World.createObject(newclass, pos, options);
 	},
 	linkObjects: function(o1, o2, maxforce)
 	{
@@ -616,11 +646,12 @@ World = {
 			World.editorStep();
 			ctx.restore();
 		}
+		/*
 		ctx.fillStyle    = '#000';
 		ctx.font         = '16px sans-serif';
 		ctx.textAlign = 'left';
 		ctx.textBaseline = 'top';
-		ctx.fillText  ('Objects: '+World._objects.length + ' depth comparisons: ' + comparisons, 30, 30);
+		ctx.fillText  ('Objects: '+World._objects.length + ' depth comparisons: ' + comparisons, 30, 30);*/
 	},
 	physicsStep : function()
 	{
@@ -652,7 +683,7 @@ World = {
 				We also collide mobile objects to fixed objects inside this loop
 			*/
 
-			var objectbuffer = [];
+			var objectbuffer = {};
 			for(var i = 0; i < World._proxy.length; i++)
 			{
 				var p = World._proxy[i];
@@ -871,13 +902,16 @@ World = {
 	_collide : function(o1, o2)
 	{
 		// Quick bounding volume checks to rule obvious cases out:
+		var dx = o2.x-o1.x;
+		var dy = o2.y-o1.y;
+		var dz = o2.z-o1.z;
+	
+		var tx = (o1.bx+o2.bx)/2;
+		var ty = (o1.by+o2.by)/2;
+		var tz = (o1.bz+o2.bz)/2;
 
-		if(o1.x+1.01 < o2.x) return false;
-		if(o1.x-1.01 > o2.x) return false;
-		if(o1.y+1.01 < o2.y) return false;
-		if(o1.y-1.01 > o2.y) return false;
-		if(o1.z+1.01 < o2.z) return false;
-		if(o1.z-1.01 > o2.z) return false;
+		if(Math.abs(dx)>tx||Math.abs(dy)>ty||Math.abs(dz)>tz)
+			return false;
 		
 		// Dispatch to dedicated worker functions
 		var collisions = World._colliders[o1.shape.shape][o2.shape.shape](o1,o2);
@@ -931,8 +965,7 @@ World = {
 			var classid = obj[0];
 			var pos = obj[1];
 			var mass = obj[2];
-			var instance = World.createObject(classid, pos, {fixed: mass==0});
-			instance.mass = mass;
+			var instance = World.createObject(classid, pos, {mass: mass});
 		}
 		
 		if(World._editor.online)
@@ -940,23 +973,34 @@ World = {
 			// In editor mode we'll need a couple of custom classes and instances
 			World.initEditor();
 		}
+	},
+	saveLevel: function()
+	{
+		// Dump all objects and settings to a single json
+		var obj = [];
+		var json = {
+			module: 'PlethoraOriginal', // Hardcoded for now
+			objects: obj	
+		};
+		
+		for(var i = 0 ; i < World._objects.length; i++)
+		{
+			var o = World._objects[i];
+			if(!o.shape.internal)
+			{
+				obj.push([
+					o.shape.id, [o.x,o.y,o.z], o.mass
+				]);
+			}
+		}
+		return json;
 	}
 };
 
 
-World.Entity = function(classid, pos, fixed)
+World.Entity = function(classid)
 {
-	this.x = pos[0];
-	this.y = pos[1];
-	this.z = pos[2];
-	this.bx = 1;
-	this.by = 1;
-	this.bz = 1;
-	this.fixed = fixed; // take part in dynamics simulation if fixed=false
 	this.id = World._objectCounter++; // Unique id is assigned to each object
-	this.shape = null;
-	
-	// The tile better be loaded with loadTile by now
 	if(classid in World._classes)
 	{
 		this.shape = World._classes[classid];	
@@ -969,14 +1013,16 @@ World.Entity = function(classid, pos, fixed)
 	}
 	else
 	{
-		console.log('Warning: Unknown tile referenced: \''+classid+'\'');
-		throw 'Unknown tile!';
+		console.log('Warning: Unknown class referenced: \''+classid+'\'');
+		throw 'Unknown class!';
 	}
-	// Complex object initialization
-	if('init' in this.shape)
-		this.shape.init.call(this);
 }
 
+World.Entity.prototype.shape = null;
+World.Entity.prototype.id = 0;
+World.Entity.prototype.x = 0; // pos
+World.Entity.prototype.y = 0;
+World.Entity.prototype.z = 0;
 World.Entity.prototype.bx = 1; // bbox
 World.Entity.prototype.by = 1;
 World.Entity.prototype.bz = 1;
@@ -993,7 +1039,7 @@ World.Entity.prototype.collideFixed = true; // should this object collide with f
 World.Entity.prototype.phantom = false; // Phantom objects cannot be collided to
 World.Entity.prototype.visible = true; // invisible objects are cheap to draw :)
 World.Entity.prototype.significant = false; // Used to make covering objects transparent
-World.Entity.prototype.mass = 1;
+World.Entity.prototype.mass = 0;
 World.Entity.prototype.direction = 0;
 World.Entity.prototype.frame = 0; // current frame
 World.Entity.prototype.frameTick = 0; // current tick
