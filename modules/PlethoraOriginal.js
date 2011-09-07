@@ -242,14 +242,14 @@ World.addModule('PlethoraOriginal',
 			category: 'architecture',
 			tiles:[4,0], 
 			shape: World.BOX, 
-			size: [1,0.4,1]
+			size: [1,0.5,1]
 		});
 		World.addClass('fencey', {
 			tileset: plethora_original,
 			category: 'architecture',
 			tiles:[5,0], 
 			shape: World.BOX,
-			bbox: [0.4,1,1]
+			bbox: [0.5,1,1]
 		});
 		World.addClass('beltx', {
 			tileset: plethora_original,

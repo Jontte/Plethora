@@ -120,7 +120,10 @@ World.initEditor = function()
 			prevpos = [this.x, this.y, this.z];
 			prevsize= [this.bx, this.by, this.bz];
 			var c = wec.classes[wec.selectedCategory][wec.selectedClass[wec.selectedCategory]].c;
-			
+			var csx = Math.ceil(c.size[0]);
+			var csy = Math.ceil(c.size[1]);
+			var csz = Math.ceil(c.size[2]);
+				
 			Graphics.ctx.save();
 			
 			var focus = World2Screen(World._cameraPosX, World._cameraPosY, World._cameraPosZ);
@@ -133,42 +136,42 @@ World.initEditor = function()
 				// mouse movement
 				this.bx = Math.abs(we.drag.x - we.layer.x)+1;
 				this.by = Math.abs(we.drag.y - we.layer.y)+1;
-				this.bz = Math.abs(we.drag.z - (we.layer.z + c.size[2]/2))+1;
+				this.bz = Math.abs(we.drag.z - (we.layer.z + csz/2))+1;
 				
-				if(this.bx<c.size[0])this.bx=c.size[0];
-				if(this.by<c.size[1])this.by=c.size[1];
-				if(this.bz<c.size[2])this.bz=c.size[2];
-				this.bx = Math.floor(this.bx/c.size[0])*c.size[0];
-				this.by = Math.floor(this.by/c.size[1])*c.size[1];
-				this.bz = Math.floor(this.bz/c.size[2])*c.size[2];
+				if(this.bx<csx)this.bx=csx;
+				if(this.by<csy)this.by=csy;
+				if(this.bz<csz)this.bz=csz;
+				this.bx = Math.floor(this.bx/csx)*csx;
+				this.by = Math.floor(this.by/csy)*csy;
+				this.bz = Math.floor(this.bz/csz)*csz;
 
 				xdir = sign(we.drag.x - we.layer.x);
 				ydir = sign(we.drag.y - we.layer.y);
-				zdir = sign(we.drag.z - we.layer.z - c.size[2]/2);
+				zdir = sign(we.drag.z - we.layer.z - csz/2);
 				
-				this.x = we.drag.x - xdir * Math.max(0, this.bx/2-c.size[0]/2);
-				this.y = we.drag.y - ydir * Math.max(0, this.by/2-c.size[1]/2);
-				this.z = we.drag.z - zdir * Math.max(0, this.bz/2-c.size[2]/2);
+				this.x = we.drag.x - xdir * Math.max(0, this.bx/2-csx/2);
+				this.y = we.drag.y - ydir * Math.max(0, this.by/2-csy/2);
+				this.z = we.drag.z - zdir * Math.max(0, this.bz/2-csz/2);
 			}
 			else
 			{
-				this.bx = c.size[0];
-				this.by = c.size[1];
-				this.bz = c.size[2];
+				this.bx = csx;
+				this.by = csy;
+				this.bz = csz;
 				this.x = we.layer.x;
 				this.y = we.layer.y;
-				this.z = we.layer.z+this.bz/2;			
+				this.z = we.layer.z+csz/2;			
 			}
 			
 			// fill bx,by,bz cuboid with sprites..
-			for(var zz = 0; zz < this.bz; zz+=c.size[2])
-			for(var yy = 0; yy < this.by; yy+=c.size[1])
-			for(var xx = 0; xx < this.bx; xx+=c.size[0])
+			for(var zz = 0; zz < this.bz; zz+=csz)
+			for(var yy = 0; yy < this.by; yy+=csy)
+			for(var xx = 0; xx < this.bx; xx+=csx)
 			{
 				var coords = Cuboid2Screen(
-					this.x+xx-(this.bx/2-c.size[0]/2), 
-					this.y+yy-(this.by/2-c.size[1]/2), 
-					this.z+zz-(this.bz/2-c.size[2]/2), 
+					this.x+xx-(this.bx/2-csx/2), 
+					this.y+yy-(this.by/2-csy/2), 
+					this.z+zz-(this.bz/2-csz/2), 
 					c.size[0], c.size[1], c.size[2]);
 				
 				coords.x += 320-focus.x;
@@ -212,7 +215,7 @@ World.initEditor = function()
 			ctx.fillText  ('mx,my: ('+focus.x+', '+focus.y+')', 30, 120);
 			
 			Graphics.ctx.restore();
-			if(wec.online)
+			if(wec.open)
 			{
 				we.drag.dragging = false;
 			}
@@ -525,7 +528,8 @@ World.editorStep = function()
 		wec.open = true;
 		if(wec.alpha < 1.0)
 			wec.alpha = (wec.alpha+1.0)/2;
-			
+		
+		// keyboard selection
 		if(Key.get(KEY_LEFT) && Key.changed(KEY_LEFT))
 		{
 			wec.selectedClass[wec.selectedCategory] = 
@@ -545,6 +549,20 @@ World.editorStep = function()
 		if(Key.get(KEY_DOWN) && Key.changed(KEY_DOWN))
 		{
 			wec.selectedCategory = wrap(wec.selectedCategory+1,wec.classes.length);
+		}
+		// mouse selection
+		ctx.fillStyle = 'white';
+		ctx.fillText  ('Mouse: '+World.mouseX + ', ' + World.mouseY, 0,0);
+		if(Key.get(MOUSE_LEFT) && Key.changed(MOUSE_LEFT))
+		{
+			var dy = Math.floor((World.mouseY - 240) / 32);
+			var dx = Math.floor((World.mouseX - 320) / 32);
+
+			// its important we change category first...
+			wec.selectedCategory = wrap(wec.selectedCategory+dy, wec.classes.length);
+			wec.selectedClass[wec.selectedCategory] = 
+				wrap(wec.selectedClass[wec.selectedCategory] + dx,
+				wec.classes[wec.selectedCategory].length);
 		}
 	}
 	else
@@ -623,6 +641,18 @@ World.editorStep = function()
 				c.y = (c.y*a+ty*(1.0-a));
 				if(Math.abs(c.x-tx)<1)c.x=tx;
 				if(Math.abs(c.y-ty)<1)c.y=ty;
+				
+				// change color if mouse is close
+				var mx = World.mouseX;
+				var my = World.mouseY;
+				if(mx >= c.x && mx < c.x+32 && my > c.y && my < c.y+32)
+				{
+					ctx.fillStyle = 'red';
+				}
+				else
+				{
+					ctx.fillStyle = 'black';
+				}
 				
 				ctx.fillRect(Math.floor(c.x), Math.floor(c.y), 32, 32);
 			}

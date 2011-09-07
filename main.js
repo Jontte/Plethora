@@ -14,6 +14,21 @@ var Graphics = {
 	img : []
 };
 
+
+// TODO: move this to util.js
+// http://paulirish.com/2011/requestanimationframe-for-smart-animating/
+// shim layer with setTimeout fallback
+window.requestAnimFrame = (function(){
+	return	window.requestAnimationFrame       || 
+		window.webkitRequestAnimationFrame || 
+		window.mozRequestAnimationFrame    || 
+		window.oRequestAnimationFrame      || 
+		window.msRequestAnimationFrame     || 
+		function(/* function */ callback, /* DOMElement */ element){
+			window.setTimeout(callback, 1000 / 30);
+		};
+})();
+
 $(document).ready(function(){
 
 	// Disable context menu on right click
@@ -39,6 +54,7 @@ $(document).ready(function(){
 		$('#lselect').append('<option value="'+src+'">'+levelname+'</option>');	
 	});
 	
+	// Setup extra info dialogs
 	$.each(['about','tech','todo','author'], function(idx, dlg){
 		$('#'+dlg+'-text').dialog({
 				modal:true,
@@ -55,6 +71,23 @@ $(document).ready(function(){
 		});
 	});
 	
+	// Setup level selector dialog
+	$('#level-selector-panel').dialog({
+		modal: false,
+		autoOpen: false,
+		maxHeight: 400,
+		width: 600,
+		resizable: true,
+		draggable: true,
+		show: 'slide',
+		hide: 'fade'
+	});
+	$('#level-selector').button().click(function(){
+		$('#level-selector-panel').dialog('open');
+	});
+	
+	// Setup level selector grid
+	
 	var p = $.getUrlVar('editor');
 	if(typeof(p) != 'undefined')
 		$('#sw-radio-edit').attr('checked', 'checked');
@@ -68,15 +101,32 @@ $(document).ready(function(){
 	// Request list of levels from server
 	$.getJSON('index.php?level_list', function(json)
 	{
-		$.each(json, function(idx, level)
+		var lastlevel = getCookie('level_selection');
+		// see if lastlevel exists in json..
+		var found = false;
+		for(var i = 0 ; i < json.length; i++)
 		{
+			if(json[i].src == lastlevel)
+			{
+				found = true;
+				break;
+			}
+		}
+		if(found==false)
+		{
+			// select the first level...
+			lastlevel = json[0].src;
+		}
+		for(var i = 0 ; i < json.length; i++)
+		{
+			var level = json[i];
 			var s = '';
-			if(getCookie('level_selection') == level.src)
+			if(lastlevel == level.src)
 			{
 				s = ' selected="true"';
 			}
 			$('#lselect').append('<option value="'+level.src+'"'+s+'>'+level.name+'</option>');	
-		});
+		};
 		reset();
 	});
 	
@@ -192,6 +242,9 @@ function initialize()
 	load_gfx('tileset.png');
 
 	Config.gamestate = 'online';
+
+	//window.requestAnimFrame(game_loop);
+
 	Config.intervalID = setInterval(game_loop, 1000/Config.FPS);
 }
 
@@ -207,6 +260,8 @@ function game_loop()
 		return;
 	}
 
+//	console.time('frame');
+
 	// Clear screen
 	Graphics.ctx.fillRect (0, 0, 640, 480);  	
 
@@ -215,6 +270,7 @@ function game_loop()
 
 	// Reset key states
 	Key.timestep();
+	
+	//window.requestAnimFrame(game_loop);
+//	console.timeEnd('frame');
 }
-
-

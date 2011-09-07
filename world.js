@@ -52,50 +52,106 @@ World = {
 	},
 	_depth_func: function(a,b)
 	{
-		// This function answers the following question:
-		// "Is a behind b?" or "Should a be rendered before b?"
-		// Returns null when either way works
+		/*
+			This function is the root of the render graph builder.
+			It answers the following question:
+			"Is a behind b?" or "Should a be rendered before b?"
+			Returns null when don't care
+		*/
 		
-		if(a.x==b.x&&a.y==b.y&&a.z==b.z) return null;
 		// Screen projection rectangle check
-		var b1 = Cuboid2Screen(a.x,a.y,a.z,a.bx,a.by,a.bz);
+		/*var b1 = Cuboid2Screen(a.x,a.y,a.z,a.bx,a.by,a.bz);
 		var b2 = Cuboid2Screen(b.x,b.y,b.z,b.bx,b.by,b.bz);
 		if(b1.x+b1.w <= b2.x)return null;
 		if(b2.x+b2.w <= b1.x)return null;
 		if(b1.y+b1.h <= b2.y)return null;
-		if(b2.y+b2.h <= b1.y)return null;
+		if(b2.y+b2.h <= b1.y)return null;*/
 		
 		// check diagonals..
-
 		var mx = (a.bx+b.bx)/2;
 		var my = (a.by+b.by)/2;
 		var mz = (a.bz+b.bz)/2;
 		
-		var p1a = (a.x-b.x) >= mx;
-		var p2a = (a.y-b.y) >= my;
-		var p3a = (a.z-b.z) >= mz;
+		var p1a = (a.x-b.x)-mx >= 0;
+		var p2a = (a.y-b.y)-my >= 0;
+		var p3a = (a.z-b.z)-mz >= 0;
 			
-		var p1b = (a.x-b.x) <= -mx;
-		var p2b = (a.y-b.y) <= -my;
-		var p3b = (a.z-b.z) <= -mz;
-
+		var p1b = (a.x-b.x)+mx <= 0;
+		var p2b = (a.y-b.y)+my <= 0;
+		var p3b = (a.z-b.z)+mz <= 0; 
+		
 		// we always prefer nulls where possible since adding unnecessary 
-		// connections to the acyclic rendering graph can potentially make 
-		// calculation much more complicated
+		// connections to the rendering graph can potentially make 
+		// calculation much more complicated and expensive
 		
 		if(p1a&&p2b)return null;
 		if(p2a&&p1b)return null;
-		if(p1a&&p3b)return null;
-		if(p2a&&p3b)return null;
-		if(p1b&&p3a)return null;
-		if(p2b&&p3a)return null;
 		
-		if(a.x+a.bx/2 <= b.x-b.bx/2)return true;
-		if(b.x+b.bx/2 <= a.x-a.bx/2)return false;
-		if(a.y+a.by/2 <= b.y-b.by/2)return true;
-		if(b.y+b.by/2 <= a.y-a.by/2)return false;
-		if(a.z+a.bz/2 <= b.z-b.bz/2)return true;
-		if(b.z+b.bz/2 <= a.z-a.bz/2)return false;
+		if(p3b)
+			if(p1a||p2a)return null;
+		if(p3a)
+			if(p2b||p1b)return null;
+		
+		if(p1a)return false;
+		if(p1b)return true;
+		if(p2a)return false;
+		if(p2b)return true;
+		if(p3a)return false;
+		if(p3b)return true;
+
+		// If the objects penetrate just a little, we may still be able to do something...
+		// calculate box of penetration.. 
+		
+		var bbx1 = a.x-a.bx/2;
+		var bby1 = a.y-a.by/2;
+		var bbz1 = a.z-a.bz/2;
+		var bbx2 = a.x+a.bx/2;
+		var bby2 = a.y+a.by/2;
+		var bbz2 = a.z+a.bz/2;
+		
+		if(b.x-b.bx/2 > bbx1)
+			bbx1 = b.x-b.bx/2;
+		if(b.y-b.by/2 > bby1)
+			bby1 = b.y-b.by/2;
+		if(b.z-b.bz/2 > bbz1)
+			bbz1 = b.z-b.bz/2;
+		
+		if(b.x+b.bx/2 < bbx2)
+			bbx2 = b.x+b.bx/2;
+		if(b.y+b.by/2 < bby2)
+			bby2 = b.y+b.by/2;
+		if(b.z+b.bz/2 < bbz2)
+			bbz2 = b.z+b.bz/2;
+			
+		// select dimension that penerates least => sort by that dim
+		
+		var bbx = bbx2-bbx1;
+		var bby = bby2-bby1;
+		var bbz = bbz2-bbz1;
+		
+		if(	bbx < bby && 
+			bbx < bbz)
+		{
+			return a.x < b.x;
+		}
+		else if(bby < bbz)
+		{
+			return a.y < b.y;
+		}
+		else
+		{
+			return a.z < b.z;
+		}
+		/*
+		var gx = mx/5;
+		var gy = my/5;
+		var gz = mz/5;
+		if((a.z-b.z)+mz >= -gz)return false;
+		if((b.z-a.z)-mz <= gz)return true;
+		if((a.x-b.x)+mx >= -gx)return false;
+		if((b.x-a.x)-mx <= gx)return true;
+		if((a.y-b.y)+my >= -gy)return false;
+		if((b.y-a.y)-my <= gy)return true;*/
 		
 		// Objects that penetrated each other cannot be put in a reliable rendering order
 		// -> it would cause loops in the render graph
@@ -372,9 +428,9 @@ World = {
 			};
 			
 			// Next we draw the cube filled with tiny objects..
-			for(var zz = 0; zz < size[2]; zz+=c.size[2])
-			for(var yy = 0; yy < size[1]; yy+=c.size[1])
-			for(var xx = 0; xx < size[0]; xx+=c.size[0])
+			for(var zz = 0; zz < size[2]; zz+=Math.ceil(c.size[2]))
+			for(var yy = 0; yy < size[1]; yy+=Math.ceil(c.size[1]))
+			for(var xx = 0; xx < size[0]; xx+=Math.ceil(c.size[0]))
 			{
 				var coords = Cuboid2Screen(
 					xx+(c.size[0]/2), 
@@ -442,7 +498,7 @@ World = {
 	render : function()
 	{
 		var ctx = Graphics.ctx;
-		//console.time('render');
+//		console.time('render');
 
 		// Update camera position
 		if(World._cameraFocus != null)
@@ -572,6 +628,14 @@ World = {
 			if(wo[i].internal.depends.length == 0)
 				visit(wo[i]);
 		
+		// if result.length != wo.length, the graph contained cycles
+		// our only option now is to brutally force all objects to the result set
+		if(wo.length != result.length)
+		{
+			for(var i = 0;i < wo.length; i++)
+				visit(wo[i]);
+		}
+		
 		for(var i = result.length-1;i >= 0; i--)
 			World.drawObject(result[i]);
 			
@@ -583,7 +647,7 @@ World = {
 
 		var focus = World2Screen(World._cameraPosX, World._cameraPosY, World._cameraPosZ);
 		var c1,c2;	
-		/*
+		
 		for(var i = 0; i < wo.length; i++)
 		{
 			var o = wo[i];
@@ -619,7 +683,7 @@ World = {
 			}
 		}
 		ctx.closePath();
-		ctx.stroke();*//*
+		ctx.stroke();/*
 		ctx.strokeStyle = 'blue';
 		ctx.beginPath();
 		for(var i = 0; i < result.length; i++)
@@ -652,10 +716,12 @@ World = {
 		ctx.textAlign = 'left';
 		ctx.textBaseline = 'top';
 		ctx.fillText  ('Objects: '+World._objects.length + ' depth comparisons: ' + comparisons, 30, 30);*/
+
+//		console.timeEnd('render');
 	},
 	physicsStep : function()
 	{
-		//console.time('physics');
+//		console.time('physics');
 		
 		if(World._editor.online)
 			return;
@@ -793,9 +859,15 @@ World = {
 				obj.fx = 0;
 				obj.fy = 0;
 				obj.fz = (obj.hasGravity)?(-0.04*obj.mass/World._physicsIterations) : 0;
+				
+				// Mark moving objects dirty so that render graph gets rebuilt for them
+				if(	Math.abs(obj.vx)>0.01||
+					Math.abs(obj.vy)>0.01||
+					Math.abs(obj.vz)>0.01)
+					obj.dirty = true;
 			}
 		}
-		//console.timeEnd('physics');
+//		console.timeEnd('physics');
 	},
 	_tryCollideAndResponse : function(o1, o2)
 	{

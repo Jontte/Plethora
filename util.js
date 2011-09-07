@@ -77,6 +77,9 @@ function World2Screen(x,y,z)
 
 function Cuboid2Screen(x,y,z,bx,by,bz)
 {
+	bx = Math.ceil(bx);
+	by = Math.ceil(by);
+	bz = Math.ceil(bz);
 	var front = ((x+bx/2)+(y+by/2)-2*(z-bz/2))*8;
 	var left = ((x-bx/2)-(y+by/2))*16;
 	var right = ((x+bx/2)-(y-by/2))*16;
