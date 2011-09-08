@@ -193,6 +193,7 @@ World = {
 	addTilesetCanvas : function(width, height)
 	{
 		var canvas = document.createElement('canvas');
+		canvas.style.border = '1px black solid';
 		canvas.setAttribute("width", width);
 		canvas.setAttribute("height", height);
 		$('#cache').append(canvas);
@@ -407,10 +408,14 @@ World = {
 		var newclass = 'compound('+classid + ',' + size[0] + ',' + size[1] + ',' + size[2] + ')';
 		if(!(newclass in World._classes))
 		{
+			console.log('creating compound class ' + newclass);
 			var rect = Cuboid2Screen(0,0,0,size[0],size[1],size[2]);
 		
 			var tileset = World.addTilesetCanvas(rect.w, rect.h);
-		
+	
+			var modx = Math.ceil(c.size[0]) - c.size[0];	
+			var mody = Math.ceil(c.size[1]) - c.size[1];	
+			var modz = Math.ceil(c.size[2]) - c.size[2];	
 			World.addClass(newclass, {
 				tileset: tileset,
 				category: 'dynamic',
@@ -433,10 +438,12 @@ World = {
 			for(var xx = 0; xx < size[0]; xx+=Math.ceil(c.size[0]))
 			{
 				var coords = Cuboid2Screen(
-					xx+(c.size[0]/2), 
-					yy+(c.size[1]/2), 
-					zz+(c.size[2]/2),
-					c.size[0], c.size[1], c.size[2]);
+					xx+Math.ceil(c.size[0])/2, 
+					yy+Math.ceil(c.size[1])/2,
+					zz+Math.ceil(c.size[2])/2,
+					(c.size[0]), 
+					(c.size[1]),
+					(c.size[2]));
 			
 				coords.x += zero.x;
 				coords.y += zero.y;	
@@ -641,7 +648,7 @@ World = {
 			
 		var ctx = Graphics.ctx;
 		// draw render graph...
-		ctx.beginPath();
+		/*ctx.beginPath();
 		ctx.lineWidth = 1;
 		ctx.strokeStyle = 'red';
 
@@ -683,7 +690,11 @@ World = {
 			}
 		}
 		ctx.closePath();
-		ctx.stroke();/*
+		ctx.stroke();
+		
+		*/
+			 
+		/*
 		ctx.strokeStyle = 'blue';
 		ctx.beginPath();
 		for(var i = 0; i < result.length; i++)

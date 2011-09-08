@@ -42,7 +42,7 @@ $(document).ready(function(){
 		World.mouseX = x;
 		World.mouseY = y;
   	}); 
-  	// Hide unwanted elements
+  	// Hide cache canvases
   	$('#cache').hide();
   	
  	$('#save-btn').button().hide().click(function(){

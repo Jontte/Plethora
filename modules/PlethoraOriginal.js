@@ -146,60 +146,57 @@ World.addModule('PlethoraOriginal',
 			flags: World.ANIMATED,
 			tiles: [[0,6],[1,6],[2,6],[3,6],[4,6],[5,6],[6,6],[7,6],[8,6],[9,6]]
 		});
-		/*World.addComplexClass('lift', {
-			create : function(x,y,z, options)
+		/*
+		World.addClass('lift', {
+			init : function(params)
 			{
-				if(options == undefined)options = {};
-				if(options.fixed == undefined)options.fixed = true;
-				var obj = World.createObject('lift_simple', x, y, z, options.fixed);
-				obj.frameMaxTicks = 0; // Disable automatic animation
+				this.frameMaxTicks = 0; // Disable automatic animation
 		
-				obj.mode = 'automatic'; // Nox-style
-				obj.state = 'waiting';
-				obj.waitTicks = 0;
-				obj.waitMaxTicks = 25;
-				obj.animMaxTicks = 3; // ticks per frame
-				this.lift = obj;
+				this.mode = 'automatic'; // Nox-style
+				this.state = 'waiting';
+				this.waitTicks = 0;
+				this.waitMaxTicks = 25;
+				this.animMaxTicks = 3; // ticks per frame
 			},
 			step : function()
 			{
 				// Step any existing lifts...
-				var lift = this.lift;
-				if(lift.state == 'waiting')
+				if(this.state == 'waiting')
 				{
-					lift.waitTicks++;
-					if(lift.waitTicks >= lift.waitMaxTicks)
+					this.waitTicks++;
+					if(this.waitTicks >= this.waitMaxTicks)
 					{
-						lift.waitTicks = 0;
-						if(lift.frame == 0)
-							lift.state = 'ascending';
+						this.waitTicks = 0;
+						if(this.frame == 0)
+							this.state = 'ascending';
 						else
-							lift.state = 'descending';
+							this.state = 'descending';
 					}
 				}
-				else if(lift.state == 'ascending' || lift.state == 'descending')
+				else if(this.state == 'ascending' || this.state == 'descending')
 				{
-					lift.waitTicks++;
+					this.waitTicks++;
 				
-					if(lift.waitTicks >= lift.animMaxTicks)
+					if(this.waitTicks >= this.animMaxTicks)
 					{
-						lift.waitTicks = 0;
+						this.waitTicks = 0;
 					
-						if(lift.state == 'ascending')
-							lift.frame++;
+						if(this.state == 'ascending')
+							this.frame++;
 						else
-							lift.frame--;
+							this.frame--;
 				
-						if(lift.frame>=9 || lift.frame <= 0)
+						if(this.frame>=9 || this.frame <= 0)
 						{
-							if(lift.mode=='automatic')
-								lift.state = 'waiting';
+							if(this.mode=='automatic')
+								this.state = 'waiting';
 							else
-								lift.state = 'standby';
+								this.state = 'standby';
 						}
 					}
 				}
-				lift.tiles.c.h = lift.frame/9;
+				// TODO
+				this.tiles.c.h = lift.frame/9;
 			}
 		});*/
 		World.addClass('water', {
@@ -249,7 +246,7 @@ World.addModule('PlethoraOriginal',
 			category: 'architecture',
 			tiles:[5,0], 
 			shape: World.BOX,
-			bbox: [0.5,1,1]
+			size: [0.5,1,1]
 		});
 		World.addClass('beltx', {
 			tileset: plethora_original,

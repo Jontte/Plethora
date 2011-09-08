@@ -134,33 +134,54 @@ World.initEditor = function()
 			if(we.drag.dragging == true)
 			{
 				// mouse movement
+/*
 				this.bx = Math.abs(we.drag.x - we.layer.x)+1;
 				this.by = Math.abs(we.drag.y - we.layer.y)+1;
-				this.bz = Math.abs(we.drag.z - (we.layer.z + csz/2))+1;
+				this.bz = Math.abs(we.drag.z - (we.layer.z+0.5))+1;
+
+				this.bx -= ((csx-c.size[0]));
+				this.by -= ((csy-c.size[1]));
+				this.bz -= ((csz-c.size[2]));
+
+				this.x = (we.drag.x + we.layer.x) / 2;
+				this.y = (we.drag.y + we.layer.y) / 2;
+				this.z = (we.drag.z + we.layer.z+this.bz/2) / 2;
+			*/	
+			 
+				this.bx = Math.abs(we.drag.x - we.layer.x)+1;
+				this.by = Math.abs(we.drag.y - we.layer.y)+1;
+				this.bz = Math.abs(we.drag.z - (we.layer.z + c.size[2]/2))+1;
+
+				this.bx -= ((csx-c.size[0]));
+				this.by -= ((csy-c.size[1]));
+				this.bz -= ((csz-c.size[2]));
 				
-				if(this.bx<csx)this.bx=csx;
-				if(this.by<csy)this.by=csy;
-				if(this.bz<csz)this.bz=csz;
-				this.bx = Math.floor(this.bx/csx)*csx;
-				this.by = Math.floor(this.by/csy)*csy;
-				this.bz = Math.floor(this.bz/csz)*csz;
+				if(this.bx<c.size[0])this.bx=c.size[0];
+				if(this.by<c.size[1])this.by=c.size[1];
+				if(this.bz<c.size[2])this.bz=c.size[2];
+				this.bx = Math.floor(this.bx/c.size[0])*c.size[0];
+				this.by = Math.floor(this.by/c.size[1])*c.size[1];
+				this.bz = Math.floor(this.bz/c.size[2])*c.size[2];
 
 				xdir = sign(we.drag.x - we.layer.x);
 				ydir = sign(we.drag.y - we.layer.y);
 				zdir = sign(we.drag.z - we.layer.z - csz/2);
 				
-				this.x = we.drag.x - xdir * Math.max(0, this.bx/2-csx/2);
-				this.y = we.drag.y - ydir * Math.max(0, this.by/2-csy/2);
-				this.z = we.drag.z - zdir * Math.max(0, this.bz/2-csz/2);
+				this.x = we.drag.x - xdir * Math.max(0, this.bx/2-c.size[0]/2);
+				this.y = we.drag.y - ydir * Math.max(0, this.by/2-c.size[1]/2);
+				this.z = we.drag.z - zdir * Math.max(0, this.bz/2-c.size[2]/2);
+				
+				this.z += Math.floor(c.size[2]/2);
+				this.z -= (csz-c.size[2])/2;
 			}
 			else
 			{
-				this.bx = csx;
-				this.by = csy;
-				this.bz = csz;
+				this.bx = c.size[0];
+				this.by = c.size[1];
+				this.bz = c.size[2];
 				this.x = we.layer.x;
 				this.y = we.layer.y;
-				this.z = we.layer.z+csz/2;			
+				this.z = we.layer.z+this.bz/2;
 			}
 			
 			// fill bx,by,bz cuboid with sprites..
@@ -169,10 +190,10 @@ World.initEditor = function()
 			for(var xx = 0; xx < this.bx; xx+=csx)
 			{
 				var coords = Cuboid2Screen(
-					this.x+xx-(this.bx/2-csx/2), 
-					this.y+yy-(this.by/2-csy/2), 
-					this.z+zz-(this.bz/2-csz/2), 
-					c.size[0], c.size[1], c.size[2]);
+					this.x+xx-(this.bx/2)+c.size[0]/2,
+					this.y+yy-(this.by/2)+c.size[1]/2, 
+					this.z+zz-(this.bz/2)+c.size[2]/2, 
+					csx,csy,csz);
 				
 				coords.x += 320-focus.x;
 				coords.y += 240-focus.y;
@@ -213,6 +234,7 @@ World.initEditor = function()
 			ctx.fillText  ('bx,by,bz: ('+this.bx+', '+this.by+', '+this.bz+') x,y,z: ('+this.x+', '+this.y+', '+this.z+')', 30, 80);
 
 			ctx.fillText  ('mx,my: ('+focus.x+', '+focus.y+')', 30, 120);
+			ctx.fillText  ('c.bx,by,bz: ('+JSON.stringify(c.size)+')', 30, 150);
 			
 			Graphics.ctx.restore();
 			if(wec.open)
@@ -248,7 +270,7 @@ World.initEditor = function()
 							// No object was selected: start dragging here
 							we.drag.x = we.layer.x;
 							we.drag.y = we.layer.y;
-							we.drag.z = we.layer.z+c.size[2]/2;
+							we.drag.z = we.layer.z+0.5;
 							we.drag.dragging = true;
 						}
 					});
@@ -293,8 +315,9 @@ World.initEditor = function()
 										this.size[2] != this.c.size[2] )
 									{
 										// a huge object compound..
-										newid = 'compound('+newid+','+this.size[0]+','+this.size[1]+','+this.size[2]+')';
+										newid = 'compound('+newid+','+Math.ceil(this.size[0])+','+Math.ceil(this.size[1])+','+Math.ceil(this.size[2])+')';
 									}
+									console.log(this.size[0]+', '+this.size[1]+', '+this.size[2] + ' vs ' + this.c.size[0] + ', '+this.c.size[1] + ', ' + this.c.size[2]);
 									World.createObject(newid, this.pos, {fixed: true});
 								}
 							}
@@ -336,7 +359,7 @@ World.initEditor = function()
 				this.dirty = true;
 		}
 	});
-	var layer = World.createObject('E_layer', [0,0,-0.5], {
+	var layer = World.createObject('E_layer', [0,0,0.5], {
 		phantom: true
 	});
 	World.createObject('E_ghost', [0,0,0], {
@@ -442,7 +465,8 @@ World.editorStep = function()
 		{
 			var p = World._proxy[i];
 			var o = p.obj;
-			p.d = (o.x + o.y + o.z) + ((p.begin==true)?-1:1) * (o.bx+o.by+o.bz)/2;
+			var err = 0.999; // avoid rounding errors.. 
+			p.d = (o.x + o.y + o.z) + ((p.begin==true)?-1:1) * err*(o.bx+o.by+o.bz)/2;
 		}
 
 		// Sort it
@@ -517,7 +541,7 @@ World.editorStep = function()
 			}
 		}
 		$.each(temp, function(idx, val){
-			val.obj.callback(val.result);
+			val.obj.callback.call(val.obj, val.result); // ?? 
 		});
 		
 	}
