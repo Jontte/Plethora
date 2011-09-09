@@ -1,0 +1,33 @@
+body {
+	background-color: #1a82f7;
+}
+#game {
+	border: 1px black solid;
+	width: 640px;
+	height: 480px;
+	float: left;
+}
+#panel {
+	width: 200px;
+	height: 480px;
+	float: left;
+	text-align: center;
+}
+#panel-content {
+	height: 404px;
+}
+#browser-warning {
+	visibility: hidden;
+	background-color: #60A0FF;
+	border: 1px black solid;
+	position: absolute;
+	width: 598px;
+	height: 438px;
+	padding: 20px 20px 20px 20px;
+}
+#worksbestwith {
+	position: absolute;
+	top: 450px;
+	left: 48px;	
+}
+
