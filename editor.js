@@ -252,6 +252,8 @@ World.initEditor = function()
 				else
 				{
 					var t = c.tiles;
+					if(c.flags & World.DIRECTED)
+						t = t[this.direction];
 					while(typeof(t[0]) != 'number')t = t[0];
 					draw({
 						x: coords.x, 
@@ -281,6 +283,107 @@ World.initEditor = function()
 			}
 			else
 			{
+				// Draw collision mask
+				World.addScan({
+					pos : [this.x, this.y, this.z],
+					size: [this.bx, this.by, this.bz],
+					callback: function(objects)
+					{
+						var we = World._editor;
+						var focus = World2Screen(World._cameraPosX, World._cameraPosY, World._cameraPosZ);
+						for(var i = 0; i < objects.length ; i++)
+						{
+							var obj = objects[i];
+							if(obj.phantom)
+								continue;
+							
+							// find cuboid of collision
+							var bbx1 = this.x-this.bx/2;
+							var bby1 = this.y-this.by/2;
+							var bbz1 = this.z-this.bz/2;
+							var bbx2 = this.x+this.bx/2;
+							var bby2 = this.y+this.by/2;
+							var bbz2 = this.z+this.bz/2;
+							
+							if(obj.x-obj.bx/2 > bbx1)
+								bbx1 = obj.x-obj.bx/2;
+							if(obj.y-obj.by/2 > bby1)
+								bby1 = obj.y-obj.by/2;
+							if(obj.z-obj.bz/2 > bbz1)
+								bbz1 = obj.z-obj.bz/2;
+							
+							if(obj.x+obj.bx/2 < bbx2)
+								bbx2 = obj.x+obj.bx/2;
+							if(obj.y+obj.by/2 < bby2)
+								bby2 = obj.y+obj.by/2;
+							if(obj.z+obj.bz/2 < bbz2)
+								bbz2 = obj.z+obj.bz/2;
+								
+							bbx1 = Math.floor(bbx1);
+							bby1 = Math.floor(bby1);
+							bbz1 = Math.floor(bbz1);
+							bbx2 = Math.floor(bbx2);
+							bby2 = Math.floor(bby2);
+							bbz2 = Math.floor(bbz2);
+							
+							// draw top
+							for(var y = bby1; y < bby2; y++)
+							for(var x = bbx1; x < bbx2; x++)
+							{
+								var z = bbz2-1;
+								var coords = World2Screen(x,y,z);
+								coords.x += 320-focus.x;
+								coords.y += 240-focus.y;
+								draw({
+									x: coords.x,
+									y: coords.y, 
+									tilex: 4, 
+									tiley: 11, 
+									src: we.tileset.image,
+									tilew: 32,
+									tileh: 32
+								});
+							}
+							// draw left
+							for(var z = bbz1; z < bbz2; z++)
+							for(var x = bbx1; x < bbx2; x++)
+							{
+								var y = bby2-1;
+								var coords = World2Screen(x,y,z);
+								coords.x += 320-focus.x;
+								coords.y += 240-focus.y;
+								draw({
+									x: coords.x,
+									y: coords.y, 
+									tilex: 5, 
+									tiley: 11, 
+									src: we.tileset.image,
+									tilew: 32,
+									tileh: 32
+								});
+							}
+							// draw right
+							for(var z = bbz1; z < bbz2; z++)
+							for(var y = bby1; y < bby2; y++)
+							{
+								var x = bbx2-1;
+								var coords = World2Screen(x,y,z);
+								coords.x += 320-focus.x;
+								coords.y += 240-focus.y;
+								draw({
+									x: coords.x,
+									y: coords.y, 
+									tilex: 6, 
+									tiley: 11, 
+									src: we.tileset.image,
+									tilew: 32,
+									tileh: 32
+								});
+							}
+						}
+					}
+				});
+								
 				if(Key.get(MOUSE_LEFT) && Key.changed(MOUSE_LEFT))
 				{
 					World._editor.selectedObject = null;			
@@ -547,7 +650,6 @@ World.editorStep = function()
 			var p = World._proxy[i];
 			if(p.begin == false)
 			{
-			
 //				alert('end ' + p.obj.id + ' at ' + p.d);
 				// Remove object from buffer
 				delete objectbuffer[p.obj.id];
@@ -558,32 +660,39 @@ World.editorStep = function()
 				if(typeof(p.callback) != 'undefined')
 				{
 					$.each(objectbuffer, function(key, val){
-						// verify val collides p...
-						var a = p.obj;
-						var b = val.obj;
-						var mx = (a.bx+b.bx)/2;
-						var my = (a.by+b.by)/2;
-						var mz = (a.bz+b.bz)/2;
-						if(	Math.abs(a.x-b.x) < mx && 
-							Math.abs(a.y-b.y) < my && 
-							Math.abs(a.z-b.z) < mz)
-							p.result.push(b);
+						if(typeof(val.callback) == 'undefined')
+						{
+							// verify val collides p...
+							var a = p.obj;
+							var b = val.obj;
+							
+							var mx = (a.bx+b.bx)/2;
+							var my = (a.by+b.by)/2;
+							var mz = (a.bz+b.bz)/2;
+							if(	Math.abs(a.x-b.x) < mx && 
+								Math.abs(a.y-b.y) < my && 
+								Math.abs(a.z-b.z) < mz)
+								p.result.push(b);
+						}
 					});
 				}
 				$.each(objectbuffer, function(key, val){
 					if(typeof(val.callback) != 'undefined')
 					{
 						// verify val collides p...
-						var a = p.obj;
-						var b = val.obj;
-						var mx = (a.bx+b.bx)/2;
-						var my = (a.by+b.by)/2;
-						var mz = (a.bz+b.bz)/2;
-						if(	Math.abs(a.x-b.x) < mx && 
-							Math.abs(a.y-b.y) < my && 
-							Math.abs(a.z-b.z) < mz)
-							val.result.push(a);
+						if(typeof(p.callback) == 'undefined')
+						{
+							var a = p.obj;
+							var b = val.obj;
+							var mx = (a.bx+b.bx)/2;
+							var my = (a.by+b.by)/2;
+							var mz = (a.bz+b.bz)/2;
+							if(	Math.abs(a.x-b.x) < mx && 
+								Math.abs(a.y-b.y) < my && 
+								Math.abs(a.z-b.z) < mz)
+								val.result.push(a);
 						}
+					}
 				});
 
 				// Add object to buffer 
