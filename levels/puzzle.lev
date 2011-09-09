@@ -2,8 +2,9 @@
 	"module" : "PlethoraOriginal",
 	"objects" : [
 		["compound(groundrugged,10,10,1)", [0.5,0.5,0], 0],
-		["dude", [0,0,2], 1],
-		["lift", [-3.5,5.5,1.5], 0]
+		["dude", [0,0,2], 1, 0],
+		["lift", [2,-1,1], 1, 0],
+		["crate", [2,-2,1], 0, 0]
 	]
 }
 

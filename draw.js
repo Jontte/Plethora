@@ -66,7 +66,8 @@ World.drawBackground = function()
 World.drawObject = function(obj)
 {
 	// Check whether the object is simple or complex
-	if('step' in obj.shape)
+	// In editor every object is drawn without side effects (unless theyre internal)
+	if((World._editor.online == false||obj.shape.internal)&&'step' in obj.shape)
 		obj.shape.step.call(obj);
 	else
 		World.drawSimpleObject(obj);

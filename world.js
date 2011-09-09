@@ -50,6 +50,7 @@ World = {
 		scene : new Effects.SunsetBackground(0,0,640,480),
 		clouds: []
 	},
+	preload: [], // uris to graphics resources to preload before entering level..
 	_depth_func: function(a,b)
 	{
 		/*
@@ -901,7 +902,6 @@ World = {
 			// - calculate surface velocity (conveyor belt)
 			// - do nothing
 
-			var cancel = false;
 			var vx = 0;
 			var vy = 0;
 			var vz = 0;
@@ -913,9 +913,11 @@ World = {
 				{
 					var mul = i==0?1:-1;
 					var ret = cur.collision_listener(cur, other, nx*mul, ny*mul, nz*mul, displacement);
-					if(ret == false)
+					if(ret === false)
 					{
-						cancel = true;
+						// collision_listener wants to let the object pass thru
+						console.log('passthru');
+						return;
 					}
 					else if(ret.vx != undefined)
 					{
@@ -1041,6 +1043,7 @@ World = {
 		}
 		World.reset();
 		module.load();
+		World.preload = World.preload.concat(module.preload);
 		var objects = json.objects;
 		for(var i = 0; i < objects.length; i++)
 		{
@@ -1048,7 +1051,9 @@ World = {
 			var classid = obj[0];
 			var pos = obj[1];
 			var mass = obj[2];
+			var direction = obj[3];
 			var instance = World.createObject(classid, pos, {mass: mass});
+			instance.direction = direction;
 		}
 		
 		if(World._editor.online)
@@ -1072,7 +1077,7 @@ World = {
 			if(!o.shape.internal)
 			{
 				obj.push([
-					o.shape.id, [o.x,o.y,o.z], o.mass
+					o.shape.id, [o.x,o.y,o.z], o.mass, o.direction
 				]);
 			}
 		}

@@ -110,20 +110,71 @@ World.initEditor = function()
 			this.bx = 1;
 			this.by = 1;
 			this.bz = 1;
+			
+			this.createObjects = function(c, allow_compound)
+			{
+				World.addScan({
+					pos : [this.x, this.y, this.z],
+					size: [this.bx, this.by, this.bz],
+					c: c,
+					direction: this.direction,
+					callback: function(objects)
+					{
+						// If CTRL is held, kill all objects beneath cursor
+						// Otherwise only create if theres room
+						var create = true;
+						if(Key.get(KEY_CTRL))
+						{
+							$.each(objects, function(idx, obj){
+								if(!obj.phantom)
+									World.removeObject(obj);
+							});
+						}
+						else
+						{
+							for(var i = 0; i < objects.length; i++)
+							{
+								var o = objects[i];
+								if(!o.phantom)
+								{
+									create = false;
+									break;
+								}
+							}
+						}
+						if(create)
+						{
+							var newid = this.c.id;
+							if(	(this.size[0] != this.c.size[0] ||
+								this.size[1] != this.c.size[1] ||
+								this.size[2] != this.c.size[2]) && allow_compound)
+							{
+								// a huge object compound..
+								newid = 'compound('+newid+','+Math.ceil(this.size[0])+','+Math.ceil(this.size[1])+','+Math.ceil(this.size[2])+')';
+							}
+							var obj = World.createObject(newid, this.pos, {fixed: true});
+							obj.direction = this.direction;
+						}
+					}
+				});
+			};
 		},
 		step: function()
 		{
-			var we = World._editor;
-			var wec = World._editor.classBrowser;
 			var ctx = Graphics.ctx;
 			var prevpos, prevsize;
 			prevpos = [this.x, this.y, this.z];
 			prevsize= [this.bx, this.by, this.bz];
+			var we = World._editor;
+			var wec = World._editor.classBrowser;
 			var c = wec.classes[wec.selectedCategory][wec.selectedClass[wec.selectedCategory]].c;
 			var csx = Math.ceil(c.size[0]);
 			var csy = Math.ceil(c.size[1]);
 			var csz = Math.ceil(c.size[2]);
-				
+			
+			// whether to allow compound objects being created from this class type
+			var allow_compound = !('init' in c)&&!('step' in c);
+			
 			Graphics.ctx.save();
 			
 			var focus = World2Screen(World._cameraPosX, World._cameraPosY, World._cameraPosZ);
@@ -134,19 +185,6 @@ World.initEditor = function()
 			if(we.drag.dragging == true)
 			{
 				// mouse movement
-/*
-				this.bx = Math.abs(we.drag.x - we.layer.x)+1;
-				this.by = Math.abs(we.drag.y - we.layer.y)+1;
-				this.bz = Math.abs(we.drag.z - (we.layer.z+0.5))+1;
-
-				this.bx -= ((csx-c.size[0]));
-				this.by -= ((csy-c.size[1]));
-				this.bz -= ((csz-c.size[2]));
-
-				this.x = (we.drag.x + we.layer.x) / 2;
-				this.y = (we.drag.y + we.layer.y) / 2;
-				this.z = (we.drag.z + we.layer.z+this.bz/2) / 2;
-			*/	
 			 
 				this.bx = Math.abs(we.drag.x - we.layer.x)+1;
 				this.by = Math.abs(we.drag.y - we.layer.y)+1;
@@ -267,62 +305,21 @@ World.initEditor = function()
 									return;
 								}
 							}				
-							// No object was selected: start dragging here
-							we.drag.x = we.layer.x;
-							we.drag.y = we.layer.y;
-							we.drag.z = we.layer.z+0.5;
-							we.drag.dragging = true;
+							// No object was selected: start dragging here (or if compounds are disabled, start creating objects)
+							if(allow_compound)
+							{
+								we.drag.x = we.layer.x;
+								we.drag.y = we.layer.y;
+								we.drag.z = we.layer.z+0.5;
+								we.drag.dragging = true;
+							}
 						}
 					});
 				}
 				else if(!Key.get(MOUSE_LEFT) && Key.changed(MOUSE_LEFT))
 				{
 					if(we.drag.dragging == true)
-					{
-						World.addScan({
-							pos : [this.x, this.y, this.z],
-							size: [this.bx, this.by, this.bz],
-							c: c,
-							callback: function(objects)
-							{
-								// If CTRL is held, kill all objects beneath cursor
-								// Otherwise only create if theres room
-								var create = true;
-								if(Key.get(KEY_CTRL))
-								{
-									$.each(objects, function(idx, obj){
-										if(!obj.phantom)
-											World.removeObject(obj);
-									});
-								}
-								else
-								{
-									for(var i = 0; i < objects.length; i++)
-									{
-										var o = objects[i];
-										if(!o.phantom)
-										{
-											create = false;
-											break;
-										}
-									}
-								}
-								if(create)
-								{
-									var newid = this.c.id;
-									if(	this.size[0] != this.c.size[0] ||
-										this.size[1] != this.c.size[1] ||
-										this.size[2] != this.c.size[2] )
-									{
-										// a huge object compound..
-										newid = 'compound('+newid+','+Math.ceil(this.size[0])+','+Math.ceil(this.size[1])+','+Math.ceil(this.size[2])+')';
-									}
-									console.log(this.size[0]+', '+this.size[1]+', '+this.size[2] + ' vs ' + this.c.size[0] + ', '+this.c.size[1] + ', ' + this.c.size[2]);
-									World.createObject(newid, this.pos, {fixed: true});
-								}
-							}
-						});
-					}
+						this.createObjects(c, allow_compound);
 					we.drag.dragging = false;
 				}
 				else if(Key.get(MOUSE_RIGHT) && !we.drag.dragging)
@@ -339,8 +336,11 @@ World.initEditor = function()
 						}
 					});
 				}
-				
-				
+				else if(Key.get(MOUSE_LEFT) && !allow_compound)
+				{
+					// special (=scripted) objects are created this way...
+					this.createObjects(c, allow_compound);
+				}
 				
 				if(Key.get(MOUSE_LEFT) && !Key.changed(KEY_LEFT) && we.selectedObject != null)
 				{
@@ -350,25 +350,90 @@ World.initEditor = function()
 						this.y + we.selectionOffsetY,
 						this.z + we.selectionOffsetZ);
 				}
-				
-				
-				
 			}
+			
+			// change direction based on mouse movement
+			var delta = [
+				Math.floor(this.x - prevpos[0]),
+				Math.floor(this.y - prevpos[1]),
+				Math.floor(this.z - prevpos[2])
+			];
+			
+			var delta_abs = [
+				Math.abs(delta[0]),
+				Math.abs(delta[1]),
+				Math.abs(delta[2])
+			];
+			
+			if(delta_abs[0] > delta_abs[1])
+			{
+				this.direction = (delta[0]>0)?1:3;
+			}
+			else if(delta_abs[0] < delta_abs[1])
+			{
+				this.direction = (delta[1]>0)?2:0;
+			}
+			
 			if(this.x != prevpos[0] || this.y != prevpos[1] || this.z != prevpos[2] ||
 			   this.bx != prevsize[0] || this.by != prevsize[1] || this.bz != prevsize[2])
 				this.dirty = true;
 		}
 	});
+	// Add an arrow class to show directions.. 
+	World.addClass('E_arrow',
+	{
+		internal: true, // prevents visibility in class browser
+		init: function()
+		{
+			this.bx = 1;
+			this.by = 1;
+			this.bz = 1;
+		},
+		step: function()
+		{
+			var wec = World._editor.classBrowser;
+			var c = wec.classes[wec.selectedCategory][wec.selectedClass[wec.selectedCategory]].c;
+			if(!(c.flags & World.DIRECTED))
+				return;
+			var g = World._editor.ghost;
+			var target = [g.x, g.y, g.z];
+			
+			this.setPos(target);
+			
+			var focus = World2Screen(World._cameraPosX, World._cameraPosY, World._cameraPosZ);
+			var frame = 0;
+			
+			// flicker!
+			frame = g.direction * 2 + (Math.floor((new Date()).getTime()/500)%2==0);
+			
+			var coords = World2Screen(this.x, this.y, this.z);
+
+			coords.x += 320-focus.x;
+			coords.y += 240-focus.y;
+			
+			draw({
+				x: coords.x, 
+				y: coords.y, 
+				tilex: frame, 
+				tiley: 7, 
+				src: World._editor.tileset.image
+			});
+		}
+	});
 	var layer = World.createObject('E_layer', [0,0,0.5], {
 		phantom: true
 	});
-	World.createObject('E_ghost', [0,0,0], {
+	var ghost = World.createObject('E_ghost', [0,0,0], {
+		phantom: true
+	});
+	World.createObject('E_arrow', [0,0,0], {
 		phantom: true
 	});
 	
 	var we = World._editor;
 	
 	we.layer = layer;
+	we.ghost = ghost;
 	we.selectedClass = 0;
 	
 	we.drag = {

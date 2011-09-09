@@ -5,6 +5,7 @@
 
 World.addModule('PlethoraOriginal',
 {
+	preload: ['tileset.png'],
 	load : function()
 	{
 		// Load tiles and graphics
@@ -140,23 +141,33 @@ World.addModule('PlethoraOriginal',
 			category: 'terrain',
 			tiles: [3,9]
 		});
+		/*
 		World.addClass('lift', {
 			tileset: plethora_original,
 			category: 'terrain',
 			flags: World.ANIMATED,
 			tiles: [[0,6],[1,6],[2,6],[3,6],[4,6],[5,6],[6,6],[7,6],[8,6],[9,6]]
-		});
-		/*
+		});*/
+		
 		World.addClass('lift', {
+			tileset: plethora_original,
+			tiles: [[0,6],[1,6],[2,6],[3,6],[4,6],[5,6],[6,6],[7,6],[8,6],[9,6],[10,6],[11,6],[12,6],[13,6],[14,6],[15,6]],
+			category: 'terrain',
+			flags: World.ANIMATED,
 			init : function(params)
 			{
 				this.frameMaxTicks = 0; // Disable automatic animation
+				//this.frameMaxTicks = 5;
 		
 				this.mode = 'automatic'; // Nox-style
 				this.state = 'waiting';
 				this.waitTicks = 0;
 				this.waitMaxTicks = 25;
 				this.animMaxTicks = 3; // ticks per frame
+				params.mass = 100000;
+				this.hasGravity = false;
+				this.collideFixed = false;
+				this.startpos = [this.x,this.y,this.z];
 			},
 			step : function()
 			{
@@ -186,7 +197,7 @@ World.addModule('PlethoraOriginal',
 						else
 							this.frame--;
 				
-						if(this.frame>=9 || this.frame <= 0)
+						if(this.frame>=15 || this.frame <= 0)
 						{
 							if(this.mode=='automatic')
 								this.state = 'waiting';
@@ -196,9 +207,15 @@ World.addModule('PlethoraOriginal',
 					}
 				}
 				// TODO
-				this.tiles.c.h = lift.frame/9;
+				this.setPos([
+					this.startpos[0],
+					this.startpos[1],
+					this.startpos[2] - this.frame/15.1
+				]);
+				
+				World.drawSimpleObject(this, 0);
 			}
-		});*/
+		});
 		World.addClass('water', {
 			tileset: plethora_original,
 			category: 'terrain',
@@ -248,21 +265,37 @@ World.addModule('PlethoraOriginal',
 			shape: World.BOX,
 			size: [0.5,1,1]
 		});
-		World.addClass('beltx', {
+		World.addClass('belt', {
 			tileset: plethora_original,
 			category: 'transport',
-			flags: World.ANIMATED, 
-			tiles: [[10,0],[11,0],[12,0],[13,0],[14,0]], 
+			flags: World.ANIMATED|World.DIRECTED, 
+			tiles: [
+				[[14,1],[13,1],[12,1],[11,1],[10,1]],
+				[[10,0],[11,0],[12,0],[13,0],[14,0]],
+				[[10,1],[11,1],[12,1],[13,1],[14,1]],
+				[[14,0],[13,0],[12,0],[11,0],[10,0]]
+			], 
 			shape: World.BOX,
-			size: [1,1,0.5]
-		});
-		World.addClass('belty', {
-			tileset: plethora_original,
-			category: 'transport',
-			flags: World.ANIMATED, 
-			tiles: [[10,1],[11,1],[12,1],[13,1],[14,1]], 
-			shape: World.BOX, 
-			size: [1,1,0.5]
+			size: [1,1,0.5],
+			init: function(){
+				this.collision_listener = function(self, other, nx, ny, nz, displacement){
+					if(nz<0) {
+						var v = 0.1;
+						switch(self.direction){
+							case 0: vec=[ 0,-v]; break;
+							case 1: vec=[ v, 0]; break;
+							case 2: vec=[ 0, v]; break;
+							case 3: vec=[-v, 0]; break;
+						};
+						return {
+							vx: vec[0],
+							vy: vec[1],
+							vz: 0
+						};
+					}
+					return true;
+				};
+			}
 		});
 		World.addClass('famouslogo', {
 			tileset: plethora_original,
