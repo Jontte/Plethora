@@ -131,6 +131,19 @@ World.addModule('PlethoraOriginal',
 				World.drawSimpleObject(this);
 			}
 		});
+		World.addClass('creeper', {
+			tileset: plethora_original,
+			flags: World.DIRECTED | World.ANIMATED,
+			tiles: [
+				[[0,14],[1,14],[2,14],[3,14],[4,14]],
+				[[5,12],[6,12],[7,12],[8,12],[9,12]],
+				[[0,12],[1,12],[2,12],[3,12],[4,12]],
+				[[5,14],[6,14],[7,14],[8,14],[9,14]]
+			],
+			//shape: World.CYLINDER,
+			size: [1,1,2],
+			category: 'characters'
+		});
 		World.addClass('groundrugged', {
 			tileset: plethora_original,
 			category: 'terrain',
@@ -141,13 +154,6 @@ World.addModule('PlethoraOriginal',
 			category: 'terrain',
 			tiles: [3,9]
 		});
-		/*
-		World.addClass('lift', {
-			tileset: plethora_original,
-			category: 'terrain',
-			flags: World.ANIMATED,
-			tiles: [[0,6],[1,6],[2,6],[3,6],[4,6],[5,6],[6,6],[7,6],[8,6],[9,6]]
-		});*/
 		
 		World.addClass('lift', {
 			tileset: plethora_original,
