@@ -17,68 +17,92 @@ function error($text){
 	));
 }
 
-$sql = new mysqli($plethora_mysql['host'], $plethora_mysql['username'], $plethora_mysql['password'], $plethora_mysql['database'], $plethora_mysql['port']);
+$dbh = new PDO(
+		"mysql:host={$plethora_mysql['host']};dbname={$plethora_mysql['database']}",
+		$plethora_mysql['username'],
+		$plethora_mysql['password']
+);
+
+function sql($query, array $params = array(), $numToFetch = null){
+	global $dbh;
+	
+	if ( count($params) > 0 ){
+		$stmt = $dbh->prepare($query);
+		if ( !$stmt->execute($params) )
+			return false;
+	}
+	else
+		$stmt = $dbh->query($query);
+	
+	if ( !$stmt )
+		return false;
+	
+	if ( $numToFetch === 0 )
+		return true;
+	
+	$results = array();
+	while ( $row = $stmt->fetch(PDO::FETCH_ASSOC) )
+		$results []= $row;
+	
+	if ( $numToFetch === 1 )
+		return $results[0];
+	elseif ( $numToFetch > 0 )
+		return array_slice($results, 0, $numToFetch);
+	
+	return $results;
+}
 
 function handleRequest($action){
-	global $sql;
-	
 	switch ( $action ){
 		case 'getSessionData':
 			// Get user info
-			$stmt = $sql->prepare('SELECT users.id, users.username, sessions.id AS sid FROM users, sessions WHERE sessions.id=? AND users.id=sessions.user_id LIMIT 1');
-			@$stmt->bind_param('s', reqparam('sid'));
-			$stmt->execute();
-			$result = $stmt->get_result();
+			$data = sql('SELECT users.id, users.username, sessions.id AS sid FROM users, sessions WHERE sessions.id=:sid AND users.id=sessions.user_id LIMIT 1', array(
+				':sid' => reqparam('sid')
+			), 1);
 			
-			if ( $result->num_rows > 0 ){
-				$data = $result->fetch_assoc();
-				
+			if ( !empty($data) )
 				output($data);
-			}
-			else{
+			else
 				error('Invalid session!');
-			}
 		break;
 		case 'login':
 			// Get user info
-			$stmt = $sql->prepare('SELECT id, username FROM users WHERE username=? AND password=? LIMIT 1');
-			@$stmt->bind_param('ss', reqparam('username'), reqparam('password'));
-			$stmt->execute();
-			$result = $stmt->get_result();
-
-			if ( $result->num_rows > 0 ){
-				$data = $result->fetch_assoc();
-				
+			$data = sql('SELECT id, username FROM users WHERE username=:username AND password=:password LIMIT 1', array(
+				':username' => reqparam('username'),
+				':password' => reqparam('password')
+			), 1);
+			
+			if ( !empty($data) ){
 				// Create a new session
 				$data['sid'] = uniqid('', true);
-				$stmt = $sql->prepare('INSERT INTO sessions (id, user_id) VALUES(?, ?)');
-				$stmt->bind_param('ss', $data['sid'], $data['id']);
-				$stmt->execute();
+				sql('INSERT INTO sessions (id, user_id) VALUES(:sid, :uid)', array(
+					':sid' => $data['sid'],
+					':uid' => $data['id']
+				), 0);
 				
 				// Limit to 5 open sessions per user
-				$stmt = $sql->prepare('DELETE FROM sessions WHERE user_id=? AND id NOT IN ( SELECT id FROM ( SELECT id FROM sessions WHERE user_id=? ORDER BY created DESC LIMIT 5 ) foo )');
-				$stmt->bind_param('ss', $data['id'], $data['id']);
-				$stmt->execute();
+				sql('DELETE FROM sessions WHERE user_id=:uid AND id NOT IN ( SELECT id FROM ( SELECT id FROM sessions WHERE user_id=:uid ORDER BY created DESC LIMIT 5 ) foo )', array(
+					':uid' => $data['id']
+				), 0);
 				
 				output($data);
 			}
-			else{
+			else
 				error('Invalid username or password!');
-			}
 		break;
 		case 'register':
 			// Check if username exists
-			$stmt = $sql->prepare('SELECT * FROM users WHERE username=? LIMIT 1');
-			@$stmt->bind_param('s', reqparam('username'));
-			$stmt->execute();
-			$result = $stmt->get_result();
-			if ( $result->num_rows > 0 )
+			$data = sql('SELECT * FROM users WHERE username=:username LIMIT 1', array(
+				':username' => reqparam('username')
+			));
+			if ( count($data) > 0 )
 				error('Username already taken!');
 			
 			// Create new user
-			$stmt = $sql->prepare('INSERT INTO users (username, password) VALUES(?, ?)');
-			@$stmt->bind_param('ss', reqparam('username'), reqparam('password'));
-			$stmt->execute();
+			sql('INSERT INTO users (username, password) VALUES(:username, :password)', array(
+				':username' => reqparam('username'),
+				':password' => reqparam('password')
+			), 0);
 
 			return handleRequest('login');
 		break;

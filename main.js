@@ -391,6 +391,8 @@ function initiateSession(data){
 		$('#login-panel').dialog('close');
 		$('#logout-button').show();
 		
+		$('#login-panel input[type!=submit]').val('');
+		
 		if ( !data.id ){
 			$.getJSON('api.php', {
 				'action': 'getSessionData',
