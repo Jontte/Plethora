@@ -13,7 +13,7 @@ $dname = dirname(__FILE__);
 return array(
 	'js' => array(
 		new Minify_Source(array(
-			'filepath' => "$dname/../jquery-1.5.1.min.js",
+			'filepath' => "$dname/../jquery-1.6.3.min.js",
 			'minifier' => create_function('$a', 'return $a;')
 		)),
 		new Minify_Source(array(
@@ -39,7 +39,7 @@ return array(
 	),
 	'3rdparty' => array(
 		new Minify_Source(array(
-			'filepath' => "$dname/../jquery-1.5.1.min.js",
+			'filepath' => "$dname/../jquery-1.6.3.min.js",
 			'minifier' => create_function('$a', 'return $a;')
 		)),
 		new Minify_Source(array(

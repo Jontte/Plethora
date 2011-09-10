@@ -39,7 +39,7 @@
 			if($plethora_debug)
 			{
 				$files = array(
-					'public/jquery-1.5.1.min.js',
+					'public/jquery-1.6.3.min.js',
 					'public/jquery-ui-1.8.12.custom.min.js',
 					'public/json_parse.js',
 					'util.js',
@@ -117,10 +117,33 @@
 			</p>
 		</div>
 		<div id="level-selector-panel"></div>
-		<div id="login-panel">
-			<p>
-				Lol lol, loginform!
-			</p>
+		<div id="login-panel" title="Login/Register">
+			<div style="width:50%;float:left;">
+				<p>Login</p>
+				<p>
+					<form id="login-form">
+						<label for="login-username">Username:</label><br />
+						<input id="login-username" name="login-username" type="text" /><br />
+						<label for="login-password">Password:</label><br />
+						<input id="login-password" name="login-password" type="password" /><br />
+						<input type="submit" value="Login" />
+					</form>
+				</p>
+			</div>
+			<div style="width:50%;margin-left:50%;">
+				<p>Register</p>
+				<p>
+					<form id="register-form">
+						<label for="register-username">Username:</label><br />
+						<input id="register-username" name="register-username" type="text" /><br />
+						<label for="register-password">Password:</label><br />
+						<input id="register-password" name="register-password" type="password" /><br />
+						<label for="register-password-again">Password (again):</label><br />
+						<input id="register-password-again" name="register-password-again" type="password" /><br />
+						<input type="submit" value="Register" />
+					</form>
+				</p>
+			</div>
 		</div>
 		<div id="panel" class="ui-corner-all ui-widget">
 			<div class="ui-corner-all ui-widget-header"><h2>Plethora</h2></div>
@@ -146,6 +169,7 @@
 				<input id="save-btn" type="button" value="Save"/>
 				<hr/>
 				<input type="button" id="login-panel-button" value="Login/Register"/>
+				<input type="button" id="logout-button" value="Logout"/>
 				
 				<div id="worksbestwith">
 					<a href="http://www.google.com/chrome">

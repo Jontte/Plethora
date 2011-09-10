@@ -2,4 +2,6 @@
 public/ga_tracker.php
 public/config.php
 
-
+/nbproject/
+project.xml
+project.properties

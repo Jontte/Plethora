@@ -31,3 +31,7 @@ body {
 	left: 48px;	
 }
 
+
+#login-panel label {
+	font-size: 75%;
+}

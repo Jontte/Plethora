@@ -4,4 +4,13 @@
 
 	// Enable debug mode
 	$plethora_debug = false;
+	
+	// MySQL connection information
+	$plethora_mysql = array(
+		'host' => 'localhost',
+		'port' => null,
+		'username' => 'plethora',
+		'password' => '',
+		'database' => 'plethora'
+	);
 ?>

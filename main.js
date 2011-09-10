@@ -89,6 +89,64 @@ $(document).ready(function(){
 	$('#login-panel-button').button().click(function(){
 		$('#login-panel').dialog('open');
 	});
+	$('#logout-button').button().click(function(){
+		destroySession();
+	}).hide();
+
+	$('#login-form').submit(function(){
+		var data = {};
+		$.each({
+			'username': 'login-username',
+			'password': 'login-password'
+		}, function(key, val){
+			data[key] = $('#'+val).val();
+		});
+
+		$.getJSON('api.php', {
+			'action': 'login',
+			'username': data['username'],
+			'password': SHA1(data['password'])
+		}, function(retu){
+			if ( retu && retu.error )
+				alert(retu.error);
+			else
+				initiateSession(retu);
+		});
+
+		return false;
+	});
+
+	$('#register-form').submit(function(){
+		var data = {
+			'action': 'register'
+		};
+		$.each({
+			'username': 'register-username',
+			'password': 'register-password',
+			'password-again': 'register-password-again'
+		}, function(key, val){
+			data[key] = $('#'+val).val();
+		});
+
+		if ( data['password'] != data['password-again'] ){
+			alert('Passwords do not match!');
+			return false;
+		}
+
+		$.getJSON('api.php', {
+			'action': 'register',
+			'username': data['username'],
+			'password': SHA1(data['password'])
+		}, function(retu){
+			if ( retu && retu.error )
+				alert(retu.error);
+			else
+				initiateSession(retu);
+		});
+
+		return false;
+	});
+	
 	// Setup level selector dialog
 	$('#level-selector-panel').dialog({
 		modal: false,
@@ -149,6 +207,8 @@ $(document).ready(function(){
 	});
 	
 	$('#lselect').change(reset);
+	
+	initiateSession();
 });
 
 function reset(areyousure)
@@ -307,4 +367,57 @@ function game_loop()
 	
 	//window.requestAnimFrame(game_loop);
 //	console.timeEnd('frame');
+}
+
+var currentUser = null;
+function initiateSession(data){
+	if ( !data ){
+		var sid = getCookie('sid');
+		if ( !sid || sid == '' )
+			return;
+		
+		initiateSession({
+			'sid': sid
+		})
+		
+		return;
+	}
+	
+	function onSession(){
+		currentUser = data;
+		setCookie('sid', data.sid);
+		
+		$('#login-panel-button').hide();
+		$('#login-panel').dialog('close');
+		$('#logout-button').show();
+		
+		if ( !data.id ){
+			$.getJSON('api.php', {
+				'action': 'getSessionData',
+				'sid': data.sid
+			}, function(retu){
+				if ( !retu || retu.error )
+					onNoSession();
+				else if ( retu.id )
+					initiateSession(retu);
+			});
+		}
+	}
+	
+	function onNoSession(){
+		$('#login-panel-button').show();
+		$('#logout-button').hide();
+	}
+	
+	if ( !data || !data.sid )
+		onNoSession();
+	else
+		onSession();
+}
+
+function destroySession(){
+	currentUser = null;
+	setCookie('sid', '');
+	$('#login-panel-button').show();
+	$('#logout-button').hide();
 }
