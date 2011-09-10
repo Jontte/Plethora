@@ -117,6 +117,11 @@
 			</p>
 		</div>
 		<div id="level-selector-panel"></div>
+		<div id="login-panel">
+			<p>
+				Lol lol, loginform!
+			</p>
+		</div>
 		<div id="panel" class="ui-corner-all ui-widget">
 			<div class="ui-corner-all ui-widget-header"><h2>Plethora</h2></div>
 			<div id="panel-content" class="ui-corner-all ui-widget-content">
@@ -139,6 +144,8 @@
 					<label for="sw-radio-edit">Edit</label>
 				</div>
 				<input id="save-btn" type="button" value="Save"/>
+				<hr/>
+				<input type="button" id="login-panel-button" value="Login/Register"/>
 				
 				<div id="worksbestwith">
 					<a href="http://www.google.com/chrome">

@@ -18,7 +18,7 @@ World = {
 	// Shape enum
 	BOX: 0,
 	CYLINDER : 1,
-	HEIGTHMAP: 2,
+	SLOPE: 2,
 	
 	/* 
 	 * Internal variables 

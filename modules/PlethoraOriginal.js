@@ -232,7 +232,7 @@ World.addModule('PlethoraOriginal',
 		World.addClass('lift', {
 			tileset: plethora_original,
 			tiles: [[0,6],[1,6],[2,6],[3,6],[4,6],[5,6],[6,6],[7,6],[8,6],[9,6],[10,6],[11,6],[12,6],[13,6],[14,6],[15,6]],
-			category: 'terrain',
+			category: 'transport',
 			flags: World.ANIMATED,
 			init : function(params)
 			{
@@ -304,13 +304,13 @@ World.addModule('PlethoraOriginal',
 		});
 		World.addClass('barrelwooden', {
 			tileset: plethora_original,
-			category: 'terrain',
+			category: 'obstacles',
 			tiles: [2,1],
 			shape: World.CYLINDER,
 		});
 		World.addClass('crate', {
 			tileset: plethora_original,
-			category: 'misc',
+			category: 'obstacles',
 			tiles: [3,1]
 		});
 		World.addClass('famouscube', {
@@ -388,33 +388,12 @@ World.addModule('PlethoraOriginal',
 			flags: World.ANIMATED, 
 			tiles: [[8,2],[9,2],[10,2],[11,2],[12,2],[13,2],[14,2],[15,2]]
 		});
-		World.addClass('slopesouth', {
+		World.addClass('slope', {
 			tileset: plethora_original,
 			category: 'terrain',
-			tiles: [4, 8 ], 
-			shape: World.HEIGHTMAP, 
-			corners: [1,1,0,0]
-		});
-		World.addClass('slopeeast',  {
-			tileset: plethora_original,
-			category: 'terrain',
-			tiles: [5, 8 ], 
-			shape: World.HEIGHTMAP, 
-			corners: [1,0,0,1]
-		});
-		World.addClass('slopenorth', {
-			tileset: plethora_original,
-			category: 'terrain',
-			tiles: [4, 9 ], 
-			shape: World.HEIGHTMAP, 
-			corners: [0,0,1,1]
-		});
-		World.addClass('slopewest',  {
-			tileset: plethora_original,
-			category: 'terrain',
-			tiles: [4, 10], 
-			shape: World.HEIGHTMAP, 
-			corners: [0,1,1,0]
+			flags: World.DIRECTED,
+			tiles: [[4,9],[5,8],[4,8],[4,10]], 
+			shape: World.SLOPE
 		});
 	}
 });

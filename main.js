@@ -75,6 +75,20 @@ $(document).ready(function(){
 		});
 	});
 	
+	// Setup login panel
+	$('#login-panel').dialog({
+		modal: true,
+		autoOpen: false,
+		maxHeight: 400,
+		width: 600,
+		resizable: true,
+		draggable: true,
+		show: 'slide',
+		hide: 'fade'
+	});
+	$('#login-panel-button').button().click(function(){
+		$('#login-panel').dialog('open');
+	});
 	// Setup level selector dialog
 	$('#level-selector-panel').dialog({
 		modal: false,
