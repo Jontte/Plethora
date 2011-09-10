@@ -457,9 +457,9 @@ World.initEditor = function()
 			
 			// change direction based on mouse movement
 			var delta = [
-				Math.floor(this.x - prevpos[0]),
-				Math.floor(this.y - prevpos[1]),
-				Math.floor(this.z - prevpos[2])
+				(this.x - prevpos[0]),
+				(this.y - prevpos[1]),
+				(this.z - prevpos[2])
 			];
 			
 			var delta_abs = [

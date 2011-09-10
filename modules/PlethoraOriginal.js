@@ -52,7 +52,6 @@ World.addModule('PlethoraOriginal',
 				this.walkx = this.walky = 0;
 
 				this.frameMaxTicks=0;
-				this.frameMaxTicks=0;
 
 				if(!World._editor.online)
 					World.setCameraFocus(this);
@@ -142,7 +141,82 @@ World.addModule('PlethoraOriginal',
 			],
 			//shape: World.CYLINDER,
 			size: [1,1,2],
-			category: 'characters'
+			category: 'characters',
+			init: function(params){	
+				params.fixed = false;
+				params.mass = 1;
+				
+				this.walkx = this.walky = 0;
+
+				this.frameMaxTicks=0;
+		
+				this.collision_listener = function(self, other, nx, ny, nz, displacement){
+					if(nz>0)
+					{
+						return {
+							vx: -self.walkx,
+							vy: -self.walky,
+							vz: 0
+						};
+					}
+					return true;
+				};
+				this.counter = 0;
+				this.targetdir = 0;
+			},
+			step: function(){
+				var d = 0.13;
+	
+				if(--this.counter <= 0)
+				{
+					this.targetdir = Math.floor(Math.random()*5.99);
+					this.counter = Math.floor(Math.random()*30*3);
+				}
+				var movement_x = this.targetdir==1?d:(this.targetdir==3?-d:0);
+				var movement_y = this.targetdir==0?-d:(this.targetdir==2?d:0);
+				
+				// measure distance to camera center (player location)
+				var pdx = (World._cameraPosX-this.x);
+				var pdy = (World._cameraPosY-this.y);
+				var pdz = (World._cameraPosZ-this.z);
+				var pdist = Math.sqrt(pdx*pdx+pdy*pdy+pdz*pdz);
+				if(pdist < 5)
+				{
+					// normalize pdx and pdy in xy plane
+					pdist = Math.sqrt(pdx*pdx+pdy*pdy);
+					pdx /= pdist;
+					pdy /= pdist;
+					movement_x = d*pdx;
+					movement_y = d*pdy;
+				}
+	
+				// Inhibit diagonal movement
+				var dd = Math.sqrt(movement_x*movement_x+movement_y*movement_y);
+				if(dd>0)
+				{
+					movement_x *= d/dd;
+					movement_y *= d/dd;
+				}
+
+				this.walkx = movement_x - this.vx/20;
+				this.walky = movement_y - this.vy/20;
+				
+				var comp = [Math.abs(movement_x), Math.abs(movement_y)];
+				if(comp[0] > comp[1])
+				{
+					this.direction = movement_x>0?1:3;
+				}
+				else if(comp[1] > comp[0])
+				{
+					this.direction = movement_y>0?2:0;
+				}
+
+				var speed = (this.vx*this.vx+this.vy*this.vy);
+				var maxticks = (speed<0.001) ? 0 : 0.5*0.10/speed;
+				this.frameMaxTicks = maxticks;
+	
+				World.drawSimpleObject(this);
+			}
 		});
 		World.addClass('groundrugged', {
 			tileset: plethora_original,
