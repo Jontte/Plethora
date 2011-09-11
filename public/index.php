@@ -23,6 +23,7 @@ require_once('config.php');
 					'public/jquery-1.6.3.min.js',
 					'public/jquery-ui-1.8.12.custom.min.js',
 					'public/jquery.toastmessage.js',
+					'public/DataTables-1.8.2/jquery.dataTables.min.js',
 					'util.js',
 					'jsbih.js',
 					'key.js',
@@ -97,7 +98,33 @@ require_once('config.php');
 				He is no graphics artist, nor does he find general web design (HTML&amp;CSS) particularly interesting, so if you feel like contributing, please contact him at his email joonas[meow]haapa.la. Wishes, ideas, comments, criticism welcome.
 			</p>
 		</div>
-		<div id="level-selector-panel"></div>
+		<div id="level-selector-panel">
+			<table cellpadding="0" cellspacing="0" border="0" id="level-selector-grid"> 
+				<thead> 
+					<tr> 
+						<th>ID</th> 
+						<th>Updated</th> 
+						<th>Name</th> 
+						<th>Description</th> 
+						<th>User_id</th> 
+						<th>Username</th> 
+					</tr> 
+				</thead> 
+				<tbody> 
+		
+				</tbody> 
+				<tfoot> 
+					<tr> 
+						<th>ID</th> 
+						<th>Updated</th> 
+						<th>Name</th> 
+						<th>Description</th> 
+						<th>User_id</th> 
+						<th>Username</th> 
+					</tr> 
+				</tfoot> 
+			</table> 
+		</div>
 		<div id="login-panel" title="Login/Register">
 			<div style="width:30%;float:left;">
 				<p>Login</p>

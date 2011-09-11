@@ -18,21 +18,6 @@ var Graphics = {
 	img : []
 };
 
-
-// TODO: move this to util.js
-// http://paulirish.com/2011/requestanimationframe-for-smart-animating/
-// shim layer with setTimeout fallback
-window.requestAnimFrame = (function(){
-	return	window.requestAnimationFrame       || 
-		window.webkitRequestAnimationFrame || 
-		window.mozRequestAnimationFrame    || 
-		window.oRequestAnimationFrame      || 
-		window.msRequestAnimationFrame     || 
-		function(/* function */ callback, /* DOMElement */ element){
-			window.setTimeout(callback, 1000 / 30);
-		};
-})();
-
 $(document).ready(function(){
 
 	// Disable context menu on right click
@@ -204,7 +189,7 @@ $(document).ready(function(){
 		return false;
 	});
 	
-	// Setup level selector dialog
+	// Setup level selector dialogs and grid
 	$('#level-selector-panel').dialog({
 		modal: false,
 		autoOpen: false,
@@ -217,6 +202,18 @@ $(document).ready(function(){
 	});
 	$('#level-selector').button().click(function(){
 		$('#level-selector-panel').dialog('open');
+	});
+	$('#level-selector-grid').dataTable( {
+		"bProcessing": true,
+		"sAjaxSource": "api.php?action=getLevelList",
+		"aoColumns": [
+			{ "mDataProp": "id" },
+			{ "mDataProp": "updated" },
+			{ "mDataProp": "name" },
+			{ "mDataProp": "desc" },
+			{ "mDataProp": "user_id" },
+			{ "mDataProp": "username" }
+		]
 	});
 	
 	// Setup level selector grid
@@ -399,8 +396,6 @@ function initialize()
 
 	Config.gamestate = 'online';
 
-	//window.requestAnimFrame(game_loop);
-
 	Config.intervalID = setInterval(game_loop, 1000/Config.FPS);
 }
 
@@ -427,7 +422,6 @@ function game_loop()
 	// Reset key states
 	Key.timestep();
 	
-	//window.requestAnimFrame(game_loop);
 //	console.timeEnd('frame');
 }
 

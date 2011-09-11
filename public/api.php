@@ -119,6 +119,8 @@ function handleRequest($action){
 			array(
 				':uid' => reqparam('uid')
 			));
+			//TODO, lol
+			$data = array('aaData' => $data);
 			output($data);
 		break;
 		case 'getLevel': // id
