@@ -21,6 +21,10 @@ return array(
 			'filepath' => "$dname/../jquery-ui-1.8.12.custom.min.js",
 			'minifier' => create_function('$a', 'return $a;')
 		)),
+		new Minify_Source(array(
+			'filepath' => "$dname/../jquery-mousewheel-3.0.4/jquery.mousewheel.min.js",
+			'minifier' => create_function('$a', 'return $a;')
+		)),
 		"$dname/../jquery.toastmessage.js",
 		"$dname/../../jsbih.js",
 		"$dname/../../util.js",

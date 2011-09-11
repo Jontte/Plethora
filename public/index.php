@@ -23,6 +23,7 @@ require_once('config.php');
 					'public/jquery-1.6.3.min.js',
 					'public/jquery-ui-1.8.12.custom.min.js',
 					'public/jquery.toastmessage.js',
+					'public/jquery-mousewheel-3.0.4/jquery.mousewheel.min.js',
 					'util.js',
 					'jsbih.js',
 					'key.js',

@@ -35,20 +35,20 @@ World.initEditor = function()
 			var focus = World2Screen(World._cameraPosX, World._cameraPosY, World._cameraPosZ);
 			if(!wec.open)
 			{
-				// Keyboard movement
-				if(Key.changed(KEY_PAGEUP) && Key.get(KEY_PAGEUP))
+				// Keyboard & Mouse wheel movement up/down
+				if((Key.changed(KEY_PAGEUP) && Key.get(KEY_PAGEUP)) || Key.changed(MOUSE_WHEEL_UP))
 				{
 					this.z++;
 					this.dirty = true;
 					World._cameraPosZ++;
 				}
-				if(Key.changed(KEY_PAGEDOWN) && Key.get(KEY_PAGEDOWN))
+				if((Key.changed(KEY_PAGEDOWN) && Key.get(KEY_PAGEDOWN)) || Key.changed(MOUSE_WHEEL_DOWN))
 				{
 					this.z--;
 					this.dirty = true;
 					World._cameraPosZ--;
 				}				
-				// mouse movement
+				// mouse movement horizontally
 				focus = World2Screen(World._cameraPosX, World._cameraPosY, World._cameraPosZ);
 				var pos = Screen2WorldXY(World.mouseX+focus.x-320, World.mouseY+focus.y-240, this.z-0.5);
 				
@@ -65,8 +65,6 @@ World.initEditor = function()
 					var o = World._objects[i];
 					if(o.z-o.bz/2 > this.z)
 						o.alpha = 0.2;
-					else if(o.z+o.bz/2 <= this.z)
-						o.alpha = 1.0;
 					else
 						o.alpha = 1.0;
 				}
