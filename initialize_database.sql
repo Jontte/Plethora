@@ -15,7 +15,7 @@ CREATE TABLE IF NOT EXISTS `levels` (
 ) ENGINE=InnoDB  DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci AUTO_INCREMENT=10 ;
 
 INSERT INTO `levels` (`id`, `user_id`, `updated`, `playcount`, `name`, `desc`, `data`) VALUES
-(1, NULL, '2011-09-11 12:04:19', 0, 'Puzzle', 'A testing level', '{\r\n	"module" : "PlethoraOriginal",\r\n	"objects" : [\r\n		["compound(groundrugged,10,10,1)", [0.5,0.5,0], 0],\r\n		["dude", [0,0,2], 1, 0],\r\n		["lift", [2,-1,1], 1, 0],\r\n		["crate", [2,-2,1], 0, 0]\r\n	]\r\n}\r\n');
+(1, NULL, '2011-09-11 12:04:19', 0, 'Puzzle', 'A testing level', '{\r\n	"module" : "PlethoraOriginal",\r\n	"objects" : [\r\n		["compound(groundrugged,10,10,1)", [0.5,0.5,0], 0],\r\n		["dude", [0,0,1.5], 1, 0],\r\n		["lift", [2,-1,1], 1, 0],\r\n		["crate", [2,-2,1], 0, 0]\r\n	]\r\n}\r\n');
 
 DROP TABLE IF EXISTS `sessions`;
 CREATE TABLE IF NOT EXISTS `sessions` (

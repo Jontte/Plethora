@@ -19,14 +19,16 @@ World.addModule('PlethoraOriginal',
 			tileset: plethora_original,
 			category: 'obstacles',
 			tiles: [8,3],
-			size: [3,1,3]
+			size: [3,1,3],
+			init: function(params){params.mass = 9;}
 		});
 		World.addClass('duck', {
 			tileset: plethora_original,
 			category: 'misc',
 			tiles : [5,1],
 			shape: World.CYLINDER,
-			size: [0.5,0.5,0.5]
+			size: [0.5,0.5,0.5],
+			init: function(params){params.mass = 0.2;}
 		});
 		World.addClass('dude',
 		{
@@ -38,7 +40,7 @@ World.addModule('PlethoraOriginal',
 				[[0,2],[1,2],[2,2],[3,2]], // south
 				[[4,4],[5,4],[6,4],[7,4]] // west
 			],
-			//shape: World.CYLINDER,
+			shape: World.CYLINDER,
 			size: [1,1,2],
 			category: 'characters',
 			init: function(params){
@@ -139,7 +141,7 @@ World.addModule('PlethoraOriginal',
 				[[0,12],[1,12],[2,12],[3,12],[4,12]],
 				[[5,14],[6,14],[7,14],[8,14],[9,14]]
 			],
-			//shape: World.CYLINDER,
+			shape: World.CYLINDER,
 			size: [1,1,2],
 			category: 'characters',
 			init: function(params){	
@@ -307,16 +309,19 @@ World.addModule('PlethoraOriginal',
 			category: 'obstacles',
 			tiles: [2,1],
 			shape: World.CYLINDER,
+			init: function(params){params.mass = 1;}
 		});
 		World.addClass('crate', {
 			tileset: plethora_original,
 			category: 'obstacles',
-			tiles: [3,1]
+			tiles: [3,1],
+			init: function(params){params.mass = 1;}
 		});
 		World.addClass('famouscube', {
 			tileset: plethora_original,
 			category: 'misc',
-			tiles: [4,1]
+			tiles: [4,1],
+			init: function(params){params.mass = 1;}
 		});
 		World.addClass('shadow', {
 			tileset: plethora_original,
@@ -360,7 +365,7 @@ World.addModule('PlethoraOriginal',
 			init: function(){
 				this.collision_listener = function(self, other, nx, ny, nz, displacement){
 					if(nz<0) {
-						var v = 0.1;
+						var v = 20;
 						switch(self.direction){
 							case 0: vec=[ 0,-v]; break;
 							case 1: vec=[ v, 0]; break;
@@ -368,8 +373,8 @@ World.addModule('PlethoraOriginal',
 							case 3: vec=[-v, 0]; break;
 						};
 						return {
-							vx: vec[0],
-							vy: vec[1],
+							vx: vec[0]*displacement,
+							vy: vec[1]*displacement,
 							vz: 0
 						};
 					}
@@ -380,130 +385,23 @@ World.addModule('PlethoraOriginal',
 		World.addClass('famouslogo', {
 			tileset: plethora_original,
 			category: 'misc',
-			tiles: [9,1]
+			tiles: [9,1],
+			init: function(params){params.mass = 1;}
 		});
 		World.addClass('redblock', {
 			tileset: plethora_original,
 			category: 'misc',
 			flags: World.ANIMATED, 
-			tiles: [[8,2],[9,2],[10,2],[11,2],[12,2],[13,2],[14,2],[15,2]]
+			tiles: [[8,2],[9,2],[10,2],[11,2],[12,2],[13,2],[14,2],[15,2]],
+			init: function(params){params.mass = 1;}
 		});
-		World.addClass('slope', {
+		/*World.addClass('slope', {
 			tileset: plethora_original,
 			category: 'terrain',
 			flags: World.DIRECTED,
 			tiles: [[4,9],[5,8],[4,8],[4,10]], 
 			shape: World.SLOPE
-		});
+		});*/
 	}
 });
-/*	createLift : function(x, y, z, fixed)
-	{
-		
-	},
-	createConveyorBeltX : function(x, y, z, direction, fixed)
-	{
-		if(direction == undefined)direction = 1;
-		var obj = World.createObject(Graphics.ConveyorBeltX, x, y, z, fixed);
-		obj.frameMaxTicks = 1 * direction;
-		obj.direction = direction;
-		obj.collision_listener = function(self, other, nx, ny, nz, displacement)
-		{
-			if(Math.abs(nz+1) > 0.01)return true;
-			var force = 0.05*self.direction;
-			return {
-				vx: force, 
-				vy: 0, 
-				vz: 0
-			};
-		}
-		return obj;
-	},
-	createConveyorBeltY : function(x, y, z, direction, fixed)
-	{
-		if(direction == undefined)direction = 1;
-		var obj = World.createObject(Graphics.ConveyorBeltY, x, y, z, fixed);
-		obj.frameMaxTicks = 1 * direction;
-		obj.direction = direction;
-		obj.collision_listener = function(self, other, nx, ny, nz, displacement)
-		{
-			if(Math.abs(nz+1) > 0.01)return true;
-			var force = 0.05*self.direction;
-			return {
-				vx: 0, 
-				vy: force, 
-				vz: 0
-			};
-		}
-		return obj;
-	},
-	createAnimator : function(obj, params)
-	{
-		if(params.type == 'transfer')
-		{
-			obj.hasGravity = false; // animated objects needn't no gravity
-			obj.fixedCollide = false; // animated objects needn't collide with fixed objects
-			var anim = {
-				obj : obj,
-				link : World.linkObjects(obj, null),
-				current_frame : 0,
-				target_frame : params.time * Config.FPS,
-				state: 0, // 0 = moving forward, 1 = waiting, 2 = moving backward, 3 = waiting
-				srcX: obj.x,
-				srcY: obj.y,
-				srcZ: obj.z,
-				destX: params.target[0],
-				destY: params.target[1],
-				destZ: params.target[2],
-				movetime: params.time,
-				sleeptime: params.sleep,
-				step: function()
-				{
-					var d = 0;
-					if(this.state == 0)
-						d = this.current_frame / this.target_frame;
-					else if(this.state == 1)
-						d = 1;
-					else if(this.state == 2)
-						d = 1.0-this.current_frame / this.target_frame;
-					else if(this.state == 3)
-						d = 0;
 
-					this.link.dx = this.srcX + (this.destX-this.srcX) * d;
-					this.link.dy = this.srcY + (this.destY-this.srcY) * d;
-					this.link.dz = this.srcZ + (this.destZ-this.srcZ) * d;
-
-					if(++this.current_frame >= this.target_frame)
-					{
-						this.current_frame = 0;
-						if(++this.state>3)this.state=0;
-						if(this.state==0 || this.state==2)
-							this.target_frame = this.movetime * Config.FPS;
-						else
-							this.target_frame = this.sleeptime * Config.FPS;
-						
-					}
-				}
-			};
-			Base.animators.push(anim);
-			return anim;
-		}
-		else
-		{
-			throw 'unknown animator type';
-		}
-	},
-	step : function()
-	{
-		
-
-		// Step animators
-		for(var i = 0; i < Base.animators.length; i++)
-		{
-			Base.animators[i].step();
-		}
-	}
-
-};
-
-);*/

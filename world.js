@@ -712,8 +712,7 @@ World = {
 				ctx.lineTo(c1.x, c1.y);
 		}
 		ctx.closePath();
-		ctx.stroke();
-*/
+		ctx.stroke();*/
 		
 		if(World._editor.online)
 		{
@@ -908,14 +907,13 @@ World = {
 			{
 				var cur   = i==0?o1:o2;
 				var other = i==0?o2:o1;
-				if(cur.collision_listener)
+				if('collision_listener' in cur)
 				{
 					var mul = i==0?1:-1;
 					var ret = cur.collision_listener(cur, other, nx*mul, ny*mul, nz*mul, displacement);
 					if(ret === false)
 					{
 						// collision_listener wants to let the object pass thru
-						console.log('passthru');
 						return;
 					}
 					else if(ret.vx != undefined)
@@ -1024,11 +1022,19 @@ World = {
 			World._colliders[type2] = {};
 			
 		World._colliders[type1][type2] = fn;
-		
-		// TODO: Is creating a closure slow or is calling a closure slow?
-		// The alt. option is to have this switch done in each collision 
-		// function separately. That'd suck. 
-		World._colliders[type2][type1] = function(a,b){return fn(b,a);};
+		World._colliders[type2][type1] = function(a,b){
+			// We need to invert each axis here since we flip the order of the parameters..
+			var ret = fn(b,a);
+			var r;
+			for(var i = 0; i < ret.length; i++)
+			{
+				r = ret[i];
+				r.nx = -r.nx;
+				r.ny = -r.ny;
+				r.nz = -r.nz;
+			}
+			return ret;
+		};
 	},
 	loadLevel : function(levelname, json, use_editor)
 	{

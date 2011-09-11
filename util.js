@@ -96,8 +96,6 @@ function Screen2WorldXY(x,y,z)
 {
 	// Project (x,y) to a XY-plane in world with height Z
 	
-//	x-=16;
-//	y-=16;
 	var obj = {
 		x: Math.round((x+y-x/2)/16)-1,
 		y: Math.round(((y-x/2))/16)

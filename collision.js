@@ -19,9 +19,9 @@ function BoxBoxCollision(a,b)
 	{
 		var ret = [];
 		return [
-			new World.Collision(sign(dx),0,0, tx-Math.abs(dx)),
-			new World.Collision(0,sign(dy),0, ty-Math.abs(dy)),
-			new World.Collision(0,0,sign(dz), tz-Math.abs(dz))
+			new World.Collision(-sign(dx),0,0, tx-Math.abs(dx)),
+			new World.Collision(0,-sign(dy),0, ty-Math.abs(dy)),
+			new World.Collision(0,0,-sign(dz), tz-Math.abs(dz))
 		];
 	}
 	return [];
@@ -34,89 +34,55 @@ function BoxCylinderCollision(box,cyl)
 	var dy = cyl.y-box.y;
 	var dz = cyl.z-box.z;
 	
-	var z_hit = false;
-	var xy_hit = false;
+	var tx = (cyl.bx+box.bx)/2;
+	var ty = (cyl.by+box.by)/2;
+	var tz = (cyl.bz+box.bz)/2;
 	
-	// Try z-axis
-	var d;
-	
-	d = dz-box.shape.bbox[1][2]+cyl.shape.height[0];
-	if(d <= 0)
-	{
-		z_hit = true;
-		ret.push(new World.Collision(0,0, 1,-d));
-	}
-	d = -dz+box.shape.bbox[0][2]-cyl.shape.height[1];
-	if(d >= 0)
-	{
-		z_hit = true;
-		ret.push(new World.Collision(0,0,-1, d));
-	}
-	if(!z_hit)
+	// Hit top/bottom?
+	if(Math.abs(dz)>tz)
 		return [];
-	
-	// Try sides X&Y
 
-	if(	dx >= -0.5+box.shape.bbox[0][0] && 
-		dx <= -0.5+box.shape.bbox[1][0])
+	ret.push(
+		new World.Collision(0,0,-sign(dz), tz-Math.abs(dz))
+	);
+
+	var hit = false;
+
+	// Hit sides?
+	if(Math.abs(dy) < box.by/2 && Math.abs(dx) <= tx)
 	{
-		d = dy-(cyl.shape.radius-(-0.5-box.shape.bbox[0][1]));
-		if(d <= 0) {
-			xy_hit = true;
-			ret.push(new World.Collision(0, 1,0, -d));
-		}
-		d = dy-(cyl.shape.radius-(-0.5-box.shape.bbox[1][1]));
-		if(d >= 0) {
-			xy_hit = true;
-			ret.push(new World.Collision(0, -1,0, d));
+		ret.push(new World.Collision(-sign(dx),0,0,tx-Math.abs(dx)));
+		hit = true;
+	}
+	if(Math.abs(dx) < box.bx/2 && Math.abs(dy) <= ty)
+	{
+		ret.push(new World.Collision(0,-sign(dy),0,ty-Math.abs(dy)));
+		hit = true;
+	}
+	if(hit)
+		return ret;
+
+	// Hit corners?
+	var xx,yy,d,s;
+
+	for(var i = 0; i < 4; i++)
+	{
+		s = [i%2?1:-1, i/2?1:-1];
+		xx = (dx+s[0]*box.bx/2)/(cyl.bx/2);
+		yy = (dy+s[1]*box.by/2)/(cyl.by/2);
+		d = xx*xx+yy*yy;
+	
+		if(d < 1) {
+			ret.push(new World.Collision(-xx,-yy,0,1-d));
+			hit = true;
 		}
 	}
-/*	if(	dy >= -0.5+box.tiles.c.bbox[0][1] && 
-		dy <= -0.5+box.tiles.c.bbox[1][1])
-	{
-		d = dx+0.5-box.tiles.c.bbox[0][0] + cyl.tiles.c.r;
-		if(d > 0) {
-			xy_hit = true;
-			ret.push(new World.Collision( 1,0,0, d));
-		}
-		d = -dx+0.5+box.tiles.c.bbox[1][0] - cyl.tiles.c.r;
-		if(d < 0) {
-			xy_hit = true;
-			ret.push(new World.Collision(-1,0,0,-d));
-		}
-	}*/
-	/*if(!xy_hit)
-	{
-		var corners = [
-			[-0.5+box.tiles.c.bbox[0][0],-0.5+box.tiles.c.bbox[0][1]],
-			[-0.5+box.tiles.c.bbox[0][0],-0.5+box.tiles.c.bbox[1][1]],
-			[-0.5+box.tiles.c.bbox[1][0],-0.5+box.tiles.c.bbox[0][1]],
-			[-0.5+box.tiles.c.bbox[1][0],-0.5+box.tiles.c.bbox[1][1]]
-		];
-		var rr = cyl.tiles.c.r * cyl.tiles.c.r;
-		for(var i = 0; i < 4; i++)
-		{
-			dx = cyl.x-(box.x+corners[i][0]);
-			dy = cyl.y-(box.y+corners[i][1]);
-			d = dx*dx+dy*dy;
-			if(d < rr && d > 0)
-			{
-				xy_hit = true;
-				dx /= d;
-				dy /= d;
-				
-				ret.push(new World.Collision(dx,dy,0,cyl.tiles.r-Math.sqrt(d)));
-				
-				break; 
-				// not possible to have collisions with more than one corner
-			}
-		}
-	}*/
-	if(z_hit && xy_hit)
+
+	if(hit)
 		return ret;
 	return [];
 }
-function BoxHeightmapCollision(box, hmap)
+function BoxSlopeCollision(box, slope)
 {
 	return [];
 }
@@ -128,53 +94,46 @@ function CylinderCylinderCollision(cyl1, cyl2)
 	var dy = cyl2.y-cyl1.y;
 	var dz = cyl2.z-cyl1.z;
 	
-	// Try z-axis
-	var d;
-	var topdown = false; // z-axis hit was made
+	var tx = (cyl2.bx+cyl1.bx)/2;
+	var ty = (cyl2.by+cyl1.by)/2;
+	var tz = (cyl2.bz+cyl1.bz)/2;
 	
-	d = dz-cyl1.shape.height[1]+cyl2.shape.height[0];
-	if(d <= 0)
+	// Hit top/bottom?
+	if(Math.abs(dz)>tz)
+		return [];
+
+	ret.push(
+		new World.Collision(0,0,-sign(dz), tz-Math.abs(dz))
+	);
+	
+	var xx,yy,d;
+	xx = (dx)/(tx);
+	yy = (dy)/(ty);
+	d = xx*xx+yy*yy;
+	
+	if(d < 1)
 	{
-		topdown = true;
-		ret.push(new World.Collision(0,0, 1,-d));
-	}
-	d = -dz+cyl1.shape.height[0]-cyl2.shape.height[1];
-	if(d >= 0)
-	{
-		topdown = true;
-		ret.push(new World.Collision(0,0,-1, d));
-	}
-	if(!topdown)
+		ret.push(new World.Collision(-xx,-yy,0,1-d));
 		return ret;
-	
-	var mindist = cyl1.shape.radius + cyl2.shape.radius;
-	
-	dist = dx*dx+dy*dy;
-	d = dist-mindist*mindist;
-	if(d <= 0)
-	{
-		dist = Math.sqrt(dist);
-		var xx = dx/dist;
-		var yy = dy/dist;
-		ret.push(new World.Collision(xx,yy,mindist-dist));
 	}
-	return ret;
+
+	return [];
 }
-function CylinderHeightmapCollision(cyl, hmap)
+function CylinderSlopeCollision(cyl, slope)
 {
 	return [];
 }
-function HeightmapHeightmapCollision(hmap1, hmap2)
+function SlopeSlopeCollision(slope1, slope2)
 {
 	return [];
 }
 
 World._registerCollider(	World.BOX,			World.BOX,			BoxBoxCollision				);
 World._registerCollider(	World.BOX,			World.CYLINDER,		BoxCylinderCollision		);
-World._registerCollider(	World.BOX,			World.HEIGHTMAP, 	BoxHeightmapCollision		);
+World._registerCollider(	World.BOX,			World.SLOPE,	 	BoxSlopeCollision			);
 World._registerCollider(	World.CYLINDER,		World.CYLINDER,		CylinderCylinderCollision	);
-World._registerCollider(	World.CYLINDER,		World.HEIGHTMAP,	CylinderHeightmapCollision	);
-World._registerCollider(	World.HEIGHTMAP,	World.HEIGHTMAP,	HeightmapHeightmapCollision	);
+World._registerCollider(	World.CYLINDER,		World.SLOPE,		CylinderSlopeCollision		);
+World._registerCollider(	World.SLOPE,		World.SLOPE,		SlopeSlopeCollision			);
 
 	/*_collide : function(o1, o2)
 	{
