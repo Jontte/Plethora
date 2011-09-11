@@ -75,21 +75,28 @@ $(document).ready(function(){
 		});
 	});
 	
+	//$('#toast-message').hide();
+	
 	// Setup login panel
 	$('#login-panel').dialog({
 		modal: true,
 		autoOpen: false,
 		maxHeight: 400,
-		width: 600,
+		width: 800,
 		resizable: true,
 		draggable: true,
 		show: 'slide',
 		hide: 'fade'
 	});
 	$('#login-panel-button').button().click(function(){
+		if ( $('#register-captcha #recaptcha_area').length > 0 )
+			Recaptcha.reload();
+		else
+			createCaptcha($('#register-captcha'));
 		$('#login-panel').dialog('open');
 	});
 	$('#logout-button').button().click(function(){
+		showNoticeToast('Logged out!');
 		destroySession();
 	}).hide();
 
@@ -108,9 +115,11 @@ $(document).ready(function(){
 			'password': SHA1(data['password'])
 		}, function(retu){
 			if ( retu && retu.error )
-				alert(retu.error);
-			else
+				showErrorToast(retu.error);
+			else{
+				showSuccessToast('Logged in as ' + retu.username + '!');
 				initiateSession(retu);
+			}
 		});
 
 		return false;
@@ -129,19 +138,25 @@ $(document).ready(function(){
 		});
 
 		if ( data['password'] != data['password-again'] ){
-			alert('Passwords do not match!');
+			showErrorToast('Passwords do not match!');
 			return false;
 		}
-
+		
 		$.getJSON('api.php', {
 			'action': 'register',
 			'username': data['username'],
-			'password': SHA1(data['password'])
+			'password': SHA1(data['password']),
+			'captcha_challenge': Recaptcha.get_challenge(),
+			'captcha_response': Recaptcha.get_response()
 		}, function(retu){
-			if ( retu && retu.error )
-				alert(retu.error);
-			else
+			if ( retu && retu.error ){
+				showErrorToast(retu.error);
+				Recaptcha.reload();
+			}
+			else{
+				showSuccessToast('User account created!');
 				initiateSession(retu);
+			}
 		});
 
 		return false;
@@ -418,8 +433,17 @@ function initiateSession(data){
 }
 
 function destroySession(){
+	if ( currentUser && currentUser.sid ){
+		$.getJSON('api.php', {
+			'action': 'logout',
+			'sid': currentUser.sid
+		}, function(){
+			$('#login-panel-button').show();
+		});
+	}
+	
 	currentUser = null;
 	setCookie('sid', '');
-	$('#login-panel-button').show();
+	
 	$('#logout-button').hide();
 }

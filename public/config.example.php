@@ -12,4 +12,8 @@
 		'password' => '',
 		'database' => 'plethora'
 	);
-?>
+	
+	$plethora_recaptcha = array(
+		'public' => '6LfHAsgSAAAAACIc0nOpHT_mXSwvW3k7T0dmxOjt',
+		'private' => '6LfHAsgSAAAAAPFNFskmiyRulxPZPl_bC2tXByRp'
+	);

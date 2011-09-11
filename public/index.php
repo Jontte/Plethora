@@ -1,5 +1,5 @@
 <?php
-	require('config.php');
+	require_once('config.php');
 
 	$levels =	
 		array(
@@ -34,6 +34,10 @@
 		<!-- Crude canvas support for IE family browsers. Many thanks to Google.-->
 		<!--[if IE]><script type="text/javascript" src="excanvas.js"></script><![endif]-->
 		
+		<script type="text/javascript" src="http://www.google.com/recaptcha/api/js/recaptcha_ajax.js"></script>
+		<script type="text/javascript">
+			var recaptchaPublicKey = '<?php echo $plethora_recaptcha['public']; ?>';
+		</script>
 		
 		<?php 
 			if($plethora_debug)
@@ -42,6 +46,7 @@
 					'public/jquery-1.6.3.min.js',
 					'public/jquery-ui-1.8.12.custom.min.js',
 					'public/json_parse.js',
+					'public/jquery.toastmessage.js',
 					'util.js',
 					'jsbih.js',
 					'key.js',
@@ -118,7 +123,7 @@
 		</div>
 		<div id="level-selector-panel"></div>
 		<div id="login-panel" title="Login/Register">
-			<div style="width:50%;float:left;">
+			<div style="width:30%;float:left;">
 				<p>Login</p>
 				<p>
 					<form id="login-form">
@@ -130,7 +135,7 @@
 					</form>
 				</p>
 			</div>
-			<div style="width:50%;margin-left:50%;">
+			<div style="width:65%;margin-left:35%;">
 				<p>Register</p>
 				<p>
 					<form id="register-form">
@@ -140,6 +145,7 @@
 						<input id="register-password" name="register-password" type="password" /><br />
 						<label for="register-password-again">Password (again):</label><br />
 						<input id="register-password-again" name="register-password-again" type="password" /><br />
+						<div id="register-captcha"></div>
 						<input type="submit" value="Register" />
 					</form>
 				</p>

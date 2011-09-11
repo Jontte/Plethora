@@ -243,6 +243,22 @@ $.extend({
   }
 });
 
+// wrap names to avoid code bloatage
+$.each(['showNoticeToast', 'showSuccessToast', 'showWarningToast', 'showErrorToast', 'showToast'], function(i, name){
+  window[name] = function(){
+	  $().toastmessage.apply(this, Array.prototype.concat.apply([name], arguments));
+  };
+});
+
+function createCaptcha(el, options){
+	if ( !options )
+		options = {};
+	if ( !options.theme )
+		options.theme = 'clean';
+	
+	el.empty();
+	Recaptcha.create(recaptchaPublicKey, el[0], options);
+}
 
 /**
 *

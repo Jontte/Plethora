@@ -1,6 +1,7 @@
 <?php
 
-include('config.php');
+require_once('config.php');
+require_once('recaptchalib.php');
 
 function reqparam($key){
 	if ( isset($_REQUEST[$key]) )
@@ -9,12 +10,15 @@ function reqparam($key){
 }
 
 function output($data){
+	if ( is_bool($data) )
+		$data = array('ok'=>$data);
+	
 	die(json_encode($data));
 }
-function error($text){
-	output(array(
+function error($text, array $stuff=array()){
+	output(array_merge(array(
 		'error' => $text
-	));
+	), $stuff));
 }
 
 $dbh = new PDO(
@@ -52,6 +56,12 @@ function sql($query, array $params = array(), $numToFetch = null){
 	return $results;
 }
 
+function checkCaptcha(){
+	global $plethora_recaptcha;
+	
+	return recaptcha_check_answer($plethora_recaptcha['private'], $_SERVER['REMOTE_ADDR'], reqparam('captcha_challenge'), reqparam('captcha_response'));
+}
+
 function handleRequest($action){
 	switch ( $action ){
 		case 'getSessionData':
@@ -64,6 +74,13 @@ function handleRequest($action){
 				output($data);
 			else
 				error('Invalid session!');
+		break;
+		case 'logout':
+			sql('DELETE FROM sessions WHERE id=:sid LIMIT 1', array(
+				':sid' => reqparam('sid')
+			), 0);
+			
+			output(true);
 		break;
 		case 'login':
 			// Get user info
@@ -91,6 +108,11 @@ function handleRequest($action){
 				error('Invalid username or password!');
 		break;
 		case 'register':
+			// Check captcha
+			$resp = checkCaptcha();
+			if ( !$resp->is_valid )
+				error('Invalid CAPTCHA answer!');
+			
 			// Check if username exists
 			$data = sql('SELECT * FROM users WHERE username=:username LIMIT 1', array(
 				':username' => reqparam('username')

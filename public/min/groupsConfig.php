@@ -20,6 +20,7 @@ return array(
 			'filepath' => "$dname/../jquery-ui-1.8.12.custom.min.js",
 			'minifier' => create_function('$a', 'return $a;')
 		)),
+		"$dname/../jquery.toastmessage.js",
 		"$dname/../json_parse.js",
 		"$dname/../../jsbih.js",
 		"$dname/../../util.js",
@@ -35,30 +36,9 @@ return array(
 	),
 	'css' => array(
 		"$dname/../style.css",
-		"$dname/../redmond/jquery-ui-1.8.12.custom.css"
-	),
-	'3rdparty' => array(
-		new Minify_Source(array(
-			'filepath' => "$dname/../jquery-1.6.3.min.js",
-			'minifier' => create_function('$a', 'return $a;')
-		)),
-		new Minify_Source(array(
-			'filepath' => "$dname/../jquery-ui-1.8.12.custom.min.js",
-			'minifier' => create_function('$a', 'return $a;')
-		)),
-		"$dname/../json_parse.js",
-		"$dname/../../jsbih.js",
-	),
-	'misc' => array(
-		"$dname/../../util.js",
-		"$dname/../../key.js",
-		"$dname/../../effects.js"
-	),
-	'other' => array(
-		"$dname/../../world.js",
-		"$dname/../../draw.js",
-		"$dname/../../editor.js"
-	),
+		"$dname/../redmond/jquery-ui-1.8.12.custom.css",
+		"$dname/../jquery.toastmessage.css"
+	)
 	
     // 'css' => array('//css/file1.css', '//css/file2.css'),
 
