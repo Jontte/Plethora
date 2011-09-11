@@ -50,12 +50,54 @@ $(document).ready(function(){
   	$('#cache').hide();
   	
  	$('#save-btn').button().hide().click(function(){
-		var level = World.saveLevel();
-		var src = 'custom_'+new Date().getTime();
-		var levelname = 'custom';
+		if ( !currentUser ){
+			showErrorToast('You have to be logged in to save a level!');
+			return;
+		}
 		
-		Config.level_cache[src]=level;
-		$('#lselect').append('<option value="'+src+'">'+levelname+'</option>');	
+		var levelData = World.saveLevel();
+		var levelid = World.getLevelName();
+		
+		var overwriting = Config.level_cache[levelid] && Config.level_cache[levelid].user_id == currentUser.id;
+		var level = overwriting ? Config.level_cache[levelid] : {
+			'id': (new Date).getTime(),
+			'name': 'New Level',
+			'updated': null,
+			'user_id': currentUser.id,
+			'username': currentUser.username
+		};
+		level.data = levelData;
+		var oldid = level.id;
+		
+		$.postJSON('api.php', {
+			'action': 'saveLevel', // sid, [id], name, [desc], data
+			'sid': currentUser.sid,
+			'id': overwriting ? level.id : undefined,
+			'name': level.name,
+			'desc': level.desc || undefined,
+			'data': JSON.stringify(level.data)
+		}, function(data){
+			if ( data.error )
+				showErrorToast(data.error);
+			else{
+				if ( data.id != oldid ){
+					level.id = data.id;
+					Config.level_cache[data.id] = level;
+					delete Config.level_cache[oldid];
+				}
+				
+				if ( $('#lselect option[value='+level.id+']').length == 0 ){
+					var option = $('<option>', {
+						'value': level.id,
+						'text': level.name,
+						'selected': 'selected'
+					});
+					$('#lselect').append(option);
+				}
+				
+				showSuccessToast('Level saved!');
+			}
+		})
 	});
 	
 	// Setup extra info dialogs
@@ -190,14 +232,15 @@ $(document).ready(function(){
 	$('#sw-radio-edit').click(reset);
 	
 	// Request list of levels from server
-	$.getJSON('index.php?level_list', function(json)
-	{
+	$.getJSON('api.php', {
+		'action': 'getLevelList'
+	}, function(json){
 		var lastlevel = getCookie('level_selection');
 		// see if lastlevel exists in json..
 		var found = false;
 		for(var i = 0 ; i < json.length; i++)
 		{
-			if(json[i].src == lastlevel)
+			if(json[i].id == lastlevel)
 			{
 				found = true;
 				break;
@@ -206,17 +249,17 @@ $(document).ready(function(){
 		if(found==false)
 		{
 			// select the first level...
-			lastlevel = json[0].src;
+			lastlevel = json[0].id;
 		}
 		for(var i = 0 ; i < json.length; i++)
 		{
 			var level = json[i];
 			var s = '';
-			if(lastlevel == level.src)
+			if(lastlevel == level.id)
 			{
 				s = ' selected="true"';
 			}
-			$('#lselect').append('<option value="'+level.src+'"'+s+'>'+level.name+'</option>');	
+			$('#lselect').append('<option value="'+level.id+'"'+s+'>'+level.name+'</option>');	
 		};
 		reset();
 	});
@@ -260,19 +303,19 @@ function reset(areyousure)
 	World.reset();
 
 	// Select & load level
-	var levelname = document.getElementById('lselect').value;
+	var levelid = document.getElementById('lselect').value;
 
-	if(levelname == '')
+	if(!levelid || levelid == '')
 	{
 		return;
 	}
 	// The level has been selected! Save it as a cookie
-	setCookie('level_selection', levelname);
+	setCookie('level_selection', levelid);
 	
 	
-	function fn(levelname)
+	function fn(levelid)
 	{
-		var json = Config.level_cache[levelname];
+		var json = Config.level_cache[levelid];
 		Config.gamestate = 'initializing';
 		
 		var use_editor = $('#sw-radio-edit').is(':checked');
@@ -284,7 +327,7 @@ function reset(areyousure)
 		else
 			savebtn.hide();
 		
-		World.loadLevel(levelname, json, use_editor);
+		World.loadLevel(json.id, json.data, use_editor);
 		// Let's preload a couple of images before calling initialize... 
 		
 		Config.preloader.counter = World.preload.length;
@@ -305,17 +348,21 @@ function reset(areyousure)
 	};
 	
 	// Not in level cache yet?
-	if(!(levelname in Config.level_cache))
+	if(!(levelid in Config.level_cache))
 	{
 		// load it there
-		$.getJSON('index.php?level='+levelname, function(json){
-			Config.level_cache[levelname] = json;
-			fn(levelname);
+		$.getJSON('api.php', {
+			'action': 'getLevel',
+			'id': levelid
+		}, function(json){
+			json.data = JSON.parse(json.data);
+			Config.level_cache[levelid] = json;
+			fn(levelid);
 		});
 	}
 	else
 	{
-		fn(levelname);
+		fn(levelid);
 	}
 }
 function load_gfx(filename, onload)

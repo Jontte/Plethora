@@ -260,6 +260,12 @@ function createCaptcha(el, options){
 	Recaptcha.create(recaptchaPublicKey, el[0], options);
 }
 
+$.extend({
+	postJSON: function(a, b, c){
+		return $.post(a, b, c, 'json');
+	}
+});
+
 /**
 *
 *  Secure Hash Algorithm (SHA1)

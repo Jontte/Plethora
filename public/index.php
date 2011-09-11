@@ -1,31 +1,7 @@
 <?php
-	require_once('config.php');
 
-	$levels =	
-		array(
-			array('name' => 'Puzzle',
-				  'src' => 'puzzle.lev',
-				  'author' => 'Joonas Haapala',
-				  'description' => 'A testing level')
-		);
+require_once('config.php');
 
-	if(isset($_GET['level_list']))
-	{
-		header('Content-type: text/json');
-		die(json_encode($levels));
-	}
-	else if(isset($_GET['level']))
-	{
-		$selection = $_GET['level'];
-		header('Content-type: text/json');
-		
-		foreach($levels as $lev)
-		{
-			if($lev['src'] == $selection)
-				die(file_get_contents($plethora_source_directory.'levels/'.$selection));
-		}
-		die();
-	}
 ?><!DOCTYPE html>
 <html>
 	<head>
@@ -43,9 +19,9 @@
 			if($plethora_debug)
 			{
 				$files = array(
+					'public/json2.js',
 					'public/jquery-1.6.3.min.js',
 					'public/jquery-ui-1.8.12.custom.min.js',
-					'public/json_parse.js',
 					'public/jquery.toastmessage.js',
 					'util.js',
 					'jsbih.js',

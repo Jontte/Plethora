@@ -12,6 +12,7 @@
 $dname = dirname(__FILE__);
 return array(
 	'js' => array(
+		"$dname/../json2.js",
 		new Minify_Source(array(
 			'filepath' => "$dname/../jquery-1.6.3.min.js",
 			'minifier' => create_function('$a', 'return $a;')
@@ -21,7 +22,6 @@ return array(
 			'minifier' => create_function('$a', 'return $a;')
 		)),
 		"$dname/../jquery.toastmessage.js",
-		"$dname/../json_parse.js",
 		"$dname/../../jsbih.js",
 		"$dname/../../util.js",
 		"$dname/../../key.js",

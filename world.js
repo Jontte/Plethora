@@ -1,4 +1,3 @@
-
 World = {
 	/* 
 	 * Constants
@@ -1033,15 +1032,15 @@ World = {
 	},
 	loadLevel : function(levelname, json, use_editor)
 	{
-		World._level = levelname;
 		World._editor.online = use_editor;
 		var module = World._modules[json.module];
 		if(!module)
 		{
-			alert('Module was not found');
+			showErrorToast('Module was not found');
 			return;
 		}
 		World.reset();
+		World._level = levelname;
 		module.load();
 		World.preload = World.preload.concat(module.preload);
 		var objects = json.objects;
@@ -1082,6 +1081,9 @@ World = {
 			}
 		}
 		return json;
+	},
+	getLevelName: function(){
+		return World._level;
 	}
 };
 
