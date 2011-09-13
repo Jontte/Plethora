@@ -18,7 +18,7 @@ function draw(opts)
 		opts.src, 
 		32*opts.tilex, 32*opts.tiley,	
 		opts.tilew, opts.tileh,
-		Math.floor(opts.x), Math.floor(opts.y),
+		Math.round(opts.x), Math.round(opts.y),
 		opts.tilew, opts.tileh
 	);
 }
