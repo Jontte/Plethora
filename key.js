@@ -16,6 +16,8 @@ var KEY_ALT = 18;
 var MOUSE_LEFT = 201;
 var MOUSE_MIDDLE = 202;
 var MOUSE_RIGHT = 203;
+var MOUSE_WHEEL_UP = 204;
+var MOUSE_WHEEL_DOWN = 205;
 
 var Key = {
 	_key : {}, // Current states of the keys
@@ -48,7 +50,14 @@ var Key = {
 		$(document).keyup(Key.keyup);
 		$('#canvas').mousedown(Key.mousedown);
 		$('#canvas').mouseup(Key.mouseup);
-//		$('#canvas').mouseleave(Key.mouseup);
+		$('#canvas').mousewheel(function(event, delta, deltaX, deltaY) {
+			// Note the use of keyhit function here. Mouse wheel has no up/down state
+			// Using keyhit here ensures timeheld() and get() return 0
+			if(deltaY > 0)
+				Key.keyhit({keyCode:MOUSE_WHEEL_UP});
+			if(deltaY < 0)
+				Key.keyhit({keyCode:MOUSE_WHEEL_DOWN});
+		})
 	},
 	mousedown: function(evt){
 		     if(evt.which == 1)return Key.keydown({keyCode:MOUSE_LEFT});
@@ -77,6 +86,10 @@ var Key = {
 		}
 		Key._key[evt.keyCode] = false;
 		return !Key._shouldFilter(evt.keyCode);
+	},
+	keyhit: function(evt){
+		Key.keydown(evt);
+		Key.keyup(evt);		
 	},
 	get : function(keycode)
 	{

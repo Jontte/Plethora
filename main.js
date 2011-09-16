@@ -31,8 +31,9 @@ $(document).ready(function(){
 		World.mouseX = x;
 		World.mouseY = y;
   	}); 
-  	// Hide cache canvases
+  	// Hide cache and main canvases
   	$('#cache').hide();
+  	$('#canvas').hide();
   	
  	$('#save-btn').button().hide().click(function(){
 		if ( !currentUser ){
@@ -203,17 +204,27 @@ $(document).ready(function(){
 	$('#level-selector').button().click(function(){
 		$('#level-selector-panel').dialog('open');
 	});
-	$('#level-selector-grid').dataTable( {
+	Config.level_table = $('#level-selector-grid').dataTable( {
 		"bProcessing": true,
 		"sAjaxSource": "api.php?action=getLevelList",
+		"bJQueryUI": true,
+		"sPaginationType": "full_numbers",
 		"aoColumns": [
-			{ "mDataProp": "id" },
-			{ "mDataProp": "updated" },
-			{ "mDataProp": "name" },
-			{ "mDataProp": "desc" },
-			{ "mDataProp": "user_id" },
-			{ "mDataProp": "username" }
-		]
+			{ "mDataProp": "id" ,		"bVisible" : false	},
+			{ "mDataProp": "updated",	"sWidth": "20%",	},
+			{ "mDataProp": "name" ,		"sWidth": "30%",	},
+			{ "mDataProp": "desc" ,		"sWidth": "35%",	},
+			{ "mDataProp": "user_id",	"bVisible": false	},
+			{ "mDataProp": "username",	"sWidth": "15%",	}
+		],
+		"bAutoWidth": false
+	});
+	$("#level-selector-grid tbody").click(function(event) {
+        $(Config.level_table.fnSettings().aoData).each(function (){
+			$(this.nTr).removeClass('row_selected');
+		});
+		$(event.target.parentNode).addClass('row_selected');
+		reset();
 	});
 	
 	// Setup level selector grid
@@ -228,43 +239,30 @@ $(document).ready(function(){
 	$('#sw-radio-play').click(reset);
 	$('#sw-radio-edit').click(reset);
 	
-	// Request list of levels from server
-	$.getJSON('api.php', {
-		'action': 'getLevelList'
-	}, function(json){
-		var lastlevel = getCookie('level_selection');
-		// see if lastlevel exists in json..
-		var found = false;
-		for(var i = 0 ; i < json.length; i++)
-		{
-			if(json[i].id == lastlevel)
-			{
-				found = true;
-				break;
-			}
-		}
-		if(found==false)
-		{
-			// select the first level...
-			lastlevel = json[0].id;
-		}
-		for(var i = 0 ; i < json.length; i++)
-		{
-			var level = json[i];
-			var s = '';
-			if(lastlevel == level.id)
-			{
-				s = ' selected="true"';
-			}
-			$('#lselect').append('<option value="'+level.id+'"'+s+'>'+level.name+'</option>');	
-		};
-		reset();
-	});
-	
-	$('#lselect').change(reset);
-	
 	initiateSession();
 });
+
+function level_select()
+{
+	// Find out which row was selected in table and get info
+	var table = Config.level_table;
+	var selection = null;
+	var aTrs = table.fnGetNodes();
+		     
+	for ( var i=0 ; i<aTrs.length ; i++ )
+	{
+		if ( $(aTrs[i]).hasClass('row_selected') )
+		{
+			selection = i;
+			break;
+		}
+	}
+	if(selection == null)
+		return;
+
+	var d = table.fnGetData(selection);
+	return d;
+}
 
 function reset(areyousure)
 {
@@ -274,6 +272,7 @@ function reset(areyousure)
 	{
 		if(areyousure == undefined && !Config.areyousure)
 		{
+			$('#intro').hide();
 			$('#browser-warning').show();
 			$('#canvas').hide();
 			return;
@@ -297,10 +296,33 @@ function reset(areyousure)
 	if(Config.gamestate != 'halt')
 		return;
 
+	// Game is about to be loaded, hide intro
+	$('#intro').hide();
+  	$('#canvas').show();
+
 	World.reset();
+	
+	// Take the level selector panel down...
+	$('#level-selector-panel').dialog('close');
 
 	// Select & load level
-	var levelid = document.getElementById('lselect').value;
+	var level_data = level_select();
+	if(typeof(level_data) == 'undefined')
+		return;
+	var levelid = level_data.id;
+
+	// Show friendly toast message
+	var message = '<h2>'+level_data.name+'</h2>';
+	message += '<p>'+level_data.desc+'</p>'
+	if(level_data.username != null)
+		message += '<p>Author: '+level_data.username+'</p>'
+	// TODO: show rating too
+	
+	showToast({
+		text: message,
+		type: 'notice',
+		stayTime: 10000
+	});
 
 	if(!levelid || levelid == '')
 	{

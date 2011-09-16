@@ -24,6 +24,7 @@ require_once('config.php');
 					'public/jquery-ui-1.8.12.custom.min.js',
 					'public/jquery.toastmessage.js',
 					'public/DataTables-1.8.2/jquery.dataTables.min.js',
+					'public/jquery-mousewheel-3.0.4/jquery.mousewheel.min.js',
 					'util.js',
 					'jsbih.js',
 					'key.js',
@@ -99,7 +100,7 @@ require_once('config.php');
 			</p>
 		</div>
 		<div id="level-selector-panel">
-			<table cellpadding="0" cellspacing="0" border="0" id="level-selector-grid"> 
+			<table cellspacing="0" id="level-selector-grid"> 
 				<thead> 
 					<tr> 
 						<th>ID</th> 
@@ -164,9 +165,6 @@ require_once('config.php');
 	
 				<hr/>
 				<input type="button" id="level-selector" value="Level selector"/>
-				<select name="Level selection" id="lselect" size="4">
-				</select>
-				
 				<input id="resetbutton" type="button" value="Reset"/>
 			
 				<div id="sw-radio">
@@ -202,6 +200,12 @@ require_once('config.php');
 					<b><a href="http://www.google.com/chrome/">http://www.google.com/chrome/</a></b>
 				</p>
 			</canvas>
+			<div id="intro">
+				<h2>Welcome to plethora</h2>
+				<p>
+					Open the level selector menu from the left to play.
+				</p>
+			</div>
 			<div id="cache"></div>
 		</div>
 	</body>
