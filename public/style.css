@@ -1,37 +1,89 @@
 body {
 	background-color: #1a82f7;
 }
-#game {
-	border: 1px black solid;
-	width: 640px;
-	height: 480px;
+
+#wrapper {
 	float: left;
 }
+
+#game {
+	float: left;
+	width: 640px;
+	height: 480px;
+	
+	border: 1px solid black;
+}
+
 #panel {
+	float: left;
 	width: 200px;
 	height: 480px;
-	float: left;
+	
+	margin-right: -1px;
+	
 	text-align: center;
 }
 #panel-content {
 	height: 404px;
 }
+
+#panel-top-buttons {
+	height: 29px; /* 15 + 2*7 */
+	
+	padding: 0;
+	margin: 0;
+	margin-bottom: 10px;
+	
+	color: #2E6E9E;
+	background: #DFEFFC url(/public/redmond/images/ui-bg_glass_85_dfeffc_1x400.png) 50% 50% repeat-x;
+	border-bottom: 1px solid #C5DBEC;
+	
+	font-weight: 600;
+	font-size: 0.7em;
+	text-align: center;
+}
+#panel-top-buttons div {
+	float: left;
+	width: 39px; /* 198/4 - 2*5 */
+	height: 15px;
+	
+	margin: 7px 5px;
+	padding: 0;
+	
+	cursor: pointer;
+}
+#panel-top-buttons div:hover {
+	text-decoration: underline;
+	color: #5E95BF;
+}
+
 #browser-warning {
-	visibility: hidden;
-	background-color: #60A0FF;
-	border: 1px black solid;
 	position: absolute;
 	width: 598px;
 	height: 438px;
-	padding: 20px 20px 20px 20px;
+	
+	visibility: hidden;
+	
+	padding: 20px;
+	
+	background-color: #60A0FF;
+	border: 1px black solid;
 }
+
 #worksbestwith {
 	position: absolute;
 	top: 450px;
 	left: 48px;	
 }
 
-
 #login-panel label {
 	font-size: 75%;
+}
+
+#level-selector-grid_wrapper table {
+	width: 100%;
+}
+#level-selector-grid_wrapper table th,
+#level-selector-grid_wrapper table tbody tr {
+	cursor: pointer;
 }

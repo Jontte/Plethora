@@ -110,7 +110,7 @@ function handleRequest($action){
 			if ( !in_array($orderDir, array('ASC', 'DESC')) )
 				$orderDir = $orderDirs[$orderBy];
 			
-			$data = sql('SELECT levels.id, levels.updated, levels.name, levels.desc, levels.user_id, users.username
+			$data = sql('SELECT levels.id, UNIX_TIMESTAMP(levels.updated) AS updated, levels.name, levels.desc, levels.user_id, users.username
 							FROM levels
 							LEFT JOIN users ON levels.user_id=users.id
 							WHERE 1
@@ -119,12 +119,13 @@ function handleRequest($action){
 			array(
 				':uid' => reqparam('uid')
 			));
-			//TODO, lol
-			$data = array('aaData' => $data);
-			output($data);
+			
+			output(array(
+				'levels' => $data
+			));
 		break;
 		case 'getLevel': // id
-			$data = sql('SELECT levels.id, levels.updated, levels.name, levels.desc, levels.data, levels.user_id, users.username
+			$data = sql('SELECT levels.id,  UNIX_TIMESTAMP(levels.updated) AS updated, levels.name, levels.desc, levels.data, levels.user_id, users.username
 							FROM levels
 							LEFT JOIN users ON levels.user_id=users.id
 							WHERE levels.id=:id

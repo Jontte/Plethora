@@ -155,58 +155,61 @@ require_once('config.php');
 				</p>
 			</div>
 		</div>
-		<div id="panel" class="ui-corner-all ui-widget">
-			<div class="ui-corner-all ui-widget-header"><h2>Plethora</h2></div>
-			<div id="panel-content" class="ui-corner-all ui-widget-content">
-				<input type="button" id="about-button" value="About"/>
-				<input type="button" id="tech-button" value="Tech"/>
-				<input type="button" id="todo-button" value="Todo"/>
-				<input type="button" id="author-button" value="Author"/>
-	
-				<hr/>
-				<input type="button" id="level-selector" value="Level selector"/>
-				<input id="resetbutton" type="button" value="Reset"/>
-			
-				<div id="sw-radio">
-					<input type="radio" id="sw-radio-play" name="radio" checked="checked" />
-					<label for="sw-radio-play">Play</label>
-					<input type="radio" id="sw-radio-edit" name="radio" />
-					<label for="sw-radio-edit">Edit</label>
+		<div id="wrapper">
+			<div id="panel" class="ui-corner-all ui-widget">
+				<div class="ui-corner-tl ui-widget-header"><h2>Plethora</h2></div>
+				<div id="panel-content" class="ui-corner-bl ui-widget-content">
+					<div id="panel-top-buttons">
+						<div id="about-button">About</div>
+						<div id="tech-button">Tech</div>
+						<div id="todo-button">Todo</div>
+						<div id="author-button">Author</div>
+					</div>
+					
+					<input type="button" id="level-selector" value="Level selector" />
+					<input id="resetbutton" type="button" value="Reset" />
+
+					<div id="sw-radio">
+						<input type="radio" id="sw-radio-play" name="radio" checked="checked" />
+						<label for="sw-radio-play">Play</label>
+						<input type="radio" id="sw-radio-edit" name="radio" />
+						<label for="sw-radio-edit">Edit</label>
+					</div>
+					<input id="save-btn" type="button" value="Save" />
+					<hr />
+					<input type="button" id="login-panel-button" value="Login/Register" />
+					<input type="button" id="logout-button" value="Logout" />
+
+					<div id="worksbestwith">
+						<a href="http://www.google.com/chrome">
+							<img src="worksbestwith.png" alt="Works best with Google Chrome" />
+						</a>
+					</div>
 				</div>
-				<input id="save-btn" type="button" value="Save"/>
-				<hr/>
-				<input type="button" id="login-panel-button" value="Login/Register"/>
-				<input type="button" id="logout-button" value="Logout"/>
-				
-				<div id="worksbestwith">
-					<a href="http://www.google.com/chrome">
-						<img src="worksbestwith.png" alt="Works best with Google Chrome"/>
-					</a>
+			</div>
+			<div id="game" class="ui-corner-right">
+				<div id="browser-warning">
+					<h2>Suboptimal browser detected</h2>
+					<p>Plethora is likely to perform very poorly on your web browser. This may result into crashes and instability in your system. Are you sure you want to continue?</p>
+					<input type="submit" value="Yes!" onclick="reset('yes')" />
+					<input type="submit" value="No!" onclick="document.location = 'http://www.google.com/chrome/';" />
+					<div><img src="plethora.jpg" /></div>
 				</div>
+				<canvas id="canvas" width="640" height="480" class="ui-corner-right">
+					<h2>You browser doesn't support the new HTML5 &lt;canvas&gt; element.</h2>
+					<p>
+						Try getting a real browser from Google: 
+						<b><a href="http://www.google.com/chrome/">http://www.google.com/chrome/</a></b>
+					</p>
+				</canvas>
+				<div id="intro">
+					<h2>Welcome to plethora</h2>
+					<p>
+						Open the level selector menu from the left to play.
+					</p>
+				</div>
+				<div id="cache"></div>
 			</div>
-		</div>
-		<div id="game">
-			<div id="browser-warning">
-				<h2>Suboptimal browser detected</h2>
-				<p>Plethora is likely to perform very poorly on your web browser. This may result into crashes and instability in your system. Are you sure you want to continue?</p>
-				<input type="submit" value="Yes!" onclick="reset('yes')"/>
-				<input type="submit" value="No!" onclick="document.location = 'http://www.google.com/chrome/';"/>
-				<div><img src="plethora.jpg"/></div>
-			</div>
-			<canvas id="canvas" width="640" height="480">
-				<h2>You browser doesn't support the new HTML5 &lt;canvas&gt; element.</h2>
-				<p>
-					Try getting a real browser from Google: 
-					<b><a href="http://www.google.com/chrome/">http://www.google.com/chrome/</a></b>
-				</p>
-			</canvas>
-			<div id="intro">
-				<h2>Welcome to plethora</h2>
-				<p>
-					Open the level selector menu from the left to play.
-				</p>
-			</div>
-			<div id="cache"></div>
 		</div>
 	</body>
 </html>

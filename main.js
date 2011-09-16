@@ -98,7 +98,7 @@ $(document).ready(function(){
 				show: 'slide',
 				hide: 'slide'
 		});
-		$('#'+dlg+'-button').button().click(function(){
+		$('#'+dlg+'-button').click(function(){
 			$('#'+dlg+'-text').dialog('open');
 		});
 	});
@@ -209,13 +209,14 @@ $(document).ready(function(){
 		"sAjaxSource": "api.php?action=getLevelList",
 		"bJQueryUI": true,
 		"sPaginationType": "full_numbers",
+		"sAjaxDataProp": "levels",
 		"aoColumns": [
 			{ "mDataProp": "id" ,		"bVisible" : false	},
-			{ "mDataProp": "updated",	"sWidth": "20%",	},
-			{ "mDataProp": "name" ,		"sWidth": "30%",	},
-			{ "mDataProp": "desc" ,		"sWidth": "35%",	},
+			{ "mDataProp": "updated",	"sWidth": "20%" 	},
+			{ "mDataProp": "name" ,		"sWidth": "30%" 	},
+			{ "mDataProp": "desc" ,		"sWidth": "35%" 	},
 			{ "mDataProp": "user_id",	"bVisible": false	},
-			{ "mDataProp": "username",	"sWidth": "15%",	}
+			{ "mDataProp": "username",	"sWidth": "15%" 	}
 		],
 		"bAutoWidth": false
 	});

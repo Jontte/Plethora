@@ -43,9 +43,9 @@ return array(
 		"$dname/../../modules/PlethoraOriginal.js"
 	),
 	'css' => array(
-		"$dname/../style.css",
 		"$dname/../redmond/jquery-ui-1.8.12.custom.css",
 		"$dname/../jquery.toastmessage.css",
-		"$dname/../DataTables-1.8.2/table.css"
+		"$dname/../DataTables-1.8.2/table.css",
+		"$dname/../style.css"
 	)
 );
