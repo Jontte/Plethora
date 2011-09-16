@@ -438,3 +438,32 @@ function SHA1 (msg) {
 	return temp.toLowerCase();
  
 }
+
+
+(function() {
+	var units = ['millisecond', 'second', 'minute', 'hour', 'day', 'month', 'year'];
+	var ratios = [1, 1000, 60, 60, 24, 30, 12];
+	window.relative_time = function(date) {
+		var delta = new Date() - date;
+		if (delta <= 1000) {
+			return 'Just now';
+		}
+
+		var unit = null;
+		for (var i = 0; i < units.length; ++i) {
+			if (delta < ratios[i]) {
+				break;
+			}
+			unit = units[i];
+			delta /= ratios[i];
+		}
+
+		delta = Math.floor(delta);
+		if (delta !== 1) {
+			unit += "s";
+		}
+		return [delta, unit, "ago"].join(" ");
+	};
+})();
+
+

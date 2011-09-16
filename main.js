@@ -85,11 +85,11 @@ $(document).ready(function(){
 			}
 		})
 	});
-	
+
 	// Setup extra info dialogs
 	$.each(['about','tech','todo','author'], function(idx, dlg){
 		$('#'+dlg+'-text').dialog({
-				modal:true,
+				//modal:true,
 				autoOpen: false,
 				maxHeight: 400,
 				width: 600,
@@ -99,7 +99,13 @@ $(document).ready(function(){
 				hide: 'slide'
 		});
 		$('#'+dlg+'-button').click(function(){
-			$('#'+dlg+'-text').dialog('open');
+			$.each(['about-text','tech-text','todo-text','author-text','level-selector-panel'], function(idx, other){
+				var e = $('#'+other);
+				if(e.dialog('isOpen') && other != dlg+'-text')
+					e.dialog('close');
+				else if(!e.dialog('isOpen') && other == dlg+'-text')
+					e.dialog('open');
+			});
 		});
 	});
 	
@@ -202,7 +208,17 @@ $(document).ready(function(){
 		hide: 'fade'
 	});
 	$('#level-selector').button().click(function(){
-		$('#level-selector-panel').dialog('open');
+		var e = $('#level-selector-panel');
+		if(e.dialog('isOpen'))
+			e.dialog('close');
+		else
+			e.dialog('open');
+		// Close other panels
+		$.each(['about','tech','todo','author'], function(idx, other){
+			var e = $('#'+other+'-text');
+			if(e.dialog('isOpen'))
+				e.dialog('close');
+		});
 	});
 	Config.level_table = $('#level-selector-grid').dataTable( {
 		"bProcessing": true,
@@ -212,7 +228,11 @@ $(document).ready(function(){
 		"sAjaxDataProp": "levels",
 		"aoColumns": [
 			{ "mDataProp": "id" ,		"bVisible" : false	},
-			{ "mDataProp": "updated",	"sWidth": "20%" 	},
+			{ "mDataProp": "updated",	"sWidth": "20%", 
+				"fnRender": function ( oObj ) {
+					return relative_time(new Date(parseInt(oObj.aData.updated)*1000));
+				},
+			},
 			{ "mDataProp": "name" ,		"sWidth": "30%" 	},
 			{ "mDataProp": "desc" ,		"sWidth": "35%" 	},
 			{ "mDataProp": "user_id",	"bVisible": false	},
@@ -247,22 +267,15 @@ function level_select()
 {
 	// Find out which row was selected in table and get info
 	var table = Config.level_table;
-	var selection = null;
 	var aTrs = table.fnGetNodes();
 		     
 	for ( var i=0 ; i<aTrs.length ; i++ )
 	{
 		if ( $(aTrs[i]).hasClass('row_selected') )
 		{
-			selection = i;
-			break;
+			return table.fnGetData(i);
 		}
 	}
-	if(selection == null)
-		return;
-
-	var d = table.fnGetData(selection);
-	return d;
 }
 
 function reset(areyousure)
@@ -297,10 +310,6 @@ function reset(areyousure)
 	if(Config.gamestate != 'halt')
 		return;
 
-	// Game is about to be loaded, hide intro
-	$('#intro').hide();
-  	$('#canvas').show();
-
 	World.reset();
 	
 	// Take the level selector panel down...
@@ -322,16 +331,20 @@ function reset(areyousure)
 	showToast({
 		text: message,
 		type: 'notice',
-		stayTime: 10000
+		stayTime: 5000
 	});
 
 	if(!levelid || levelid == '')
 	{
 		return;
 	}
+	
+	// Game is about to be loaded, hide intro
+	$('#intro').hide();
+  	$('#canvas').show();
+	
 	// The level has been selected! Save it as a cookie
 	setCookie('level_selection', levelid);
-	
 	
 	function fn(levelid)
 	{
@@ -355,13 +368,15 @@ function reset(areyousure)
 		for(var i = 0; i < World.preload.length; i++)
 		{
 			var e = new Image();
-			e.onload = function(){
+			e.onload = function()
+			{
 				if(--Config.preloader.counter==0)
 				{
 					// Last image preloader calls initialize();
 					initialize();
 				}
 			};
+			// console.log('Precaching '+World.preload[i]);
 			e.src = World.preload[i];
 			Config.preloader.elements.push(e);
 		}
@@ -385,21 +400,6 @@ function reset(areyousure)
 		fn(levelid);
 	}
 }
-function load_gfx(filename, onload)
-{
-	// Makes sure an external img file is loaded into memory
-	// Optional onload function may be specified
-	if(!Graphics.img[filename])
-	{
-		var img = new Image();
-		img.src = filename;
-		if(onload)
-		{
-			img.onload = onload;
-		}
-		Graphics.img[filename] = img;
-	}
-}
 function initialize()
 {
 	var canvas = document.getElementById('canvas');  
@@ -409,16 +409,7 @@ function initialize()
 	// Start registering keyboard input
 	Key.register();
 
-	load_gfx('cloud1.png');
-	load_gfx('cloud2.png');
-	load_gfx('cloud3.png');
-	load_gfx('cloud4.png');
-	load_gfx('cloud5.png');
-	load_gfx('stars.png');
-	load_gfx('tileset.png');
-
 	Config.gamestate = 'online';
-
 	Config.intervalID = setInterval(game_loop, 1000/Config.FPS);
 }
 
