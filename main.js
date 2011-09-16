@@ -231,7 +231,7 @@ $(document).ready(function(){
 			{ "mDataProp": "updated",	"sWidth": "20%", 
 				"fnRender": function ( oObj ) {
 					return relative_time(new Date(parseInt(oObj.aData.updated)*1000));
-				},
+				}
 			},
 			{ "mDataProp": "name" ,		"sWidth": "30%" 	},
 			{ "mDataProp": "desc" ,		"sWidth": "35%" 	},
