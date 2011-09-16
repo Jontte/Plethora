@@ -35,7 +35,7 @@ body {
 	margin-bottom: 10px;
 	
 	color: #2E6E9E;
-	background: #DFEFFC url(/public/redmond/images/ui-bg_glass_85_dfeffc_1x400.png) 50% 50% repeat-x;
+	background: #DFEFFC url(redmond/images/ui-bg_glass_85_dfeffc_1x400.png) 50% 50% repeat-x;
 	border-bottom: 1px solid #C5DBEC;
 	
 	font-weight: 600;
