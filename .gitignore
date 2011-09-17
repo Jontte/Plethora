@@ -2,6 +2,11 @@
 public/ga_tracker.php
 public/config.php
 
+# Ignore cache files, but not the directory itself
+public/compressor_cache/*
+!public/compressor_cache/EMPTY
+
+# NetBeans IDE files
 /nbproject/
 project.xml
 project.properties

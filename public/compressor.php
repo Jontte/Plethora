@@ -30,11 +30,21 @@ if ( $group['type'] == 'javascript' )
 
 // Go through files and compress the source
 foreach ( $group['files'] as &$file ){
+	// Get file from cache if no changes were made since last time
+	$cacheChanged = @filemtime($file['cacheFile']);
+	$fileChanged = @filemtime($file['path']);
+	if ( $cacheChanged !== false && $fileChanged !== false && $cacheChanged >= $fileChanged ){
+		readfile($file['cacheFile']);
+		continue;
+	}
+	
 	$source = file_get_contents($file['path']);
 	$path = dirname($file['path']);
 	
+	$headers = array();
+	
 	if ( !$file['compress'] ){
-		$source = "/* File not compressed due to configuration */\n" . $source;
+		$headers []= 'File not compressed due to configuration';
 	}
 	else{
 		switch ( $group['type'] ){
@@ -42,8 +52,13 @@ foreach ( $group['files'] as &$file ){
 				try{
 					$source = JShrink::minify($source, array('flaggedComments' => false));
 				}
-				catch(JShrinkException $ex){
-					$source = "/* Error during compression, file not compressed! */\n" . $source;
+				catch(Exception $ex){
+					$headers []= 'Error during compression, file not compressed!';
+					@ob_flush();
+					ob_start();
+					var_dump($ex->getMessage());
+					$headers []= rtrim(ob_get_contents(), "\r\n");
+					ob_end_clean();
 				}
 			break;
 			case 'css':
@@ -58,5 +73,12 @@ foreach ( $group['files'] as &$file ){
 		}
 	}
 	
-	echo '/* ', $file['name'], " */\n", $source, "\n\n";
+	$source = trim($source, "\r\n\t ");
+	
+	// Add file metadata as comments
+	array_unshift($headers, $file['name'], date('r'));
+	$source = '/* ' . implode(" */\n/* ", $headers) . " */\n\n" . $source . "\n\n";
+	echo $source;
+	
+	file_put_contents($file['cacheFile'], $source);
 }

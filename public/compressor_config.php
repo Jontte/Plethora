@@ -27,10 +27,7 @@ $compressorGroups = array(
 			//),
 			'jquery.toastmessage.js',
 			'../util.js',
-			array(
-				'path' => '../jsbih.js', // this file errors on compression, temporarily left uncompressed
-				'compress' => false
-			),
+			'../jsbih.js',
 			'../key.js',
 			'../effects.js',
 			'../world.js',
@@ -53,7 +50,7 @@ $compressorGroups = array(
 );
 
 // Fill omitted values
-foreach ( $compressorGroups as &$group ){
+foreach ( $compressorGroups as $groupName => &$group ){
 	foreach ( $group['files'] as &$file ){
 		if ( !is_array($file) )
 			$file = array('path'=>$file);
@@ -62,5 +59,7 @@ foreach ( $compressorGroups as &$group ){
 			$file['compress'] = true;
 		if ( !array_key_exists('name', $file) )
 			$file['name'] = $file['path'];
+		if ( !array_key_exists('cacheFile', $file) )
+			$file['cacheFile'] = "compressor_cache/$groupName-" . str_replace(array('/', ':', '\\'), '-', $file['path']);
 	}
 }
