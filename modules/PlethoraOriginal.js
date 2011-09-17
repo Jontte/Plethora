@@ -41,7 +41,7 @@ World.addModule('PlethoraOriginal',
 				[[4,4],[5,4],[6,4],[7,4]] // west
 			],
 			shape: World.CYLINDER,
-			size: [1,1,2],
+			size: [0.9,0.9,2],
 			category: 'characters',
 			init: function(params){
 				if(typeof(params) != 'object')params = {};
@@ -142,7 +142,7 @@ World.addModule('PlethoraOriginal',
 				[[5,14],[6,14],[7,14],[8,14],[9,14]]
 			],
 			shape: World.CYLINDER,
-			size: [1,1,2],
+			size: [0.9,0.9,2],
 			category: 'characters',
 			init: function(params){	
 				params.fixed = false;

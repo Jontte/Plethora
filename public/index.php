@@ -45,9 +45,6 @@ require_once('compressor_config.php');
 				It was written as a proof of concept: With today's web browser JavaScript performance it is possible to perform simple dynamics simulation and collision detection. 
 			</p>
 			<p>
-				But only barely as of early 2011. Only latest versions of Google Chrome and Firefox achieve reasonable frame rates while IE(&lt;9) family browsers perform at three seconds/frame. Admittedly there is still much to optimize on my side, but I'm comfident I'm soon reaching the limits of what JS can do. 
-			</p>
-			<p>
 				Latest production version of Plethora can be found at <a href="http://github.com/Jontte/plethora">http://github.com/Jontte/plethora</a>. It is published under the three-clause BSD.
 			</p>
 		</div>
@@ -57,10 +54,7 @@ require_once('compressor_config.php');
 				Plethora utilizes a Bounding Interval Hierarchy for static object collision. An excellent implementation in Javascript can be found here: <a href="http://github.com/imbcmdth/jsBIH">http://github.com/imbcmdth/jsBIH</a>
 			</p>
 			<p>
-				I have also thought about adding some online features such as a level editor and a way to publish, share and rate levels. Some intermediary language will be required however since I cannot allow people to run arbitrary Javascript code on other peoples' browsers.
-			</p>
-			<p>
-				No, real-time MMO-like gameplay with your friends is not possible with at least traditional web techniques.
+				Real time (WebSockets-powered) multiplayer features are planned. 
 			</p>
 		</div>
 		<div id="todo-text" title="TODO-list">
@@ -68,20 +62,24 @@ require_once('compressor_config.php');
 			<p>
 				Plethora is still far from being a full game. Below is a list of important tasks/objectives:
 			</p>
+			<h3>Short term</h3>
 			<ul>
 				<li>More graphics: Character animation, logo, landscapes, everything. Maybe You can help?</li>
-				<li>A level sharing system</li>
-				<li>More collision shapes for the physics engine. Spheres, Ellipsoids, Tilted surfaces, ...</li>
 				<li>Sound effects and background music?</li>
+			</ul>
+			<h3>Long term</h3>
+			<ul>
+				<li>Multiplayer mode</li>
+				<li>Different game modes</li>
 			</ul>
 		</div>
 		<div id="author-text" title="Author">
 			<h2>Author</h2><hr>
 			<p>
-				Plethora was written by Joonas Haapala. His website is located <a href="http://sipuli.net/joonas/">here</a>.
+				Plethora was written by Joonas Haapala. His website is located <a href="http://sipuli.net/joonas/">here</a>. Atte Virtanen gave a hand with the server side code.
 			</p>
 			<p>
-				He is no graphics artist, nor does he find general web design (HTML&amp;CSS) particularly interesting, so if you feel like contributing, please contact him at his email joonas[meow]haapa.la. Wishes, ideas, comments, criticism welcome.
+				Joonas is no graphics artist, nor does he find general web design (HTML&amp;CSS) particularly interesting, so if you feel like contributing, please contact him at his email joonas[meow]haapa.la. Wishes, ideas, comments, criticism welcome.
 			</p>
 		</div>
 		<div id="level-selector-panel">
