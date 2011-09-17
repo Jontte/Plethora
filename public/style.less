@@ -41,20 +41,22 @@ body {
 	font-weight: 600;
 	font-size: 0.7em;
 	text-align: center;
-}
-#panel-top-buttons div {
-	float: left;
-	width: 39px; /* 198/4 - 2*5 */
-	height: 15px;
-	
-	margin: 7px 5px;
-	padding: 0;
-	
-	cursor: pointer;
-}
-#panel-top-buttons div:hover {
-	text-decoration: underline;
-	color: #5E95BF;
+
+	div {
+		float: left;
+		width: 39px; /* 198/4 - 2*5 */
+		height: 15px;
+
+		margin: 7px 5px;
+		padding: 0;
+
+		cursor: pointer;
+
+		:hover {
+			text-decoration: underline;
+			color: #5E95BF;
+		}
+	}
 }
 
 #browser-warning {
@@ -82,8 +84,9 @@ body {
 
 #level-selector-grid_wrapper table {
 	width: 100%;
-}
-#level-selector-grid_wrapper table th,
-#level-selector-grid_wrapper table tbody tr {
-	cursor: pointer;
+
+	th,
+	tbody tr {
+		cursor: pointer;
+	}
 }

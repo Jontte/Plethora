@@ -1,53 +1,38 @@
 <?php
 
 require_once('config.php');
+require_once('compressor_config.php');
 
 ?><!DOCTYPE html>
 <html>
 	<head>
 		<title>Plethora</title>
-		<link type="text/css" href="min/?g=css" rel="stylesheet" />			
+		<link type="text/css" href="compressor.php?group=css" rel="stylesheet" />	
+		<link type="text/css" href="style.less" rel="stylesheet/less" />
 		<!-- Crude canvas support for IE family browsers. Many thanks to Google.-->
 		<!--[if IE]><script type="text/javascript" src="excanvas.js"></script><![endif]-->
+		
+		<script type="text/javascript" src="less/less-1.1.3.min.js"></script>
 		
 		<script type="text/javascript" src="http://www.google.com/recaptcha/api/js/recaptcha_ajax.js"></script>
 		<script type="text/javascript">
 			var recaptchaPublicKey = '<?php echo $plethora_recaptcha['public']; ?>';
 		</script>
 		
-		<?php 
-			if($plethora_debug)
-			{
-				$files = array(
-					'public/json2.js',
-					'public/jquery-1.6.3.min.js',
-					'public/jquery-ui-1.8.12.custom.min.js',
-					'public/jquery.toastmessage.js',
-					'public/DataTables-1.8.2/jquery.dataTables.min.js',
-					'public/jquery-mousewheel-3.0.4/jquery.mousewheel.min.js',
-					'util.js',
-					'jsbih.js',
-					'key.js',
-					'effects.js',
-					'world.js',
-					'draw.js',
-					'editor.js',
-					'collision.js',
-					'audio.js',
-					'main.js',
-					'modules/PlethoraOriginal.js');
-				foreach($files as $file)
-				{
-					echo "<script type=\"text/javascript\" src=\"min/?f=$file&debug=1\"></script>";
-				}
-			}
-			else
-			{
-				?><script type="text/javascript" src="min/?g=js"></script><?php
-			}
-
-			/* Include Google Analytics tracker code */
-			if(file_exists('ga_tracker.php')){include('ga_tracker.php');}
+		<?php
+		
+		if ( $plethora_debug ){
+			foreach ( $compressorGroups['js']['files'] as $file )
+				echo '<script type="text/javascript" src="compressor.php?passthru=', urlencode($file['path']), '"></script>';
+		}
+		else{
+			echo '<script type="text/javascript" src="compressor.php?group=js"></script>';
+		}
+		
+		/* Include Google Analytics tracker code */
+		if ( file_exists('ga_tracker.php') )
+			include('ga_tracker.php');
+		
 		?>
 	</head>
 	<body>
