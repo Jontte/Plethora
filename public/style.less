@@ -28,13 +28,14 @@ body {
 }
 
 #panel-top-buttons {
-	height: 29px; /* 15 + 2*7 */
+	height: 15px + 2 * 7px;
 	
 	padding: 0;
 	margin: 0;
 	margin-bottom: 10px;
 	
-	color: #2E6E9E;
+	@color: #2E6E9E;
+	color: @color;
 	background: #DFEFFC url(redmond/images/ui-bg_glass_85_dfeffc_1x400.png) 50% 50% repeat-x;
 	border-bottom: 1px solid #C5DBEC;
 	
@@ -44,7 +45,7 @@ body {
 
 	div {
 		float: left;
-		width: 39px; /* 198/4 - 2*5 */
+		width: (200px - 2px) / 4 - 2 * 5px;
 		height: 15px;
 
 		margin: 7px 5px;
@@ -52,9 +53,9 @@ body {
 
 		cursor: pointer;
 
-		:hover {
+		&:hover {
 			text-decoration: underline;
-			color: #5E95BF;
+			color: lighten(@color, 15%);
 		}
 	}
 }
@@ -89,4 +90,8 @@ body {
 	tbody tr {
 		cursor: pointer;
 	}
+}
+
+.toast-item-close {
+	cursor: pointer;
 }

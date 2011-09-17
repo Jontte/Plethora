@@ -73,11 +73,9 @@ foreach ( $group['files'] as &$file ){
 		}
 	}
 	
-	$source = trim($source, "\r\n\t ");
-	
 	// Add file metadata as comments
 	array_unshift($headers, $file['name'], date('r'));
-	$source = '/* ' . implode(" */\n/* ", $headers) . " */\n\n" . $source . "\n\n";
+	$source = '/* ' . implode(" */\n/* ", $headers) . " */\n\n" . trim($source, "\r\n\t ") . "\n\n";
 	echo $source;
 	
 	file_put_contents($file['cacheFile'], $source);

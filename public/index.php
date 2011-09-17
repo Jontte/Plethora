@@ -14,7 +14,6 @@ require_once('compressor_config.php');
 		
 		<script type="text/javascript" src="less/less-1.1.3.min.js"></script>
 		
-		<script type="text/javascript" src="http://www.google.com/recaptcha/api/js/recaptcha_ajax.js"></script>
 		<script type="text/javascript">
 			var recaptchaPublicKey = '<?php echo $plethora_recaptcha['public']; ?>';
 		</script>

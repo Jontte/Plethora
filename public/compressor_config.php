@@ -1,10 +1,16 @@
 <?php
 
+$cacheDir = 'compressor_cache';
+
 $compressorGroups = array(
 	'js' => array(
 		'type' => 'javascript',
 		'files' => array(
 			'json2.js',
+			array(
+				'path' => 'recaptcha_ajax.js',
+				'compress' => false
+			),
 			array(
 				'path' => 'jquery-1.6.3.min.js',
 				'compress' => false
@@ -60,6 +66,6 @@ foreach ( $compressorGroups as $groupName => &$group ){
 		if ( !array_key_exists('name', $file) )
 			$file['name'] = $file['path'];
 		if ( !array_key_exists('cacheFile', $file) )
-			$file['cacheFile'] = "compressor_cache/$groupName-" . str_replace(array('/', ':', '\\'), '-', $file['path']);
+			$file['cacheFile'] = "$cacheDir/$groupName-" . str_replace(array('/', ':', '\\'), '-', $file['path']);
 	}
 }

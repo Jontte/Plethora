@@ -72,14 +72,7 @@ $(document).ready(function(){
 					delete Config.level_cache[oldid];
 				}
 				
-				if ( $('#lselect option[value='+level.id+']').length == 0 ){
-					var option = $('<option>', {
-						'value': level.id,
-						'text': level.name,
-						'selected': 'selected'
-					});
-					$('#lselect').append(option);
-				}
+				Config.level_table.reload();
 				
 				showSuccessToast('Level saved!');
 			}
@@ -99,13 +92,8 @@ $(document).ready(function(){
 				hide: 'slide'
 		});
 		$('#'+dlg+'-button').click(function(){
-			$.each(['about-text','tech-text','todo-text','author-text','level-selector-panel'], function(idx, other){
-				var e = $('#'+other);
-				if(e.dialog('isOpen') && other != dlg+'-text')
-					e.dialog('close');
-				else if(!e.dialog('isOpen') && other == dlg+'-text')
-					e.dialog('open');
-			});
+			closeAllDialogs();
+			$('#'+dlg+'-text').dialog('open');
 		});
 	});
 	
@@ -197,7 +185,7 @@ $(document).ready(function(){
 	});
 	
 	// Setup level selector dialogs and grid
-	$('#level-selector-panel').dialog({
+	var levelSelectorPanel = $('#level-selector-panel').dialog({
 		modal: false,
 		autoOpen: false,
 		maxHeight: 400,
@@ -208,17 +196,10 @@ $(document).ready(function(){
 		hide: 'fade'
 	});
 	$('#level-selector').button().click(function(){
-		var e = $('#level-selector-panel');
-		if(e.dialog('isOpen'))
-			e.dialog('close');
-		else
-			e.dialog('open');
-		// Close other panels
-		$.each(['about','tech','todo','author'], function(idx, other){
-			var e = $('#'+other+'-text');
-			if(e.dialog('isOpen'))
-				e.dialog('close');
-		});
+		var wasOpen = levelSelectorPanel.dialog('isOpen');
+		closeAllDialogs();
+		if ( !wasOpen )
+			levelSelectorPanel.dialog('open');
 	});
 	Config.level_table = $('#level-selector-grid').dataTable( {
 		"bProcessing": true,
@@ -255,8 +236,6 @@ $(document).ready(function(){
 		reset();
 	});
 	
-	// Setup level selector grid
-	
 	var p = $.getUrlVar('editor');
 	if(typeof(p) != 'undefined')
 		$('#sw-radio-edit').attr('checked', 'checked');
@@ -268,7 +247,6 @@ $(document).ready(function(){
 	$('#sw-radio-edit').click(reset);
 	
 	initiateSession();
-
 });
 
 function level_select()
@@ -277,16 +255,6 @@ function level_select()
 	var table = Config.level_table;
 	var aTrs = table.fnGetNodes();
 
-	// check cookie first..
-	var levelid = getCookie('level_selection');
-	for ( var i=0 ; i<aTrs.length ; i++ )
-	{
-		var d = table.fnGetData(i);
-		if (d.id == levelid)
-		{
-			return d;
-		}
-	}
 	// get selected
 	for ( var i=0 ; i<aTrs.length ; i++ )
 	{
@@ -299,6 +267,24 @@ function level_select()
 			return d;
 		}
 	}
+	
+	// Select the level saved in the cookie
+	var levelInCookie = getCookie('level_selection');
+	if ( levelInCookie ){
+		$('#level-selector-grid tbody tr').removeClass('row_selected');
+		
+		var returnData = null;
+		$(Config.level_table.fnSettings().aoData).each(function (){
+			if ( this._aData.id == levelInCookie ){
+				$(this.nTr).addClass('row_selected');
+				returnData = table.fnGetData(this._iId);
+			}
+		});
+		if ( returnData )
+			return returnData;
+	}
+	
+	return table.fnGetData(0); // load first level in case none are selected
 }
 
 function reset(areyousure)
@@ -403,7 +389,7 @@ function reset(areyousure)
 	};
 	
 	// Not in level cache yet?
-	if(!(levelid in Config.level_cache))
+	if( !Config.level_cache[levelid] || !Config.level_cache[levelid].data )
 	{
 		// load it there
 		$.getJSON('api.php', {
