@@ -238,7 +238,14 @@ $(document).ready(function(){
 			{ "mDataProp": "user_id",	"bVisible": false	},
 			{ "mDataProp": "username",	"sWidth": "15%" 	}
 		],
-		"bAutoWidth": false
+		"bAutoWidth": false,
+		"fnServerData": function ( sSource, aoData, fnCallback ) {
+			// Intercept ajax call so that we can call reset() when the table gets its data
+			$.getJSON( sSource, aoData, function (json) { 
+				fnCallback(json)
+				reset();
+			} );
+		}
 	});
 	$("#level-selector-grid tbody").click(function(event) {
         $(Config.level_table.fnSettings().aoData).each(function (){
@@ -261,6 +268,7 @@ $(document).ready(function(){
 	$('#sw-radio-edit').click(reset);
 	
 	initiateSession();
+
 });
 
 function level_select()
@@ -268,12 +276,27 @@ function level_select()
 	// Find out which row was selected in table and get info
 	var table = Config.level_table;
 	var aTrs = table.fnGetNodes();
-		     
+
+	// check cookie first..
+	var levelid = getCookie('level_selection');
+	for ( var i=0 ; i<aTrs.length ; i++ )
+	{
+		var d = table.fnGetData(i);
+		if (d.id == levelid)
+		{
+			return d;
+		}
+	}
+	// get selected
 	for ( var i=0 ; i<aTrs.length ; i++ )
 	{
 		if ( $(aTrs[i]).hasClass('row_selected') )
 		{
-			return table.fnGetData(i);
+			// The level has been selected! Save it as a cookie
+			var d = table.fnGetData(i);
+			setCookie('level_selection', d.id);
+	
+			return d;
 		}
 	}
 }
@@ -342,9 +365,6 @@ function reset(areyousure)
 	// Game is about to be loaded, hide intro
 	$('#intro').hide();
   	$('#canvas').show();
-	
-	// The level has been selected! Save it as a cookie
-	setCookie('level_selection', levelid);
 	
 	function fn(levelid)
 	{

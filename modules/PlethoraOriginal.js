@@ -22,6 +22,13 @@ World.addModule('PlethoraOriginal',
 			size: [3,1,3],
 			init: function(params){params.mass = 9;}
 		});
+		World.addClass('bigpillar', {
+			tileset: plethora_original,
+			category: 'obstacles',
+			tiles: [10,3],
+			size: [2,2,4],
+			shape: World.CYLINDER
+		});
 		World.addClass('duck', {
 			tileset: plethora_original,
 			category: 'misc',

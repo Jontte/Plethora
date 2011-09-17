@@ -186,7 +186,7 @@ World.initEditor = function()
 			 
 				this.bx = Math.abs(we.drag.x - we.layer.x)+1;
 				this.by = Math.abs(we.drag.y - we.layer.y)+1;
-				this.bz = Math.abs(we.drag.z - (we.layer.z + c.size[2]/2))+1;
+				this.bz = Math.abs(we.drag.z - we.layer.z)+1;
 
 				this.bx -= ((csx-c.size[0]));
 				this.by -= ((csy-c.size[1]));
@@ -207,8 +207,8 @@ World.initEditor = function()
 				this.y = we.drag.y - ydir * Math.max(0, this.by/2-c.size[1]/2);
 				this.z = we.drag.z - zdir * Math.max(0, this.bz/2-c.size[2]/2);
 				
-				this.z += Math.floor(c.size[2]/2);
-				this.z -= (csz-c.size[2])/2;
+				//this.z += Math.floor(c.size[2]/2);
+				//this.z -= (csz-c.size[2])/2;
 			}
 			else
 			{
@@ -217,10 +217,15 @@ World.initEditor = function()
 				this.bz = c.size[2];
 				this.x = we.layer.x;
 				this.y = we.layer.y;
-				this.z = we.layer.z+this.bz/2;
+				this.z = we.layer.z;//+c.size[2]/2;
+				//this.z += Math.floor(c.size[2]/2);
+				//this.z -= (csz-c.size[2])/2;
 			}
+			this.x += (c.size[0]-1)/2;
+			this.y += (c.size[1]-1)/2;
+			this.z += c.size[2]/2;
 			
-			// fill bx,by,bz cuboid with sprites..
+			//// fill bx,by,bz cuboid with sprites..
 			for(var zz = 0; zz < this.bz; zz+=csz)
 			for(var yy = 0; yy < this.by; yy+=csy)
 			for(var xx = 0; xx < this.bx; xx+=csx)
@@ -411,7 +416,7 @@ World.initEditor = function()
 							{
 								we.drag.x = we.layer.x;
 								we.drag.y = we.layer.y;
-								we.drag.z = we.layer.z+0.5;
+								we.drag.z = we.layer.z;
 								we.drag.dragging = true;
 							}
 						}

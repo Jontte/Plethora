@@ -233,17 +233,6 @@ World = {
 	},
 	createObject : function(classid, pos, options)
 	{
-		// find out if classid is a compound classid..
-		var m = classid.match(/compound\(([a-zA-Z]+),([0-9.]+),([0-9.]+),([0-9.]+)\)/);
-		if(m != null)
-		{
-			World.createCompoundClass(m[1], [
-				parseInt(m[2]),
-				parseInt(m[3]),
-				parseInt(m[4])
-				]
-			);
-		}
 		if(typeof(options) == 'undefined')
 			options = {};
 
@@ -1097,6 +1086,18 @@ World = {
 World.Entity = function(classid)
 {
 	this.id = World._objectCounter++; // Unique id is assigned to each object
+	
+	// find out if classid is a compound classid..
+	var m = classid.match(/compound\(([a-zA-Z]+),([0-9.]+),([0-9.]+),([0-9.]+)\)/);
+	if(m != null)
+	{
+		World.createCompoundClass(m[1], [
+			parseInt(m[2]),
+			parseInt(m[3]),
+			parseInt(m[4])
+			]
+		);
+	}
 	if(classid in World._classes)
 	{
 		this.shape = World._classes[classid];	
