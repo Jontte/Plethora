@@ -1149,10 +1149,11 @@ World.Entity.prototype.setPos = function(x,y,z)
 		y = x[1];
 		x = x[0];
 	}
+	if(this.x != x || this.y != y || this.z != x)
+		this.dirty = true;
 	this.x = x;
 	this.y = y;
 	this.z = z;
-	this.dirty = true;
 }
 World.Entity.prototype.setSize = function(bx,by,bz)
 {
@@ -1162,10 +1163,11 @@ World.Entity.prototype.setSize = function(bx,by,bz)
 		by = bx[1];
 		bx = bx[0];
 	}
+	if(this.bx != bx || this.by != by || this.bz != bx)
+		this.dirty = true;
 	this.bx = bx;
 	this.by = by;
 	this.bz = bz;
-	this.dirty = true;
 }
 World.Collision = function(nx,ny,nz, displacement)
 {

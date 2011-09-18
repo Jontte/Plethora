@@ -224,6 +224,10 @@ World.initEditor = function()
 			this.x += (c.size[0]-1)/2;
 			this.y += (c.size[1]-1)/2;
 			this.z += c.size[2]/2;
+
+			// round x and y up..
+			//var odd;
+			//odd = 0.5 * (this.bx)
 			
 			//// fill bx,by,bz cuboid with sprites..
 			for(var zz = 0; zz < this.bz; zz+=csz)
@@ -526,6 +530,107 @@ World.initEditor = function()
 			});
 		}
 	});
+	// This class draws extra surfaces around the proxy/ghost object helping with object positioning
+	World.addClass('E_surface',
+	{
+		internal: true, // prevents visibility in class browser
+		init: function(params)
+		{
+			this.axis = params.axis;
+			this.tilex = 
+				(this.axis[2] != 0)?7:(
+				(this.axis[1] != 0)?8:9);
+			this.hidden = true;
+		},
+		step: function()
+		{
+			var g = World._editor.ghost;
+
+			// Scan for collisions with scene
+			var dist = 20; //
+			
+			var pos = [g.x,g.y,g.z];
+			var size = [0,0,0];
+
+			for(var i = 0; i < 3 ; i++)
+			{
+				if(this.axis[i] != 0)
+				{
+					pos[i] += (dist/2 + [g.bx,g.by,g.bz][i]/2) * this.axis[i];
+					size[i] = dist;
+				}
+				else
+				{
+					size[i] = [g.bx,g.by,g.bz][i];
+				}
+			}
+
+			World.addScan({
+				pos : pos,
+				size: size,
+				surface: this,
+				callback: function(objects)
+				{
+					var we = World._editor;
+					
+					var mind = 0;
+					var first = true;
+					var g = World._editor.ghost;
+					var ax = (this.surface.axis[0]!=0)?0:(this.surface.axis[1]!=0?1:2);
+					for(var i = 0; i < objects.length; i++)
+					{
+						var o = objects[i];
+						if(o.phantom)continue;
+
+						var d = this.surface.axis[ax]*([o.x,o.y,o.z][ax] - this.surface.axis[ax] * [o.bx,o.by,o.bz][ax]/2 - [g.x,g.y,g.z][ax]);
+
+						if(d < 0)
+						{
+							// Inside an object...
+							this.surface.hidden = true;
+							return;	
+						}
+
+						if(d < mind || first)
+						{
+							first = false;
+							mind = d;	
+						}
+					}
+					
+					var p = [g.x,g.y,g.z];
+					var s = [g.bx,g.by,g.bz];
+					p[ax] += mind * this.surface.axis[ax];
+					s[ax] = 1;
+					this.surface.setPos(p);
+					this.surface.setSize(s);
+					this.surface.hidden = first; // hide if nothing was found..
+				}
+			});
+
+			if(this.hidden)
+				return;
+
+			var focus = World2Screen(World._cameraPosX, World._cameraPosY, World._cameraPosZ);
+
+			
+			for(var zz = 0; zz < this.bz || zz==0; zz+=1)
+			for(var yy = 0; yy < this.by || yy==0; yy+=1)
+			for(var xx = 0; xx < this.bx || xx==0; xx+=1)
+			{
+			var coords = World2Screen(this.x+xx-this.bx/2, this.y+yy-this.by/2, this.z+zz-this.bz/2);
+			coords.x += 320-focus.x;
+			coords.y += 240-focus.y;
+			draw({
+				x: coords.x, 
+				y: coords.y, 
+				tilex: this.tilex, 
+				tiley: 11,
+				src: World._editor.tileset.image
+			});
+			}
+		}
+	});
 	var layer = World.createObject('E_layer', [0,0,0.5], {
 		phantom: true
 	});
@@ -534,6 +639,15 @@ World.initEditor = function()
 	});
 	World.createObject('E_arrow', [0,0,0], {
 		phantom: true
+	});
+	$.each([	[1,0,0],[-1,0,0],
+				[0,1,0],[0,-1,0],
+				[0,0,1],[0,0,-1]
+		], function(idx, val){
+		World.createObject('E_surface', [0,0,0], {
+			phantom: true,
+			axis: val
+		});
 	});
 	
 	var we = World._editor;

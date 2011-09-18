@@ -193,10 +193,18 @@ World.addModule('PlethoraOriginal',
 				{
 					// normalize pdx and pdy in xy plane
 					pdist = Math.sqrt(pdx*pdx+pdy*pdy);
-					pdx /= pdist;
-					pdy /= pdist;
-					movement_x = d*pdx;
-					movement_y = d*pdy;
+					if(pdist > 0.1)
+					{
+						pdx /= pdist;
+						pdy /= pdist;
+						movement_x = d*pdx;
+						movement_y = d*pdy;
+					}
+					else
+					{
+						movement_x = 0;
+						movement_y = 0;
+					}
 				}
 	
 				// Inhibit diagonal movement
