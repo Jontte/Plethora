@@ -23,27 +23,6 @@ function draw(opts)
 	);
 }
 
-function progressbar(current, max, message)
-{
-	var w = 640;
-	var h = 480;
-
-	var ctx = Graphics.ctx;
-
-	ctx.fillStyle = 'black';
-	ctx.globalAlpha = 0.2;
-	ctx.fillRect (0, 0, 640, 480);		
-	ctx.globalAlpha = 1.0;
-	
-	ctx.fillStyle = 'black';
-	Graphics.ctx.fillRect(w/4,h/4,w/2,h/2);
-	ctx.fillStyle = 'red';
-	Graphics.ctx.fillRect(w/4+50,h/4+50,(w/2-100)*current/max,h/2-100);
-
-	// Force redraw of canvas..
-	document.getElementById('canvas').style.opacity = 1.0-0.001*Math.random();
-}
-
 World.drawBackground = function()
 {
 		// Clears the screen with a suitable color, renders clouds, etc.			
@@ -52,8 +31,8 @@ World.drawBackground = function()
 		var h = World._cameraPosZ;
 		// Color at zero height
 		
-		h+=100;
-		h /= 100;
+		h /= 5000;
+		h+=0.85;
 		
 		if(h<0)h=0;
 		if(h>1)h=1;	
@@ -179,26 +158,12 @@ World.drawSimpleObject = function(obj, transparency)
 	}
 
 	var focus = World2Screen(World._cameraPosX, World._cameraPosY, World._cameraPosZ);
-
-/*	ctx.strokeStyle ='yellow';
-	ctx.beginPath();
-	ctx.moveTo(coords.x+16, coords.y);
-	ctx.lineTo(coords.x+16, coords.y+16);
-	ctx.lineTo(coords.x+32, coords.y+24);
-	ctx.moveTo(coords.x+16, coords.y+16);
-	ctx.lineTo(coords.x, coords.y+24);
-	ctx.closePath();
-	ctx.stroke();
-	*/	
-	
-	
 	var ctx = Graphics.ctx;
-
 	var coords = Cuboid2Screen(obj.x, obj.y, obj.z, obj.bx, obj.by, obj.bz);
 
 	coords.x += 320-focus.x;
 	coords.y += 240-focus.y;
-	
+
 	ctx.globalAlpha = obj.alpha;
 	draw({
 		x: coords.x, 
@@ -209,24 +174,9 @@ World.drawSimpleObject = function(obj, transparency)
 		tileh: coords.h,
 		src: obj.shape.tileset.image
 	});
+	
 	ctx.globalAlpha = 1;
 	
-/*	ctx.beginPath();
-	ctx.moveTo(coords.x+32, coords.y+8);
-	ctx.lineTo(coords.x+32, coords.y+24);
-	ctx.lineTo(coords.x+16, coords.y+32);
-	ctx.lineTo(coords.x+0, coords.y+24);
-	ctx.lineTo(coords.x+0, coords.y+8);
-	ctx.lineTo(coords.x+16, coords.y+0);
-	ctx.lineTo(coords.x+32, coords.y+8);
-	
-	ctx.lineTo(coords.x+16, coords.y+16);
-	ctx.lineTo(coords.x+16, coords.y+32);
-	ctx.moveTo(coords.x+16, coords.y+16);
-	ctx.lineTo(coords.x+0, coords.y+8);
-	ctx.closePath();
-	ctx.stroke();
-*/	
 /*	Graphics.ctx.strokeStyle = 'red';
 	
 	var rect = Cuboid2Screen(obj.x,obj.y,obj.z,obj.bx,obj.by,obj.bz);

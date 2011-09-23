@@ -274,7 +274,7 @@ World.initEditor = function()
 				}
 			}
 			
-			ctx.fillStyle    = '#000';
+			/*ctx.fillStyle    = '#000';
 			ctx.font         = '16px sans-serif';
 			ctx.textAlign = 'left';
 			ctx.textBaseline = 'top';
@@ -282,7 +282,7 @@ World.initEditor = function()
 
 			ctx.fillText  ('mx,my: ('+focus.x+', '+focus.y+')', 30, 120);
 			ctx.fillText  ('c.bx,by,bz: ('+JSON.stringify(c.size)+')', 30, 150);
-			
+			*/
 			Graphics.ctx.restore();
 			if(wec.open)
 			{
@@ -609,7 +609,12 @@ World.initEditor = function()
 			});
 
 			if(this.hidden)
+			{
+				// Just to make sure we're out of sight..
+				this.setPos([g.x,g.y,g.z+100]);
+				this.setSize([0,0,0]);
 				return;
+			}
 
 			var focus = World2Screen(World._cameraPosX, World._cameraPosY, World._cameraPosZ);
 
@@ -866,8 +871,8 @@ World.editorStep = function()
 			wec.selectedCategory = wrap(wec.selectedCategory+1,wec.classes.length);
 		}
 		// mouse selection
-		ctx.fillStyle = 'white';
-		ctx.fillText  ('Mouse: '+World.mouseX + ', ' + World.mouseY, 0,0);
+		//ctx.fillStyle = 'white';
+		//ctx.fillText  ('Mouse: '+World.mouseX + ', ' + World.mouseY, 0,0);
 		if(Key.get(MOUSE_LEFT) && Key.changed(MOUSE_LEFT))
 		{
 			var dy = Math.floor((World.mouseY - 240) / 32);
@@ -927,10 +932,11 @@ World.editorStep = function()
 			});
 		}
 		
+		var cl = wec.classes[wec.selectedCategory][wec.selectedClass[wec.selectedCategory]];
+		
 		ctx.globalAlpha = wec.alpha;
 		ctx.fillStyle = 'black';
 		
-		var cl = wec.classes[wec.selectedCategory][wec.selectedClass[wec.selectedCategory]];
 		ctx.fillStyle    = '#000';
 		ctx.font         = '16px sans-serif';
 		ctx.textAlign = 'right';

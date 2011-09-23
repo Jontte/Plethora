@@ -59,7 +59,8 @@ World.addModule('PlethoraOriginal',
 				params.mass = 1;
 				
 				this.walkx = this.walky = 0;
-
+				this.jumping = true;
+				
 				this.frameMaxTicks=0;
 
 				if(!World._editor.online)
@@ -69,10 +70,18 @@ World.addModule('PlethoraOriginal',
 				this.collision_listener = function(self, other, nx, ny, nz, displacement){
 					if(nz>0)
 					{
+						// Note that we have to limit the jumps to once per frame..
+						var mult = 1;
+						var jump = 0.35*(self.jumping);
+						self.jumping = false;
 						return {
-							vx: -self.walkx,
-							vy: -self.walky,
-							vz: 0
+							vx: self.walkx*mult,
+							vy: self.walky*mult,
+							vz: 0,
+							fx: 0,
+							fy: 0,
+							fz: jump*mult,
+							friction: 1
 						};
 					}
 					return true;
@@ -97,6 +106,7 @@ World.addModule('PlethoraOriginal',
 				if(Key.get(KEY_DOWN)){ 
 					movement_y += 1;
 				}
+				this.jumping = Key.get(KEY_SPACE);
 
 				// Inhibit diagonal movement
 				var dd = Math.sqrt(movement_x*movement_x+movement_y*movement_y);
@@ -106,8 +116,8 @@ World.addModule('PlethoraOriginal',
 					movement_y *= d/dd;
 				}
 
-				plr.walkx = movement_x - plr.vx/20;
-				plr.walky = movement_y - plr.vy/20;
+				plr.walkx = movement_x;
+				plr.walky = movement_y;
 
 				if(Key.get(KEY_LEFT))
 				{
@@ -130,12 +140,6 @@ World.addModule('PlethoraOriginal',
 				var maxticks = (speed<0.001) ? 0 : 0.10/speed;
 				plr.frameMaxTicks = maxticks;
 	
-				if(plr.allowjump == true && Key.changed(KEY_SPACE) && Key.get(KEY_SPACE))
-				{
-					var f = 0.25;
-					plr.fz += f;
-				}
-				
 				World.drawSimpleObject(this);
 			}
 		});
@@ -163,8 +167,8 @@ World.addModule('PlethoraOriginal',
 					if(nz>0)
 					{
 						return {
-							vx: -self.walkx,
-							vy: -self.walky,
+							vx: self.walkx,
+							vy: self.walky,
 							vz: 0
 						};
 					}
@@ -245,6 +249,24 @@ World.addModule('PlethoraOriginal',
 			category: 'terrain',
 			tiles: [3,9]
 		});
+		World.addClass('sandfencex', {
+			tileset: plethora_original,
+			category: 'architecture',
+			tiles: [12,3],
+			size: [1,0.8,1]
+		});
+		World.addClass('sandfencey', {
+			tileset: plethora_original,
+			category: 'architecture',
+			tiles: [13,3],
+			size: [0.8,1,1]
+		});
+		World.addClass('sandblock', {
+			tileset: plethora_original,
+			category: 'terrain',
+			flags: World.ANIMATED_RANDOM,
+			tiles: [[12,4],[12,5]]
+		});
 		
 		World.addClass('lift', {
 			tileset: plethora_original,
@@ -261,7 +283,7 @@ World.addModule('PlethoraOriginal',
 				this.waitTicks = 0;
 				this.waitMaxTicks = 25;
 				this.animMaxTicks = 3; // ticks per frame
-				params.mass = 100000;
+				params.mass = 1000000;
 				this.hasGravity = false;
 				this.collideFixed = false;
 				this.startpos = [this.x,this.y,this.z];
@@ -304,6 +326,7 @@ World.addModule('PlethoraOriginal',
 					}
 				}
 				// TODO
+				
 				this.setPos([
 					this.startpos[0],
 					this.startpos[1],
@@ -380,12 +403,12 @@ World.addModule('PlethoraOriginal',
 			init: function(){
 				this.collision_listener = function(self, other, nx, ny, nz, displacement){
 					if(nz<0) {
-						var v = 20;
+						var v = 10;
 						switch(self.direction){
-							case 0: vec=[ 0,-v]; break;
-							case 1: vec=[ v, 0]; break;
-							case 2: vec=[ 0, v]; break;
-							case 3: vec=[-v, 0]; break;
+							case 0: vec=[ 0, v]; break;
+							case 1: vec=[-v, 0]; break;
+							case 2: vec=[ 0,-v]; break;
+							case 3: vec=[ v, 0]; break;
 						};
 						return {
 							vx: vec[0]*displacement,
@@ -406,9 +429,9 @@ World.addModule('PlethoraOriginal',
 		World.addClass('redblock', {
 			tileset: plethora_original,
 			category: 'misc',
-			flags: World.ANIMATED, 
+			flags: World.ANIMATED,
 			tiles: [[8,2],[9,2],[10,2],[11,2],[12,2],[13,2],[14,2],[15,2]],
-			init: function(params){params.mass = 1;}
+			init: function(params){params.mass = 1;this.hasGravity = false;}
 		});
 		/*World.addClass('slope', {
 			tileset: plethora_original,

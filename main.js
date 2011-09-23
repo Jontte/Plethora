@@ -7,11 +7,7 @@ var Config = {
 	FPS: 30,
 	areyousure: false, //Whether the user is willing to try plethora despite using browsers with poor performance
 	editor: false, //Whether we're in editor mode or not
-	level_cache : {},
-	preloader: {
-		counter: 0, // number of resources left
-		elements: []
-	}
+	level_cache : {}
 };
 var Graphics = {
 	ctx : null,
@@ -366,27 +362,9 @@ function reset(areyousure)
 		else
 			savebtn.hide();
 		
-		World.loadLevel(json.id, json.data, use_editor);
-		// Let's preload a couple of images before calling initialize... 
-		
-		Config.preloader.counter = World.preload.length;
-		Config.preloader.elements = [];
-		for(var i = 0; i < World.preload.length; i++)
-		{
-			var e = new Image();
-			e.onload = function()
-			{
-				if(--Config.preloader.counter==0)
-				{
-					// Last image preloader calls initialize();
-					initialize();
-				}
-			};
-			// console.log('Precaching '+World.preload[i]);
-			e.src = World.preload[i];
-			Config.preloader.elements.push(e);
-		}
-	};
+		//				LevelID, Level Data, bool edit?, callback
+		World.loadLevel(json.id, json.data, use_editor, initialize);
+	}
 	
 	// Not in level cache yet?
 	if( !Config.level_cache[levelid] || !Config.level_cache[levelid].data )

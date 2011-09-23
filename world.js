@@ -49,7 +49,7 @@ World = {
 		scene : new Effects.SunsetBackground(0,0,640,480),
 		clouds: []
 	},
-	preload: [], // uris to graphics resources to preload before entering level..
+	preload: {}, // uri-mapped Image objects. Used to preload graphics before starting level
 	_depth_func: function(a,b)
 	{
 		/*
@@ -58,14 +58,6 @@ World = {
 			"Is a behind b?" or "Should a be rendered before b?"
 			Returns null when don't care
 		*/
-		
-		// Screen projection rectangle check
-		/*var b1 = Cuboid2Screen(a.x,a.y,a.z,a.bx,a.by,a.bz);
-		var b2 = Cuboid2Screen(b.x,b.y,b.z,b.bx,b.by,b.bz);
-		if(b1.x+b1.w <= b2.x)return null;
-		if(b2.x+b2.w <= b1.x)return null;
-		if(b1.y+b1.h <= b2.y)return null;
-		if(b2.y+b2.h <= b1.y)return null;*/
 		
 		// check diagonals..
 		var mx = (a.bx+b.bx)/2;
@@ -142,20 +134,6 @@ World = {
 		{
 			return a.z < b.z;
 		}
-		/*
-		var gx = mx/5;
-		var gy = my/5;
-		var gz = mz/5;
-		if((a.z-b.z)+mz >= -gz)return false;
-		if((b.z-a.z)-mz <= gz)return true;
-		if((a.x-b.x)+mx >= -gx)return false;
-		if((b.x-a.x)-mx <= gx)return true;
-		if((a.y-b.y)+my >= -gy)return false;
-		if((b.y-a.y)-my <= gy)return true;*/
-		
-		// Objects that penetrated each other cannot be put in a reliable rendering order
-		// -> it would cause loops in the render graph
-		return null;
 	},
 	reset : function()
 	{
@@ -182,9 +160,12 @@ World = {
 	},
 	addTileset : function(filename)
 	{
-		var img = new Image();
-		img.src = filename;
-		
+		// Important: The image must have been previously listed in the current module's preload section
+
+		if(!(filename in World.preload))
+			throw 'Image not preloaded!';
+
+		var img = World.preload[filename];
 		return {
 			image : img,
 			src: filename
@@ -193,7 +174,6 @@ World = {
 	addTilesetCanvas : function(width, height)
 	{
 		var canvas = document.createElement('canvas');
-		canvas.style.border = '1px black solid';
 		canvas.setAttribute("width", width);
 		canvas.setAttribute("height", height);
 		$('#cache').append(canvas);
@@ -420,7 +400,7 @@ World = {
 				x: (size[1]-1)*16,
 				y: (size[2]-1)*16
 			};
-			
+
 			// Next we draw the cube filled with tiny objects..
 			for(var zz = 0; zz < size[2]; zz+=Math.ceil(c.size[2]))
 			for(var yy = 0; yy < size[1]; yy+=Math.ceil(c.size[1]))
@@ -438,7 +418,12 @@ World = {
 				coords.y += zero.y;	
 						
 				var t = c.tiles;
-				while(typeof(t[0]) != 'number')t = t[0];
+				if(c.flags & World.DIRECTED)t = t[0];
+				if(c.flags & World.ANIMATED)
+					t = t[0];
+				else if(c.flags & World.ANIMATED_RANDOM)
+					t = t[Math.floor(t.length*Math.random())];
+				
 				draw({
 					x: coords.x, 
 					y: coords.y, 
@@ -792,53 +777,53 @@ World = {
 				}
 			}
 			// process links
-				for(var i = 0; i < World._links.length; i++)
+			for(var i = 0; i < World._links.length; i++)
+			{
+				var l = World._links[i];
+				var o1 = l.o1;
+				var o2 = l.o2;
+
+				var errorx, errory, errorz;
+
+				if(o2 != null)
 				{
-					var l = World._links[i];
-					var o1 = l.o1;
-					var o2 = l.o2;
+					errorx = l.dx-(o2.x-o1.x);
+					errory = l.dy-(o2.y-o1.y);
+					errorz = l.dz-(o2.z-o1.z);
+				}
+				else
+				{
+					errorx = -l.dx+o1.x;
+					errory = -l.dy+o1.y;
+					errorz = -l.dz+o1.z;
+				}
+				var d = 1.1; // tweakable multiplier
 
-					var errorx, errory, errorz;
-
-					if(o2 != null)
+				if(l.maxforce >= 0)
+				{
+					var totalforce = errorx*errorx+errory*errory+errorz*errorz;
+					if(totalforce*d*2 > l.maxforce)
 					{
-						errorx = l.dx-(o2.x-o1.x);
-						errory = l.dy-(o2.y-o1.y);
-						errorz = l.dz-(o2.z-o1.z);
-					}
-					else
-					{
-						errorx = -l.dx+o1.x;
-						errory = -l.dy+o1.y;
-						errorz = -l.dz+o1.z;
-					}
-					var d = 1.1; // tweakable multiplier
-
-					if(l.maxforce >= 0)
-					{
-						var totalforce = errorx*errorx+errory*errory+errorz*errorz;
-						if(totalforce*d*2 > l.maxforce)
-						{
-							// link force has exceeded maxforce. Drop it
-							World._links.splice(i,1);
-							i--;
-							continue;
-						}
-					}
-
-					if(o2 == null)d*=2;
-
-					o1.fx -= errorx*d;
-					o1.fy -= errory*d;
-					o1.fz -= errorz*d;
-					if(o2 != null)
-					{
-						o2.fx += errorx*d;
-						o2.fy += errory*d;
-						o2.fz += errorz*d;
+						// link force has exceeded maxforce. Drop it
+						World._links.splice(i,1);
+						i--;
+						continue;
 					}
 				}
-			// euler integrate
+
+				if(o2 == null)d*=2;
+
+				o1.fx -= errorx*d;
+				o1.fy -= errory*d;
+				o1.fz -= errorz*d;
+				if(o2 != null)
+				{
+					o2.fx += errorx*d;
+					o2.fy += errory*d;
+					o2.fz += errorz*d;
+				}
+			}
+			// Euler integrate (my friends hate me for this)
 			for(var i = 0; i < World._mobile.length; i++)
 			{
 				var obj = World._mobile[i];
@@ -849,21 +834,29 @@ World = {
 				obj.y += obj.vy/World._physicsIterations;
 				obj.z += obj.vz/World._physicsIterations;
 				
-				obj.vx *= 0.99;
-				obj.vy *= 0.99;
-				obj.vz *= 0.99;
+				// Mark moving objects dirty so that the render graph gets rebuilt for them
+				if(	Math.abs(obj.vx)>0.001||
+					Math.abs(obj.vy)>0.001||
+					Math.abs(obj.vz)>0.001)
+					obj.dirty = true;
+				
+				// Air friction..
+				var af = 0.001;
+				     if(obj.vx > af) obj.vx -= af;
+				else if(obj.vx < -af)obj.vx += af;
+				else obj.vx = 0;
+				     if(obj.vy > af) obj.vy -= af;
+				else if(obj.vy < -af)obj.vy += af;
+				else obj.vy = 0;
+				     if(obj.vz > af) obj.vz -= af;
+				else if(obj.vz < -af)obj.vz += af;
+				else obj.vz = 0;
 			
 				// reset forces & set gravity ready for next round
 
 				obj.fx = 0;
 				obj.fy = 0;
 				obj.fz = (obj.hasGravity)?(-0.04*obj.mass/World._physicsIterations) : 0;
-				
-				// Mark moving objects dirty so that render graph gets rebuilt for them
-				if(	Math.abs(obj.vx)>0.01||
-					Math.abs(obj.vy)>0.01||
-					Math.abs(obj.vz)>0.01)
-					obj.dirty = true;
 			}
 		}
 //		console.timeEnd('physics');
@@ -873,25 +866,40 @@ World = {
 		var colldata = World._collide(o1, o2);
 		if(colldata != false)
 		{
-			// It's a HIT!
-			// Copy normal
+			// It's a HIT! What to do now?
 			var nx = colldata.nx;
 			var ny = colldata.ny;
 			var nz = colldata.nz;
 			var displacement = colldata.displacement;
 			
-			var fx = nx * displacement;
-			var fy = ny * displacement;
-			var fz = nz * displacement;
+			// fx = final force to apply.
+			var fx = 0;
+			var fy = 0;
+			var fz = 0;
 			
+			// Here's what we do:
+			// 1. Call possible collision listeners and come to an agreement about the surface velocity, friction and restitution
+			// 2. Project surface velocity vector [vx,vy,vz] to plane defined by surface normal [nx,ny,nz] and call it SV (surface velocity)
+			// 3. Calculate current delta velocity between objects, project it to the same plane and subtract it from SV. Store in SV.
+			// 4. Friction force = -SV/|SV|*friction multiplier. Add to [fx,fy,fz]
+			// 5. Elastic/Inelastic collision based on restitution
+			// 6. Apply fx to both bodies
+			// 7. Rejoice
+			
+			// 1:
 			// Alert possible collision listeners, that can either:
 			// - cancel the collision
-			// - calculate surface velocity (conveyor belt)
+			// - set  surface velocity (conveyor belt, character movement)
+			// - and/or set extra force for collision (character jumping)
 			// - do nothing
 
+			// vx,vy,vz = Target surface velocity
+			// friction = How willingly we follow the target speed
 			var vx = 0;
 			var vy = 0;
 			var vz = 0;
+			var friction = 0.1; // max friction force
+			var restitution = 1; // coefficient of restitution. unused for now..
 			for(var i = 0; i < 2; i++)
 			{
 				var cur   = i==0?o1:o2;
@@ -905,32 +913,93 @@ World = {
 						// collision_listener wants to let the object pass thru
 						return;
 					}
-					else if(ret.vx != undefined)
+					else if(typeof(ret) == 'object')
 					{
-						vx += ret.vx * mul;
-						vy += ret.vy * mul;
-						vz += ret.vz * mul;
+						if('vx' in ret && 'vy' in ret && 'vz' in ret)
+						{
+							// Surface velocity was given
+							vx += ret.vx * mul;
+							vy += ret.vy * mul;
+							vz += ret.vz * mul;
+						}
+						if('fx' in ret && 'fy' in ret && 'fz' in ret)
+						{
+							// Extra force was given
+							fx += ret.fx * mul;
+							fy += ret.fy * mul;
+							fz += ret.fz * mul;
+						}
+						if('friction' in ret)
+							friction += ret.friction;
+						if('restitution' in ret)
+							restitution *= ret.restitution;
 					}
 				}
 			}
-			if(vx!=0||vy!=0||vz!=0)
+
+			// 2: project [vx,vy,vz] to plane defined by normal vector [nx,ny,nz]
+
+			// Point on plane = point-normal*((point)dot(normal))/(|normal|^2)
+			//
+			var svx,svy,svz;
+			var d = (vx*nx+vy*ny+vz*nz)/(nx*nx+ny*ny+nz*nz);
+
+			svx = vx-nx*d;
+			svy = vy-ny*d;
+			svz = vz-nz*d;
+			
+			// 3. Calculate current delta velocity between objects, project it to the same plane and subtract it from SV. Store in SV.
+			var dvx = o2.vx-o1.vx;
+			var dvy = o2.vy-o1.vy;
+			var dvz = o2.vz-o1.vz;
+
+			d = (dvx*nx+dvy*ny+dvz*nz)/(nx*nx+ny*ny+nz*nz);
+
+			dvx = dvx-nx*d;
+			dvy = dvy-ny*d;
+			dvz = dvz-nz*d;
+		
+			svx = -svx-dvx;
+			svy = -svy-dvy;
+			svz = -svz-dvz;
+			
+			// 4. Friction force = -SV/|SV|*friction multiplier*displacement. Add to [fx,fy,fz]
+
+			// We will also project both objects' velocities to the collision axis and calculate friction based on that...
+			var o1v = (o1.vx*nx+o1.vy*ny+o1.vz*nz);// /(nx*nx+ny*ny+nz*nz); normal vector is normal
+			var o2v = (o2.vx*nx+o2.vy*ny+o2.vz*nz);// /(nx*nx+ny*ny+nz*nz);
+			
+			var vcontact = displacement;
+			
+			fx += nx*vcontact/2;
+			fy += ny*vcontact/2;
+			fz += nz*vcontact/2;
+				
+			d = (svx*svx+svy*svy+svz*svz);
+			if(d > 0)
 			{
-				var maxf = 0.1; // max surface friction..
-				var xx = (vx + (o1.vx-o2.vx))/4;
-				var yy = (vy + (o1.vy-o2.vy))/4;
-				var zz = (vz + (o1.vz-o2.vz))/4;
-				var d = xx*xx+yy*yy+zz*zz;
-				if(d*d > maxf)
-				{
-					d = Math.sqrt(d);	
-					xx *= maxf/d;
-					yy *= maxf/d;
-					zz *= maxf/d;
-				}
-				fx -= xx;
-				fy -= yy;
-				fz -= zz;
+				d = Math.sqrt(d);
+				svx /= d;
+				svy /= d;
+				svz /= d;
+				// at this point svx,svy,svz defines the direction of the friction force
+
+				vcontact = -o1v-o2v+displacement;
+				
+				friction *= vcontact * 10;
+						
+				if(friction > d)friction = d;		
+				if(friction < 0)friction = 0;
+				
+				svx*=friction;
+				svy*=friction;
+				svz*=friction;
+
+				fx -= svx/2;
+				fy -= svy/2;
+				fz -= svz/2;
 			}
+
 			o1.fx += fx;
 			o1.fy += fy;
 			o1.fz += fz;
@@ -938,32 +1007,51 @@ World = {
 			o2.fy -= fy;
 			o2.fz -= fz;
 		
-			// mean
-			var mx = 0;
-			var my = 0;
-			var mz = 0;
-
 			if(!o1.fixed && !o2.fixed)
 			{
-				mx = o1.vx*o1.mass + o2.vx*o2.mass;
-				my = o1.vy*o1.mass + o2.vy*o2.mass;
-				mz = o1.vz*o1.mass + o2.vz*o2.mass;
+				restitution = 0;
 
-				mx /= o1.mass + o2.mass;
-				my /= o1.mass + o2.mass;
-				mz /= o1.mass + o2.mass;
+				var msum = o1.mass + o2.mass;
+
+				// o1v, o2v are velocities projected to normal axis
+				// momentum is preserved, for the time being restitution is always 0 until someone rewrites this collision response function.
+				// = i cant get it to work right.
+				var momentum = o1.mass*o1v + o2.mass*o2v;
+				
+				var o1nv = (momentum + o2.mass*restitution*(o2v-o1v))/msum;
+				var o2nv = (momentum + o1.mass*restitution*(o1v-o2v))/msum;
+
+				// velocities have been determined on the normal axis, all we need to do now is
+				// shift the velocities in 3d space by the numbah.
+				
+				o1v -= o1nv;
+				o2v -= o2nv;
+
+				o1.vx -= o1v*nx;
+				o1.vy -= o1v*ny;
+				o1.vz -= o1v*nz;
+				o2.vx -= o2v*nx;
+				o2.vy -= o2v*ny;
+				o2.vz -= o2v*nz;
 			}
+			else {
+				// one of the objects is fixed, other not (collision between two fixed objects is not possible)
+				var fixed  = o1.fixed?o1:o2;
+				var mobile = o1.fixed?o2:o1;
+				var mult = o1.fixed?-1:1;
 
-			// Velocities should equal each other on the axis defined by normal
-			// Easy
-			// a+(b-a)*c, linear combination
-			
-			o1.vx = o1.vx+(mx-o1.vx)*Math.abs(nx);
-			o1.vy = o1.vy+(my-o1.vy)*Math.abs(ny);
-			o1.vz = o1.vz+(mz-o1.vz)*Math.abs(nz);
-			o2.vx = o2.vx+(mx-o2.vx)*Math.abs(nx);
-			o2.vy = o2.vy+(my-o2.vy)*Math.abs(ny);
-			o2.vz = o2.vz+(mz-o2.vz)*Math.abs(nz);
+				// what we do here is prevent the mobile object from entering the fixed one
+				var dotp = (mobile.vx*nx+mobile.vy*ny+mobile.vz*nz);
+				dotp *= mult;
+				if(dotp < 0)
+				{
+					// project mobile's velocity to the surface normal, this way we eliminate the normal component.
+					d = (dotp)/(nx*nx+ny*ny+nz*nz);
+					mobile.vx = mobile.vx-nx*d;
+					mobile.vy = mobile.vy-ny*d;
+					mobile.vz = mobile.vz-nz*d;
+				}
+			}
 		}
 	},
 	// Collide two objects
@@ -1025,9 +1113,8 @@ World = {
 			return ret;
 		};
 	},
-	loadLevel : function(levelname, json, use_editor)
+	loadLevel : function(levelname, json, use_editor, onload_callback)
 	{
-		World._editor.online = use_editor;
 		var module = World._modules[json.module];
 		if(!module)
 		{
@@ -1035,26 +1122,51 @@ World = {
 			return;
 		}
 		World.reset();
-		World._level = levelname;
-		module.load();
-		World.preload = World.preload.concat(module.preload);
-		var objects = json.objects;
-		for(var i = 0; i < objects.length; i++)
-		{
-			var obj = objects[i];
-			var classid = obj[0];
-			var pos = obj[1];
-			var mass = obj[2];
-			var direction = obj[3];
-			var instance = World.createObject(classid, pos, {mass: mass});
-			instance.direction = direction;
-		}
 		
-		if(World._editor.online)
-		{
-			// In editor mode we'll need a couple of custom classes and instances
-			World.initEditor();
+		World._level = levelname;
+		World._editor.online = use_editor;
+		
+		function finish_preloading() {
+			// Now that preloads are done, let's call the module's setup func that creates classes, etc
+			
+			module.load();
+			var objects = json.objects;
+			for(var i = 0; i < objects.length; i++)
+			{
+				var obj = objects[i];
+				var classid = obj[0];
+				var pos = obj[1];
+				var mass = obj[2];
+				var direction = obj[3];
+				var instance = World.createObject(classid, pos, {mass: mass});
+				instance.direction = direction;
+			}
+	
+			if(World._editor.online)
+			{
+				// In editor mode we'll need a couple of custom classes and instances
+				World.initEditor();
+			}
+			onload_callback(); // pass control back to main.js or whoever called loadLevel
 		}
+	
+		World.preload_counter = module.preload.length;
+
+		// Add image objects to World.preload and setup onload handlers
+		// Last callback that gets called calls finish_preloading()
+		for(var i = 0; i < module.preload.length; i++)
+		{
+			var src = module.preload[i];
+			var img = new Image();
+			img.onload = function(){
+				if(--World.preload_counter == 0)
+					finish_preloading();
+			}
+			img.src = src; // launches loading
+			World.preload[src] = img;
+		}
+
+		// TODO: If we were to show a progress indicator or anything we would set it here and clear it in finish_preloading
 	},
 	saveLevel: function()
 	{
