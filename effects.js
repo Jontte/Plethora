@@ -1,11 +1,12 @@
 
 Effects = {
 
+// The clouds effect uses a hidden canvas for faster rendering..
 Clouds: function(x, y, w, h)
 {
-	this.bubbles = [];
-
 	var ratio = 16/9; // haha, widescreen clouds
+	this.x = x;
+	this.y = y;
 
 	if(w/h > ratio)
 	{
@@ -19,7 +20,16 @@ Clouds: function(x, y, w, h)
 		h = w/ratio;
 		y += hh/2-h/2;
 	}
+	
+	this.canvas = document.createElement('canvas');
+	this.canvas.width = w+40;
+	this.canvas.height = h+40;
+	$('#cache').append(this.canvas);
+	var ctx = this.canvas.getContext('2d');
+	
 	var bubblecount = (Math.floor(Math.random()*3)+4);
+	
+	ctx.beginPath();
 	for(var i = 0; i < bubblecount; i++)
 	{
 		var d = Math.floor(Math.random()*(w<h?w:h)*(0.5*i/bubblecount));
@@ -28,34 +38,28 @@ Clouds: function(x, y, w, h)
 		var mx = Math.floor(Math.random()*(w-rad*2));
 		var my = Math.floor(Math.random()*(h-rad*2));
 
-		this.bubbles.push([x+rad+mx,y+rad+my,rad]);
+		ctx.arc(rad+mx+20, rad+my+20, rad, 0, Math.PI*2, true);
 	}
+
+	ctx.closePath();
+	ctx.shadowOffsetX = 0;
+	ctx.shadowOffsetY = 5;
+	ctx.shadowBlur = 20;
+	ctx.shadowColor = 'black';
+	ctx.fillStyle = 'black';
+	ctx.fill();
+	var my_gradient = ctx.createLinearGradient(0,10+h/4,0,10+h/4*3);
+	my_gradient.addColorStop(0, "white");
+	my_gradient.addColorStop(1, "#AAAAAA");
+	ctx.fillStyle = my_gradient;
+	ctx.shadowOffsetX = 0;
+	ctx.shadowOffsetY = 0;
+	ctx.shadowBlur = null;
+	ctx.shadowColor = null;
+	ctx.fill();
+
 	this.draw = function(ctx){
-		ctx.save();
-		ctx.beginPath();
-
-		for(var i = 0; i < this.bubbles.length; i++)
-		{
-			ctx.arc(this.bubbles[i][0], this.bubbles[i][1], this.bubbles[i][2], 0, Math.PI*2, true);
-		}
-		ctx.closePath();
-		ctx.shadowOffsetX = 0;
-		ctx.shadowOffsetY = 5;
-		ctx.shadowBlur = 20;
-		ctx.shadowColor = 'black';
-		ctx.fillStyle = 'black';
-		ctx.fill();
-		var my_gradient = ctx.createLinearGradient(0,y+h/4,0,y+h/4*3);
-		my_gradient.addColorStop(0, "white");
-		my_gradient.addColorStop(1, "#AAAAAA");
-		ctx.fillStyle = my_gradient;
-		ctx.shadowOffsetX = 0;
-		ctx.shadowOffsetY = 0;
-		ctx.shadowBlur = null;
-		ctx.shadowColor = null;
-		ctx.fill();
-
-		ctx.restore();
+		ctx.drawImage(this.canvas, this.x-20, this.y-20);
 	}
 },
 

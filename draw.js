@@ -28,6 +28,7 @@ World.drawBackground = function()
 		// Clears the screen with a suitable color, renders clouds, etc.			
 		// Update world sky color based on camera position
 		
+		var ctx = Graphics.ctx;
 		var h = World._cameraPosZ;
 		// Color at zero height
 		
@@ -37,9 +38,40 @@ World.drawBackground = function()
 		if(h<0)h=0;
 		if(h>1)h=1;	
 		
-		World.background.scene.draw(Graphics.ctx, 1.0-h);
+		World.background.scene.draw(ctx, 1.0-h);
 		//var camerapos = World2Screen(World._cameraPosX, World._cameraPosY, World._cameraPosZ);
 		
+		var b = World.background;
+		
+		if(b.clouds.length == 0)
+		{
+			// divide sky into slots..
+			var dx = 3;
+			var dy = 2;
+			for(var y = 0; y < dy; y++)
+			for(var x = 0; x < dx; x++)
+			{
+				var d = y%2*0.5;
+				var xx = 640/dx*(x+d);
+				var yy = 480/dy*y;
+				var wm = 640/dx;
+				var hm = 480/dy;
+				
+				
+				var w = Math.floor(wm/4+Math.random()*wm/4*3);
+				var h = Math.floor(hm/4+Math.random()*hm/4*3);
+				
+				var xpos = Math.floor(xx+(wm-w)*Math.random());
+				var ypos = Math.floor(yy+(hm-h)*Math.random());
+				b.clouds.push(new Effects.Clouds(xpos,ypos,w,h));
+			}
+		}
+		ctx.globalAlpha = h*h*h;
+		for(var i = 0; i < b.clouds.length; i++)
+		{
+			b.clouds[i].draw(ctx);
+		}
+		ctx.globalAlpha = 1;
 };
 
 World.drawObject = function(obj)
