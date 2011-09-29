@@ -617,8 +617,6 @@ World.initEditor = function()
 			}
 
 			var focus = World2Screen(World._cameraPosX, World._cameraPosY, World._cameraPosZ);
-
-			debugger;
 			
 			for(var zz = 0; zz < this.bz || zz==0; zz+=1)
 			for(var yy = 0; yy < this.by || yy==0; yy+=1)
