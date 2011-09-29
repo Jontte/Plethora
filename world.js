@@ -794,7 +794,7 @@ World = {
 				var features = {};
 				var cur = {};
 				// Here we check a couple of basic parameters and see if they've been changed from their default values.. if so, include them
-				if(o.mass != c.defaults.mass||0)
+				if(o.mass != (c.defaults.mass||0))
 					features.mass = o.mass;
 				if(o.flags & World.DIRECTED && o.direction != 0)
 					features.direction = o.direction;
