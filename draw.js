@@ -222,3 +222,67 @@ World.drawSimpleObject = function(obj, transparency)
 	Graphics.ctx.strokeRect(rect.x,rect.y,rect.w,rect.h);*/
 };
 
+/*
+	Generate a hidden canvas with target_count random tiles by sampling randomly thru source_tiles
+*/
+World.sampleTiles = function(source, target_count, source_tiles)
+{
+	var w = target_count * 32;
+	var h = 32;
+	
+	var c = document.createElement('canvas');
+	c.width = w;
+	c.height = h;
+	$('#cache').append(c);
+	var ctx = c.getContext('2d');
+	
+	var imagedata = ctx.getImageData(0,0,w,h);
+	
+	var tiles_data = [];
+	for(var i = 0; i < source_tiles.length; i++)
+	{
+		var s = source_tiles[i];
+		var temp = document.createElement('canvas');
+		temp.width = w;
+		temp.height = h;
+		var tempc = temp.getContext('2d');
+		tempc.drawImage(source.image,s[0]*32,s[1]*32,32,32,0,0,32,32);
+		tiles_data.push(tempc.getImageData(0,0,32,32));
+	}
+	
+	for(var i = 0; i < target_count; i++)
+	{
+		var ratios = [];
+		var sum = 0;
+		for(var a = 0; a < source_tiles.length; a++)
+		{
+			ratios.push(Math.random()*Math.random()*10+0.1);
+			sum += ratios[ratios.length-1];
+		}
+		for(var y = 0; y < 32; y++)
+		for(var x = 0; x < 32; x++)
+		{
+			var target_ind = (y)*4*w+(x+i*32)*4;
+			var source_ind = (y)*4*32+x*4;
+			
+			for(var f = 0; f < 4; f++)
+			{
+				var val = 0;
+				for(var a = 0; a < source_tiles.length; a++)
+				{
+					val += tiles_data[a].data[source_ind+f]*ratios[a];
+				}
+				val /= sum;
+				imagedata.data[target_ind+f] = val;
+			}
+		}
+	}
+	ctx.putImageData(imagedata,0,0);
+	
+	return {
+		image: c
+	};
+}
+
+
+

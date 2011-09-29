@@ -10,6 +10,8 @@ World.addModule('PlethoraOriginal',
 	{
 		// Load tiles and graphics
 		var plethora_original = World.addTileset('tileset.png');
+		var sandblock_samples = World.sampleTiles(plethora_original, 8, [[12,4],[12,5],[13,4],[13,5]]);
+		
 		World.addClass('groundplain', {
 			tileset: plethora_original,
 			category: 'terrain',
@@ -261,10 +263,10 @@ World.addModule('PlethoraOriginal',
 			size: [0.5,1,1]
 		});
 		World.addClass('sandblock', {
-			tileset: plethora_original,
+			tileset: sandblock_samples,
 			category: 'terrain',
 			flags: World.ANIMATED_RANDOM,
-			tiles: [[12,4],[12,5]]
+			tiles: [[0,0],[1,0],[2,0],[3,0],[4,0],[5,0],[6,0],[7,0]]
 		});
 		
 		World.addClass('lift', {
