@@ -6,7 +6,6 @@ var Config = {
 	gamestate : 'halt',
 	FPS: 30,
 	areyousure: false, //Whether the user is willing to try plethora despite using browsers with poor performance
-	editor: false, //Whether we're in editor mode or not
 	level_cache : {}
 };
 var Graphics = {
@@ -103,6 +102,24 @@ $(document).ready(function(){
 		show: 'slide',
 		hide: 'fade'
 	});
+	
+	// Setup 'unsaved changes!' confirmation dialog
+	
+	$('#exit-confirmation-panel').dialog({
+		resizable: false,
+		modal: true,
+		autoOpen: false,
+		buttons: {
+			'Exit the editor' : function(){
+				reset();
+				$(this).dialog('close');
+			},
+			'Cancel' : function(){
+				$(this).dialog('close');
+			}
+		}
+	});
+	
 	$('#login-panel-button').button().click(function(){
 		if ( $('#register-captcha #recaptcha_area').length > 0 )
 			Recaptcha.reload();
@@ -226,21 +243,39 @@ $(document).ready(function(){
 			$(this.nTr).removeClass('row_selected');
 		});
 		$(event.target.parentNode).addClass('row_selected');
-		reset();
+		safe_reset();
+	});
+	
+	$('#resetbutton').button().click(safe_reset);
+	$('#sw-gamemode').button({label:'Editor'}).click(function(){
+		if(World._editor.unsaved_changes)
+			$('#exit-confirmation-panel').dialog('open');
+		else
+		{
+			var use_editor = $('#sw-gamemode').button('option','label')!='Play';
+			$('#sw-gamemode').button('option','label', use_editor?'Play':'Editor');
+			reset();
+		}
 	});
 	
 	var p = $.getUrlVar('editor');
 	if(typeof(p) != 'undefined')
-		$('#sw-radio-edit').attr('checked', 'checked');
+		$('#sw-gamemode').button('option', 'label', 'Play');
 
-	$('#resetbutton').button().click(reset);
-
-	$('#sw-radio').buttonset();
-	$('#sw-radio-play').click(reset);
-	$('#sw-radio-edit').click(reset);
 	
 	initiateSession();
 });
+
+/*
+	This function will ask the user whether they really want to reset if they have unsaved changes in their editor
+*/
+function safe_reset()
+{
+	if(World._editor.unsaved_changes)
+		$('#exit-confirmation-panel').dialog('open');
+	else
+		reset();
+}
 
 function level_select()
 {
@@ -350,7 +385,7 @@ function reset(areyousure)
 		var json = Config.level_cache[levelid];
 		Config.gamestate = 'initializing';
 		
-		var use_editor = $('#sw-radio-edit').is(':checked');
+		var use_editor = $('#sw-gamemode').button('option','label')=='Play';
 		
 		var savebtn = $('#save-btn');
 

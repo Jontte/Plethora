@@ -41,7 +41,8 @@ World = {
 	_level: '', // Name of currently loaded level
 	_editor: {
 		online: false, // Whether we're in editor mode or not
-		proxy: [] // Separate object collision proxy for all objects in editor mode
+		proxy: [], // Separate object collision proxy for all objects in editor mode
+		unsaved_changes: false
 	},
 	mouseX: 0,
 	mouseY: 0,
@@ -152,6 +153,7 @@ World = {
 		World._renderProxy = [];
 		World._classes = {};
 		World._level = '';
+		World._editor.unsaved_changes = false;
 		$('#cache').empty();
 	},
 	setCameraFocus : function(obj)
@@ -405,9 +407,9 @@ World = {
 					xx+Math.ceil(c.size[0])/2, 
 					yy+Math.ceil(c.size[1])/2,
 					zz+Math.ceil(c.size[2])/2,
-					(c.size[0]), 
-					(c.size[1]),
-					(c.size[2]));
+					Math.ceil(c.size[0]), 
+					Math.ceil(c.size[1]),
+					Math.ceil(c.size[2]));
 			
 				coords.x += zero.x;
 				coords.y += zero.y;	
@@ -774,6 +776,7 @@ World = {
 	},
 	saveLevel: function()
 	{
+		World._editor.unsaved_changes = false;
 		// Dump all objects and settings to a single json
 		var objects = [];
 		var json = {

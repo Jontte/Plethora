@@ -108,6 +108,9 @@ require_once('compressor_config.php');
 				</tfoot> 
 			</table> 
 		</div>
+		<div id="exit-confirmation-panel" title="Unsaved changes!">
+			<p><span class="ui-icon ui-icon-alert" style="float:left; margin:0 7px 20px 0;"></span>Your level has unsaved changes. Are you sure you want to exit the editor without saving first?</p>
+		</div>
 		<div id="login-panel" title="Login/Register">
 			<div style="width:30%;float:left;">
 				<p>Login</p>
@@ -151,12 +154,7 @@ require_once('compressor_config.php');
 					<input type="button" id="level-selector" value="Level selector" />
 					<input id="resetbutton" type="button" value="Reset" />
 
-					<div id="sw-radio">
-						<input type="radio" id="sw-radio-play" name="radio" checked="checked" />
-						<label for="sw-radio-play">Play</label>
-						<input type="radio" id="sw-radio-edit" name="radio" />
-						<label for="sw-radio-edit">Edit</label>
-					</div>
+					<input type="button" id="sw-gamemode" value="Edit"/>
 					<input id="save-btn" type="button" value="Save" />
 					<hr />
 					<input type="button" id="login-panel-button" value="Login/Register" />

@@ -125,7 +125,10 @@ World.initEditor = function()
 						{
 							$.each(objects, function(idx, obj){
 								if(!obj.phantom)
+								{
 									World.removeObject(obj);
+									World._editor.unsaved_changes = true;
+								}
 							});
 						}
 						else
@@ -152,6 +155,7 @@ World.initEditor = function()
 							}
 							var obj = World.createObject(newid, this.pos, {fixed: true});
 							obj.direction = this.direction;
+							World._editor.unsaved_changes = true;
 						}
 					}
 				});
@@ -273,7 +277,7 @@ World.initEditor = function()
 					});
 				}
 			}
-			
+			/*
 			ctx.fillStyle    = '#000';
 			ctx.font         = '16px sans-serif';
 			ctx.textAlign = 'left';
@@ -282,7 +286,7 @@ World.initEditor = function()
 
 			ctx.fillText  ('mx,my: ('+focus.x+', '+focus.y+')', 30, 120);
 			ctx.fillText  ('c.bx,by,bz: ('+JSON.stringify(c.size)+')', 30, 150);
-			
+			*/
 			Graphics.ctx.restore();
 			if(wec.open)
 			{
@@ -441,7 +445,10 @@ World.initEditor = function()
 						callback: function(objects){
 							$.each(objects, function(idx, obj){
 								if(!obj.phantom)
+								{
 									World.removeObject(obj);
+									World._editor.unsaved_changes = true;
+								}
 							});
 						}
 					});
@@ -459,6 +466,7 @@ World.initEditor = function()
 						this.x + we.selectionOffsetX,
 						this.y + we.selectionOffsetY,
 						this.z + we.selectionOffsetZ);
+					World._editor.unsaved_changes = true;
 				}
 			}
 			
@@ -600,39 +608,46 @@ World.initEditor = function()
 					
 					var p = [g.x,g.y,g.z];
 					var s = [Math.ceil(g.bx),Math.ceil(g.by),Math.ceil(g.bz)];
-					p[ax] += mind * this.surface.axis[ax];
-					s[ax] = 1;
+					p[ax] += (mind+[g.bx,g.by,g.bz][ax]/2) * this.surface.axis[ax] / 2;
+					s[ax] = mind-[g.bx,g.by,g.bz][ax]/2;
 					this.surface.setPos(p);
 					this.surface.setSize(s);
-					this.surface.hidden = first; // hide if nothing was found..
+					this.surface.hidden = first||this.dirty; // hide if nothing was found or still have a render graph to rebuild..
 				}
 			});
 
 			if(this.hidden)
 			{
 				// Just to make sure we're out of sight..
-				this.setPos([g.x,g.y,g.z+100]);
-				this.setSize([0,0,0]);
 				return;
 			}
 
 			var focus = World2Screen(World._cameraPosX, World._cameraPosY, World._cameraPosZ);
 			
-			for(var zz = 0; zz < this.bz || zz==0; zz+=1)
-			for(var yy = 0; yy < this.by || yy==0; yy+=1)
-			for(var xx = 0; xx < this.bx || xx==0; xx+=1)
+			size = [this.bx,this.by,this.bz];
+			pos = [this.x,this.y,this.z];
+			
+			var ax = (this.axis[0]!=0)?0:(this.axis[1]!=0?1:2);
+			pos[ax] += this.axis[ax]*size[ax]/2;
+			size[ax] = 1;
+			
+			for(var zz = 0; zz < size[2] || zz==0; zz+=1)
+			for(var yy = 0; yy < size[1] || yy==0; yy+=1)
+			for(var xx = 0; xx < size[0] || xx==0; xx+=1)
 			{
-			var coords = World2Screen(this.x+xx-this.bx/2, this.y+yy-this.by/2, this.z+zz-this.bz/2);
-			coords.x += 320-focus.x;
-			coords.y += 240-focus.y;
-			draw({
-				x: coords.x, 
-				y: coords.y, 
-				tilex: this.tilex, 
-				tiley: 11,
-				src: World._editor.tileset.image
-			});
+				var coords = World2Screen(pos[0]+xx-size[0]/2, pos[1]+yy-size[1]/2, pos[2]+zz-size[2]/2);
+				coords.x += 320-focus.x;
+				coords.y += 240-focus.y;
+				draw({
+					x: coords.x, 
+					y: coords.y, 
+					tilex: this.tilex, 
+					tiley: 11,
+					src: World._editor.tileset.image
+				});
 			}
+			
+			World.drawHighlight(this);
 		}
 	});
 	var layer = World.createObject('E_layer', [0,0,0.5], {

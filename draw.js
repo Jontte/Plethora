@@ -92,8 +92,17 @@ World.drawHighlight = function(obj)
 	
 	ctx.globalAlpha = 0.5;
 	
+	var o = {
+		x: obj.x,
+		y: obj.y,
+		z: obj.z,
+		bx: obj.bx,
+		by: obj.by,
+		bz: obj.bz
+	};
+	
 	var focus = World2Screen(World._cameraPosX, World._cameraPosY, World._cameraPosZ);
-	var coords = Cuboid2Screen(obj.x, obj.y, obj.z, obj.bx, obj.by, obj.bz);
+	var coords = Cuboid2Screen(o.x, o.y, o.z, o.bx, o.by, o.bz);
 	
 	coords.x += 320-focus.x;
 	coords.y += 240-focus.y;
@@ -101,22 +110,21 @@ World.drawHighlight = function(obj)
 	ctx.fillStyle = 'yellow';
 	ctx.lineWidth = 2;
 	ctx.strokeStyle = 'yellow';
-//	ctx.fillRect(coords.x, coords.y, coords.w, coords.h);
 	
 	// Find origin:
 	var zero = {
-		x: (obj.by)*16,
-		y: (obj.bz-1)*16
+		x: (o.by)*16,
+		y: (o.bz-1)*16
 	};
 	
 	var corners = [
 		[zero.x, 0],
-		[coords.w, 8*obj.bx],
-		[coords.w-zero.x, 8*(obj.bx+obj.by)],
-		[0, 8*obj.by],
-		[0, 8*obj.by + obj.bz*16],
-		[coords.w-zero.x, 8*(obj.bx+obj.by) + obj.bz*16],
-		[coords.w, 8*obj.bx+obj.bz*16]
+		[coords.w, 8*o.bx],
+		[coords.w-zero.x, 8*(o.bx+o.by)],
+		[0, 8*o.by],
+		[0, 8*o.by + o.bz*16],
+		[coords.w-zero.x, 8*(o.bx+o.by) + o.bz*16],
+		[coords.w, 8*o.bx+o.bz*16]
 	];
 	for(var i = 0; i < 7; i++)
 	{
@@ -130,7 +138,6 @@ World.drawHighlight = function(obj)
 	ctx.lineTo(corners[2][0],corners[2][1]);
 	ctx.lineTo(corners[3][0],corners[3][1]);
 	ctx.closePath();
-//	ctx.fill();
 	ctx.stroke();
 	
 	ctx.beginPath();
@@ -139,7 +146,6 @@ World.drawHighlight = function(obj)
 	ctx.lineTo(corners[4][0],corners[4][1]);
 	ctx.lineTo(corners[5][0],corners[5][1]);
 	ctx.closePath();
-//	ctx.fill();
 	ctx.stroke();
 	
 	ctx.beginPath();
@@ -148,7 +154,6 @@ World.drawHighlight = function(obj)
 	ctx.lineTo(corners[5][0],corners[5][1]);
 	ctx.lineTo(corners[6][0],corners[6][1]);
 	ctx.closePath();
-	//ctx.fill();
 	ctx.stroke();
 	
 	ctx.restore();
@@ -191,7 +196,7 @@ World.drawSimpleObject = function(obj, transparency)
 
 	var focus = World2Screen(World._cameraPosX, World._cameraPosY, World._cameraPosZ);
 	var ctx = Graphics.ctx;
-	var coords = Cuboid2Screen(obj.x, obj.y, obj.z, obj.bx, obj.by, obj.bz);
+	var coords = Cuboid2Screen(obj.x, obj.y, obj.z, Math.ceil(obj.bx), Math.ceil(obj.by), Math.ceil(obj.bz));
 
 	coords.x += 320-focus.x;
 	coords.y += 240-focus.y;
