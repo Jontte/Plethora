@@ -171,7 +171,7 @@ World.initEditor = function()
 			var csz = Math.ceil(c.size[2]);
 			
 			// whether to allow compound objects being created from this class type
-			var allow_compound = !('init' in c)&&!('step' in c);
+			var allow_compound = !c.defaults.mass;
 			
 			Graphics.ctx.save();
 			
@@ -221,8 +221,8 @@ World.initEditor = function()
 				//this.z += Math.floor(c.size[2]/2);
 				//this.z -= (csz-c.size[2])/2;
 			}
-			this.x += (c.size[0]-1)/2;
-			this.y += (c.size[1]-1)/2;
+			this.x += (csx-1)/2;
+			this.y += (csy-1)/2;
 			this.z += c.size[2]/2;
 
 			// round x and y up..
@@ -274,7 +274,7 @@ World.initEditor = function()
 				}
 			}
 			
-			/*ctx.fillStyle    = '#000';
+			ctx.fillStyle    = '#000';
 			ctx.font         = '16px sans-serif';
 			ctx.textAlign = 'left';
 			ctx.textBaseline = 'top';
@@ -282,7 +282,7 @@ World.initEditor = function()
 
 			ctx.fillText  ('mx,my: ('+focus.x+', '+focus.y+')', 30, 120);
 			ctx.fillText  ('c.bx,by,bz: ('+JSON.stringify(c.size)+')', 30, 150);
-			*/
+			
 			Graphics.ctx.restore();
 			if(wec.open)
 			{
@@ -599,7 +599,7 @@ World.initEditor = function()
 					}
 					
 					var p = [g.x,g.y,g.z];
-					var s = [g.bx,g.by,g.bz];
+					var s = [Math.ceil(g.bx),Math.ceil(g.by),Math.ceil(g.bz)];
 					p[ax] += mind * this.surface.axis[ax];
 					s[ax] = 1;
 					this.surface.setPos(p);
@@ -618,6 +618,7 @@ World.initEditor = function()
 
 			var focus = World2Screen(World._cameraPosX, World._cameraPosY, World._cameraPosZ);
 
+			debugger;
 			
 			for(var zz = 0; zz < this.bz || zz==0; zz+=1)
 			for(var yy = 0; yy < this.by || yy==0; yy+=1)

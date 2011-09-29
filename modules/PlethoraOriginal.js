@@ -1,6 +1,6 @@
 /*
  * PlethoraOriginal module
- * Version 1.0
+ * Version 1.1
 */
 
 World.addModule('PlethoraOriginal',
@@ -20,7 +20,9 @@ World.addModule('PlethoraOriginal',
 			category: 'obstacles',
 			tiles: [8,3],
 			size: [3,1,3],
-			init: function(params){params.mass = 9;}
+			defaults: {
+				mass: 20
+			}
 		});
 		World.addClass('bigpillar', {
 			tileset: plethora_original,
@@ -35,7 +37,9 @@ World.addModule('PlethoraOriginal',
 			tiles : [5,1],
 			shape: World.CYLINDER,
 			size: [0.5,0.5,0.5],
-			init: function(params){params.mass = 0.2;}
+			defaults: {
+				mass: 0.2
+			}
 		});
 		World.addClass('dude',
 		{
@@ -50,13 +54,11 @@ World.addModule('PlethoraOriginal',
 			shape: World.CYLINDER,
 			size: [0.9,0.9,2],
 			category: 'characters',
+			defaults: {
+				mass: 1
+			},
 			init: function(params){
 				if(typeof(params) != 'object')params = {};
-				if(!('allowjump' in params))
-					params.allowjump=true;
-				
-				params.fixed = false;
-				params.mass = 1;
 				
 				this.walkx = this.walky = 0;
 				this.jumping = true;
@@ -66,7 +68,6 @@ World.addModule('PlethoraOriginal',
 				if(!World._editor.online)
 					World.setCameraFocus(this);
 		
-				this.allowjump = params.allowjump;
 				this.collision_listener = function(self, other, nx, ny, nz, displacement){
 					if(nz>0)
 					{
@@ -155,14 +156,12 @@ World.addModule('PlethoraOriginal',
 			shape: World.CYLINDER,
 			size: [0.9,0.9,2],
 			category: 'characters',
+			defaults:{
+				mass: 1
+			},
 			init: function(params){	
-				params.fixed = false;
-				params.mass = 1;
-				
 				this.walkx = this.walky = 0;
-
 				this.frameMaxTicks=0;
-		
 				this.collision_listener = function(self, other, nx, ny, nz, displacement){
 					if(nz>0)
 					{
@@ -253,13 +252,13 @@ World.addModule('PlethoraOriginal',
 			tileset: plethora_original,
 			category: 'architecture',
 			tiles: [12,3],
-			size: [1,0.8,1]
+			size: [1,0.5,1]
 		});
 		World.addClass('sandfencey', {
 			tileset: plethora_original,
 			category: 'architecture',
 			tiles: [13,3],
-			size: [0.8,1,1]
+			size: [0.5,1,1]
 		});
 		World.addClass('sandblock', {
 			tileset: plethora_original,
@@ -273,6 +272,14 @@ World.addModule('PlethoraOriginal',
 			tiles: [[0,6],[1,6],[2,6],[3,6],[4,6],[5,6],[6,6],[7,6],[8,6],[9,6],[10,6],[11,6],[12,6],[13,6],[14,6],[15,6]],
 			category: 'transport',
 			flags: World.ANIMATED,
+			defaults: {
+				/*
+					Plethora currently does not support 'actors', aka objects that do not participate in collision response
+					We emulate one by having a large mass and manually setting position every frame
+					Ugly, but works well enough
+				*/
+				mass: 1000000
+			},
 			init : function(params)
 			{
 				this.frameMaxTicks = 0; // Disable automatic animation
@@ -283,7 +290,6 @@ World.addModule('PlethoraOriginal',
 				this.waitTicks = 0;
 				this.waitMaxTicks = 25;
 				this.animMaxTicks = 3; // ticks per frame
-				params.mass = 1000000;
 				this.hasGravity = false;
 				this.collideFixed = false;
 				this.startpos = [this.x,this.y,this.z];
@@ -347,19 +353,25 @@ World.addModule('PlethoraOriginal',
 			category: 'obstacles',
 			tiles: [2,1],
 			shape: World.CYLINDER,
-			init: function(params){params.mass = 1;}
+			defaults: {
+				mass: 1
+			}
 		});
 		World.addClass('crate', {
 			tileset: plethora_original,
 			category: 'obstacles',
 			tiles: [3,1],
-			init: function(params){params.mass = 1;}
+			defaults: {
+				mass: 1
+			}
 		});
 		World.addClass('famouscube', {
 			tileset: plethora_original,
 			category: 'misc',
 			tiles: [4,1],
-			init: function(params){params.mass = 1;}
+			defaults: {
+				mass: 1
+			}
 		});
 		World.addClass('shadow', {
 			tileset: plethora_original,
@@ -400,6 +412,9 @@ World.addModule('PlethoraOriginal',
 			], 
 			shape: World.BOX,
 			size: [1,1,0.5],
+			defaults: {
+				mass: 0
+			},
 			init: function(){
 				this.collision_listener = function(self, other, nx, ny, nz, displacement){
 					if(nz<0) {
@@ -424,14 +439,19 @@ World.addModule('PlethoraOriginal',
 			tileset: plethora_original,
 			category: 'misc',
 			tiles: [9,1],
-			init: function(params){params.mass = 1;}
+			defaults: {
+				mass: 1
+			}
 		});
 		World.addClass('redblock', {
 			tileset: plethora_original,
 			category: 'misc',
 			flags: World.ANIMATED,
 			tiles: [[8,2],[9,2],[10,2],[11,2],[12,2],[13,2],[14,2],[15,2]],
-			init: function(params){params.mass = 1;this.hasGravity = false;}
+			defaults: {
+				mass: 1
+			},
+			init: function(params){this.hasGravity = false;}
 		});
 		/*World.addClass('slope', {
 			tileset: plethora_original,

@@ -67,9 +67,6 @@ $(document).ready(function(){
 					Config.level_cache[data.id] = level;
 					delete Config.level_cache[oldid];
 				}
-				
-				Config.level_table.reload();
-				
 				showSuccessToast('Level saved!');
 			}
 		})

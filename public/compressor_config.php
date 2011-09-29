@@ -39,7 +39,7 @@ $compressorGroups = array(
 			'../world.js',
 			'../draw.js',
 			'../editor.js',
-			'../collision.js',
+			'../physics.js',
 			'../audio.js',
 			'../main.js',
 			'../modules/PlethoraOriginal.js'
