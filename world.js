@@ -223,6 +223,8 @@ World = {
 		obj.x = pos[0];
 		obj.y = pos[1];
 		obj.z = pos[2];
+
+		obj.direction = options.direction||0;
 		
 		if('init' in obj.shape)
 			obj.shape.init.call(obj, options);
@@ -796,7 +798,7 @@ World = {
 				// Here we check a couple of basic parameters and see if they've been changed from their default values.. if so, include them
 				if(o.mass != (c.defaults.mass||0))
 					features.mass = o.mass;
-				if(o.flags & World.DIRECTED && o.direction != 0)
+				if((c.flags & World.DIRECTED) && o.direction != 0)
 					features.direction = o.direction;
 				
 				var cur = {

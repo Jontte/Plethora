@@ -266,7 +266,10 @@ World.addModule('PlethoraOriginal',
 			tileset: sandblock_samples,
 			category: 'terrain',
 			flags: World.ANIMATED_RANDOM,
-			tiles: [[0,0],[1,0],[2,0],[3,0],[4,0],[5,0],[6,0],[7,0]]
+			tiles: [[0,0],[1,0],[2,0],[3,0],[4,0],[5,0],[6,0],[7,0]],
+			init: function(){
+				this.frameMaxTicks=0; // disable animation
+			}
 		});
 		
 		World.addClass('lift', {
