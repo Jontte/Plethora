@@ -74,16 +74,15 @@ World.addModule('PlethoraOriginal',
 					if(nz>0)
 					{
 						// Note that we have to limit the jumps to once per frame..
-						var mult = 1;
 						var jump = 0.35*(self.jumping);
 						self.jumping = false;
 						return {
-							vx: self.walkx*mult,
-							vy: self.walky*mult,
+							vx: self.walkx,
+							vy: self.walky,
 							vz: 0,
 							fx: 0,
 							fy: 0,
-							fz: jump*mult,
+							fz: jump,
 							friction: 1
 						};
 					}
@@ -220,8 +219,8 @@ World.addModule('PlethoraOriginal',
 					movement_y *= d/dd;
 				}
 
-				this.walkx = movement_x - this.vx/20;
-				this.walky = movement_y - this.vy/20;
+				this.walkx = movement_x;
+				this.walky = movement_y;
 				
 				var comp = [Math.abs(movement_x), Math.abs(movement_y)];
 				if(comp[0] > comp[1])
@@ -271,6 +270,12 @@ World.addModule('PlethoraOriginal',
 				this.frameMaxTicks=0; // disable animation
 			}
 		});
+		/*World.addClass('big_tile', {
+			tileset: plethora_original,
+			category: 'terrain',
+			size: [2,2,1],
+			tiles: [14,4.5]
+		});*/
 		
 		World.addClass('lift', {
 			tileset: plethora_original,
@@ -458,11 +463,11 @@ World.addModule('PlethoraOriginal',
 			},
 			init: function(params){this.hasGravity = false;}
 		});
-		/*World.addClass('slope', {
+		/*World.addClass('greenslope', {
 			tileset: plethora_original,
 			category: 'terrain',
 			flags: World.DIRECTED,
-			tiles: [[4,9],[5,8],[4,8],[4,10]], 
+			tiles: [[0,9],[1,8],[0,8],[0,10]], 
 			shape: World.SLOPE
 		});*/
 	}

@@ -107,6 +107,41 @@ function Screen2WorldXY(x,y,z)
 	return obj;
 }
 
+// Rotate given vector around Z axis N degrees
+function RotateVectorZ(vector, degrees)
+{
+	// To avoid rounding errors in common cases, we handle them separately:
+	if(degrees == 90 || degrees == -270)
+	{
+		var v = vector[0];
+		vector[0] = -vector[1];
+		vector[1] = v;
+		return;
+	}
+	else if(degrees == 180 || degrees == -180)
+	{
+		vector[0] = -vector[0];
+		vector[1] = -vector[1];
+		return;
+	}
+	else if(degrees == 270 || degrees == -90)
+	{
+		var v = vector[0];
+		vector[0] = vector[1];
+		vector[1] = -v;
+		return;
+	}
+	if(degrees == 0 || degrees == 360 || degrees == -360) return;
+
+	var len = Math.sqrt(vector[0]*vector[0]+vector[1]*vector[1]);
+	var dir = Math.atan2(vector[1],vector[0]);
+	
+	dir += degrees / 180.0 * Math.PI;
+	
+	vector[0] = len * Math.cos(dir);
+	vector[1] = len * Math.sin(dir);
+}
+
 if(!window.console)window.console = {};
 if(!window.console.log)window.console.log = function(){};
 if(!window.console.time)window.console.time = function(){};

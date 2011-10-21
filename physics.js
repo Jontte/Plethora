@@ -537,7 +537,74 @@ World._registerCollider = function(type1, type2, fn)
 	}
 	var CylinderSlopeCollision = function (cyl, slope)
 	{
-		return [];
+		var plane = [slope.shape.plane[0],slope.shape.plane[1],slope.shape.plane[2]];
+		
+		// If the slope is directed, rotate the plane vector..
+		if(slope.shape.flags & World.DIRECTED)
+			RotateVectorZ(plane, slope.direction*90+90);
+
+		// Collide with a cube
+		// Apply some collision filtering
+		// Add collisions of our own if necessary
+		// ???
+		// Profit
+		
+		var cols = BoxCylinderCollision(cyl,slope);
+		
+		var dx = cyl.x-slope.x;
+		var dy = cyl.y-slope.y;
+		var dz = cyl.z-slope.z;
+
+		// See on which side the cylinder is on?
+		var dotp = dx*plane[0]+dy*plane[1]+dz*plane[2];
+		if(dotp >= 0)
+		{
+			// collide with plane...
+			// select top or bottom cylinder cap?
+			var mult = plane[2]>0?1:-1;
+			
+			var ellipse = [cyl.x,cyl.y,cyl.z - cyl.bz/2 * mult];
+			var w = cyl.bx/2;
+			var h = cyl.by/2;
+			var point = [ellipse[0], ellipse[1], ellipse[2]];
+			
+			var dir = [plane[0],plane[1]];
+			if(plane[0] != 0 || plane[1] != 0)
+			{
+				// find point from ellipse that is closest to plane
+				var d = Math.sqrt(dir[0]*dir[0]+dir[1]*dir[1]);
+				debugger;
+				dir[0]*=w/d;
+				dir[1]*=h/d;
+				point[0] -= dir[0];
+				point[1] -= dir[1];
+			}
+			
+			dx = point[0]-slope.x;
+			dy = point[1]-slope.y;
+			dz = point[2]-slope.z;
+			
+			var dist = (dx*plane[0]+dy*plane[1]+dz*plane[2])/Math.sqrt(dx*dx+dy*dy+dz*dz);
+			var treshold = 0.1;
+//			if(dist < -treshold)return cols;
+			if(dist < treshold)
+			{
+				// collision.. 
+				// if the closest point is close to the boundary, act as a box instead..
+				var cpoint = [dx+dist*plane[0],dy+dist*plane[1],dz+dist*plane[2]];
+			debugger;	
+				if(	Math.abs(cpoint[0])>slope.bx/2 ||
+					Math.abs(cpoint[1])>slope.by/2 ||
+					/*Math.abs*/(cpoint[2])>slope.bz/2)
+					return cols;
+
+				return [new World.Collision(plane[0],plane[1],plane[2],-(dist-treshold))];
+			}
+			
+			return [];
+		}
+		else 
+			return cols;
 	}
 	var SlopeSlopeCollision = function (slope1, slope2)
 	{

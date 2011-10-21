@@ -25,9 +25,9 @@ World.initEditor = function()
 		internal: true, // prevents visibility in class browser
 		init: function()
 		{
-			this.bx = 15;
-			this.by = 15;
-			this.bz = 0;
+			this.bx = 1;
+			this.by = 1;
+			this.bz = 1;
 		},
 		step: function()
 		{
@@ -52,14 +52,9 @@ World.initEditor = function()
 				focus = World2Screen(World._cameraPosX, World._cameraPosY, World._cameraPosZ);
 				var pos = Screen2WorldXY(World.mouseX+focus.x-320, World.mouseY+focus.y-240, this.z-0.5);
 				
-				var prev = [this.x, this.y];
-				this.x = pos.x;
-				this.y = pos.y;
-				if(this.x != prev[0] || this.y != prev[1])
-					this.dirty = true;
+                this.setPos(pos.x, pos.y, this.z);
 			
 				// This object will control the alpha of all other objects..
-			
 				for(var i = 0; i < World._objects.length; i++)
 				{
 					var o = World._objects[i];
@@ -70,33 +65,6 @@ World.initEditor = function()
 				}
 			}
 			// fill screen with transparent tiling...
-			
-			Graphics.ctx.save();
-			
-			for(var x = 0; x < 15; x++)
-			for(var y = 0; y < 15; y++)
-			{
-				var d = Math.sqrt(Math.pow(x-7,2)+Math.pow(y-7,2));
-				var alpha = 1.0-d/8;
-				if(alpha < 0)alpha = 0;
-				Graphics.ctx.globalAlpha = alpha/2;
-				var coords = World2Screen(this.x+x-7, this.y+y-7, this.z);
-
-				coords.x += 320-focus.x;
-				coords.y += 240-focus.y;
-				
-				var c = [1,11];
-				if(x == 7 && y == 7)
-					c = [2,11];
-				draw({
-					x: coords.x, 
-					y: coords.y, 
-					tilex: c[0], 
-					tiley: c[1], 
-					src: World._editor.tileset.image
-				});
-			}
-			Graphics.ctx.restore();
 		}
 	});
 	/* This class is a phantom that appears under mouse cursor*/

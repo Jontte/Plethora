@@ -198,6 +198,19 @@ World = {
 		if(!('tiles' in params) && !params.internal)throw 'Class definition '+id+' missing tiles attribute';
 		if(!('defaults' in params))params.defaults = {};
 		
+		if(params.shape == World.SLOPE)
+		{
+			// If the shape is a World.SLOPE, add the default plane normal
+			if(!('plane' in params))
+				params.plane = [-1,0,1];
+			// We also normalize the normal here..
+			var p = params.plane;
+			var len = p[0]*p[0]+p[1]*p[1]+p[2]*p[2];
+			p[0]/=len;
+			p[1]/=len;
+			p[2]/=len;
+		}
+		
 		params.id = id;
 		World._classes[id] = params;
 	},
@@ -223,7 +236,6 @@ World = {
 		obj.x = pos[0];
 		obj.y = pos[1];
 		obj.z = pos[2];
-
 		obj.direction = options.direction||0;
 		
 		if('init' in obj.shape)
