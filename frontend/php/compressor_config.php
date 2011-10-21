@@ -59,6 +59,7 @@ $compressorGroups = array(
 );
 
 // Fill omitted values
+$cacheDir = "../$cacheDir";
 foreach ( $compressorGroups as $groupName => &$group ){
 	foreach ( $group['files'] as &$file ){
 		if ( !is_array($file) )

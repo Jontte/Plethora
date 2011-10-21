@@ -1,7 +1,6 @@
 <?php
 
 require_once('../php/compressor_config.php');
-$cacheDir = '../'.$cacheDir;
 
 // Allow pass through to enable inclusion of files outside wwwroot
 if ( !empty($_GET['passthru']) ){
