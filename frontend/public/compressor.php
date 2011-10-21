@@ -76,10 +76,6 @@ foreach ( $group['files'] as &$file ){
 				}
 			break;
 			case 'css':
-				// Update relative paths
-				if ( $path != '.' )
-					$source = preg_replace('#url\\((["\'])?([^"\'\\)]+)["\']?\\)#i', 'url($1'.$path.'/$2$3)', $source);
-
 				$source = str_replace(array("\r", "\n"), '', $source); // remove newlines
 				$source = preg_replace('#/\\*.*?\\*/|\\s*([{};,])\\s*|(:)\\s+#', '$1$2', $source); // remove comments, and whitespace around { } ; , and after :
 				$source = str_replace('}', "}\n", $source); // add newlines after blocks

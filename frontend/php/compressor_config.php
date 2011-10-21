@@ -49,11 +49,11 @@ $compressorGroups = array(
 			array(
 				'path' => 'css/third_party/jquery-ui-1.8.12.custom.css',
 				'preProcessor' => function($str){
-					return preg_replace('/url\\(images\\//', 'url(../../public/img/third_party/redmond/', $str);
+					return preg_replace('/url\\(images\\//', 'url(img/third_party/redmond/', $str);
 				}
 			),
 			'css/third_party/jquery.toastmessage.css',
-			'css/third_party/DataTables-1.8.2/table.css'
+			'css/third_party/dataTables.css'
 		)
 	)
 );
