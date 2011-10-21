@@ -1,7 +1,7 @@
 <?php
 
-require_once('config.php');
-require_once('compressor_config.php');
+require_once('../php/config.php');
+require_once('../php/compressor_config.php');
 
 ?><!DOCTYPE html>
 <html>
@@ -12,7 +12,7 @@ require_once('compressor_config.php');
 		<!-- Crude canvas support for IE family browsers. Many thanks to Google.-->
 		<!--[if IE]><script type="text/javascript" src="excanvas.js"></script><![endif]-->
 		
-		<script type="text/javascript" src="less/less-1.1.3.min.js"></script>
+		<script type="text/javascript" src="less-1.1.3.min.js"></script>
 		
 		<script type="text/javascript">
 			var recaptchaPublicKey = '<?php echo $plethora_recaptcha['public']; ?>';
@@ -162,7 +162,7 @@ require_once('compressor_config.php');
 
 					<div id="worksbestwith">
 						<a href="http://www.google.com/chrome">
-							<img src="worksbestwith.png" alt="Works best with Google Chrome" />
+							<img src="img/worksbestwith.png" alt="Works best with Google Chrome" />
 						</a>
 					</div>
 				</div>
@@ -173,7 +173,7 @@ require_once('compressor_config.php');
 					<p>Plethora is likely to perform very poorly on your web browser. This may result into crashes and instability in your system. Are you sure you want to continue?</p>
 					<input type="submit" value="Yes!" onclick="reset('yes')" />
 					<input type="submit" value="No!" onclick="document.location = 'http://www.google.com/chrome/';" />
-					<div><img src="plethora.jpg" /></div>
+					<div><img src="img/plethora.jpg" /></div>
 				</div>
 				<canvas id="canvas" width="640" height="480" class="ui-corner-right">
 					<h2>You browser doesn't support the new HTML5 &lt;canvas&gt; element.</h2>

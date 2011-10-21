@@ -1,6 +1,6 @@
 *~
-public/ga_tracker.php
-public/config.php
+frontend/public/ga_tracker.php
+frontend/php/config.php
 
 # NetBeans IDE files
 /nbproject/

@@ -1,7 +1,7 @@
 <?php
 
-require_once('config.php');
-require_once('recaptchalib.php');
+require_once('../php/config.php');
+require_once('../php/third_party/recaptchalib.php');
 
 if ( isset($_REQUEST['plaintext']) )
 	header('Content-type: text/plain');
