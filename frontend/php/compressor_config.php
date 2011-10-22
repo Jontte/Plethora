@@ -40,7 +40,8 @@ $compressorGroups = array(
 			'../engine/physics.js',
 			'../engine/audio.js',
 			'../engine/main.js',
-			'../engine/modules/PlethoraOriginal.js'
+			'../engine/modules/PlethoraOriginal.js',
+			'../engine/modules/TubeWorks.js'
 		)
 	),
 	'css' => array(

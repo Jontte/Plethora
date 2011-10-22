@@ -5,11 +5,11 @@
 
 World.addModule('PlethoraOriginal',
 {
-	preload: ['img/tileset.png'],
+	preload: ['img/mod_original.png'],
 	load : function()
 	{
 		// Load tiles and graphics
-		var plethora_original = World.addTileset('img/tileset.png');
+		var plethora_original = World.addTileset('img/mod_original.png');
 		var sandblock_samples = World.sampleTiles(plethora_original, 8, [[12,4],[12,5],[13,4],[13,5]]);
 		
 		World.addClass('groundplain', {

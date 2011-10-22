@@ -716,21 +716,31 @@ World = {
 	},
 	loadLevel : function(levelname, json, use_editor, onload_callback)
 	{
-		var module = World._modules[json.module];
-		if(!module)
+		// Backward compability
+		var module_list = json.modules?json.modules.slice():[json.module];
+		for(var i = 0; i < module_list.length; i++)
 		{
-			showErrorToast('Module was not found');
-			return;
+			var module = World._modules[module_list[i]];
+			if(!module)
+			{
+				showErrorToast('Module '+module_list[i]+' was not found');
+				// TODO: error callback or somethin ?
+				return;
+			}
+			module_list[i] = module;
 		}
 		World.reset();
 		
 		World._level = levelname;
 		World._editor.online = use_editor;
 		
+		
 		function finish_preloading() {
-			// Now that preloads are done, let's call the module's setup func that creates classes, etc
+			// Now that preloads are done, let's call each module's setup func that creates classes, etc
+			// TODO: The modules may have dependencies to each other, gotta be careful when calling module.load() for each of them
 			
-			module.load();
+			for(var i = 0; i < module_list.length; i++)
+				module_list[i].load();
 			
 			// Check version:
 			if(!('version' in json))
@@ -770,22 +780,45 @@ World = {
 			onload_callback(); // pass control back to main.js or whoever called loadLevel
 		}
 	
-		World.preload_counter = module.preload.length;
-
+		// Get rid of duplicates by storing images temporarily in an object by their src
+		var sources = {
+			'img/editor.png': 1 // Always load editor graphics
+		};
+		for(var i = 0; i < module_list.length; i++)
+		{
+			var m = module_list[i];
+			for(var a = 0; a < m.preload.length; a++)
+			{
+				var p = m.preload[a];
+				sources[p] = 1;
+			}
+		}
+		// Count number of unique srcs..
 		// Add image objects to World.preload and setup onload handlers
 		// Last callback that gets called calls finish_preloading()
-		for(var i = 0; i < module.preload.length; i++)
+		World.preload_counter = 0;
+		for(var i in sources)
 		{
-			var src = module.preload[i];
+			// Can't combine these loops.. what if preload_counter reaches 0 while it is being run?
+			if(!sources.hasOwnProperty(i))
+				continue;
+			World.preload_counter ++;
+		}
+		for(var i in sources)
+		{
+			if(!sources.hasOwnProperty(i))
+				continue;
+			
+			var src = i;
 			var img = new Image();
 			img.onload = function(){
 				if(--World.preload_counter == 0)
 					finish_preloading();
 			}
-			img.src = src; // launches loading
+			img.src = src; // launch loading
 			World.preload[src] = img;
 		}
-
+		
 		// TODO: If we were to show a progress indicator or anything we would set it here and clear it in finish_preloading
 	},
 	saveLevel: function()
@@ -794,7 +827,7 @@ World = {
 		// Dump all objects and settings to a single json
 		var objects = [];
 		var json = {
-			module: 'PlethoraOriginal', // Hardcoded for now
+			modules: ['PlethoraOriginal','TubeWorks'], // Hardcoded for now
 			version: '1', // we want to be able to load older level formats as well..
 			objects: objects	
 		};

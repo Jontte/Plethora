@@ -16,7 +16,7 @@ World.addScan = function(opts){
 World.initEditor = function()
 {
 	World._editor.scans = [];
-	World._editor.tileset = World.addTileset('tileset.png');	
+	World._editor.tileset = World.addTileset('img/editor.png');	
 	
 	/* This class is the grid that appears below the current editing height */
 	/* It also controls the visibility of other objects */
@@ -223,8 +223,8 @@ World.initEditor = function()
 					draw({
 						x: coords.x,
 						y: coords.y,
-						tilex: 3,
-						tiley: 11,
+						tilex: 2,
+						tiley: 1,
 						src: we.tileset.image
 					});
 				}
@@ -316,8 +316,8 @@ World.initEditor = function()
 								draw({
 									x: coords.x,
 									y: coords.y, 
-									tilex: 4, 
-									tiley: 11, 
+									tilex: 0, 
+									tiley: 0, 
 									src: we.tileset.image,
 									tilew: 32,
 									tileh: 32
@@ -334,8 +334,8 @@ World.initEditor = function()
 								draw({
 									x: coords.x,
 									y: coords.y, 
-									tilex: 5, 
-									tiley: 11, 
+									tilex: 1, 
+									tiley: 0, 
 									src: we.tileset.image,
 									tilew: 32,
 									tileh: 32
@@ -352,8 +352,8 @@ World.initEditor = function()
 								draw({
 									x: coords.x,
 									y: coords.y, 
-									tilex: 6, 
-									tiley: 11, 
+									tilex: 2, 
+									tiley: 0, 
 									src: we.tileset.image,
 									tilew: 32,
 									tileh: 32
@@ -501,7 +501,7 @@ World.initEditor = function()
 				x: coords.x, 
 				y: coords.y, 
 				tilex: frame, 
-				tiley: 7, 
+				tiley: 2, 
 				src: World._editor.tileset.image
 			});
 		}
@@ -514,8 +514,8 @@ World.initEditor = function()
 		{
 			this.axis = params.axis;
 			this.tilex = 
-				(this.axis[2] != 0)?7:(
-				(this.axis[1] != 0)?8:9);
+				(this.axis[2] != 0)?3:(
+				(this.axis[1] != 0)?4:5);
 			this.hidden = true;
 		},
 		step: function()
@@ -610,7 +610,7 @@ World.initEditor = function()
 					x: coords.x, 
 					y: coords.y, 
 					tilex: this.tilex, 
-					tiley: 11,
+					tiley: 0,
 					src: World._editor.tileset.image
 				});
 			}
@@ -857,7 +857,7 @@ World.editorStep = function()
 		//ctx.fillText  ('Mouse: '+World.mouseX + ', ' + World.mouseY, 0,0);
 		if(Key.get(MOUSE_LEFT) && Key.changed(MOUSE_LEFT))
 		{
-			var dy = Math.floor((World.mouseY - 240) / 32);
+			var dy = Math.floor((World.mouseY - 240) / 32);  
 			var dx = Math.floor((World.mouseX - 320) / 32);
 
 			// its important we change category first...
@@ -934,7 +934,7 @@ World.editorStep = function()
 				var c = wec.classes[y][x];
 				
 				var tx = wrap(x-wec.selectedClass[y], wec.classes[y].length);
-				var ty = wrap(y-wec.selectedCategory+Math.floor(wec.classes.length/2), wec.classes.length)-Math.round(wec.classes.length/2);
+				var ty = wrap(y-wec.selectedCategory+Math.floor(wec.classes.length/2), wec.classes.length)-Math.floor(wec.classes.length/2);
 				
 				tx = tx*32+320;
 				ty = ty*32+240;
