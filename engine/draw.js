@@ -233,7 +233,7 @@ World.sampleTiles = function(source, target_count, source_tiles)
 	var c = document.createElement('canvas');
 	c.width = w;
 	c.height = h;
-	$('#cache').append(c);
+	$(World._cache).append(c);
 	var ctx = c.getContext('2d');
 	
 	var imagedata = ctx.getImageData(0,0,w,h);

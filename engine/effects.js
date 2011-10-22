@@ -24,7 +24,7 @@ Clouds: function(x, y, w, h)
 	this.canvas = document.createElement('canvas');
 	this.canvas.width = w+40;
 	this.canvas.height = h+40;
-	$('#cache').append(this.canvas);
+	$(World._cache).append(this.canvas);
 	var ctx = this.canvas.getContext('2d');
 	
 	var bubblecount = (Math.floor(Math.random()*3)+4);

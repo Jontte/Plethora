@@ -45,6 +45,7 @@ World = {
 		unsaved_changes: false
 	},
 	_ctx: null, // Handle to the graphics context of the main canvas
+	_cache: null, // Reference to a hidden div where canvases can be stored on the fly
 	mouseX: 0,
 	mouseY: 0,
 	background: { // Background rendering
@@ -137,6 +138,19 @@ World = {
 			return a.z < b.z;
 		}
 	},
+	init : function(render_elem, cache_elem)
+	{
+		// Called before any other method.
+		// Params: 
+		// 1. canvas element where the whole shebang is drawn
+		// 2. a hidden div where on-the-fly-created canvases can be stored
+
+		World._ctx = render_elem.getContext('2d');
+		World._cache = cache_elem;
+
+        // Register key manager
+        Key.register(render_elem);
+	},
 	reset : function()
 	{
 		// Note that modules are not reset as they are loaded during page load
@@ -155,10 +169,7 @@ World = {
 		World._classes = {};
 		World._level = '';
 		World._editor.unsaved_changes = false;
-		$('#cache').empty();
-
-		var canvas = document.getElementById('canvas');  
-		World._ctx = canvas.getContext('2d');
+		World._cache.innerHTML=''; // Clear the cache
 	},
 	setCameraFocus : function(obj)
 	{
@@ -182,7 +193,7 @@ World = {
 		var canvas = document.createElement('canvas');
 		canvas.setAttribute("width", width);
 		canvas.setAttribute("height", height);
-		$('#cache').append(canvas);
+		$(World._cache).append(canvas);
 		return {
 			image : canvas,
 			ctx : canvas.getContext('2d')

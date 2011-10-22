@@ -264,6 +264,7 @@ $(document).ready(function(){
 
 	
 	initiateSession();
+    World.init(document.getElementById('canvas'),document.getElementById('cache'));
 });
 
 /*
@@ -423,7 +424,6 @@ function initialize()
 	Graphics.ctx = canvas.getContext('2d');
 
 	// Start registering keyboard input
-	Key.register();
 
 	Config.gamestate = 'online';
 	Config.intervalID = setInterval(game_loop, 1000/Config.FPS);
