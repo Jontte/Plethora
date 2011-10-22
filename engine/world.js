@@ -44,6 +44,7 @@ World = {
 		proxy: [], // Separate object collision proxy for all objects in editor mode
 		unsaved_changes: false
 	},
+	_ctx: null, // Handle to the graphics context of the main canvas
 	mouseX: 0,
 	mouseY: 0,
 	background: { // Background rendering
@@ -155,6 +156,9 @@ World = {
 		World._level = '';
 		World._editor.unsaved_changes = false;
 		$('#cache').empty();
+
+		var canvas = document.getElementById('canvas');  
+		World._ctx = canvas.getContext('2d');
 	},
 	setCameraFocus : function(obj)
 	{
@@ -489,7 +493,7 @@ World = {
 	},
 	render : function()
 	{
-		var ctx = Graphics.ctx;
+		var ctx = World._ctx;
 //		console.time('render');
 
 		// Update camera position
@@ -631,7 +635,7 @@ World = {
 		for(var i = result.length-1;i >= 0; i--)
 			World.drawObject(result[i]);
 			
-		var ctx = Graphics.ctx;
+		var ctx = World._ctx;
 		// draw render graph...
 		/*ctx.beginPath();
 		ctx.lineWidth = 1;

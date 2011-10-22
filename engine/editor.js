@@ -131,7 +131,7 @@ World.initEditor = function()
 		},
 		step: function()
 		{
-			var ctx = Graphics.ctx;
+			var ctx = World._ctx;
 			var prevpos, prevsize;
 			prevpos = [this.x, this.y, this.z];
 			prevsize= [this.bx, this.by, this.bz];
@@ -145,7 +145,7 @@ World.initEditor = function()
 			// whether to allow compound objects being created from this class type
 			var allow_compound = !c.defaults.mass;
 			
-			Graphics.ctx.save();
+			World._ctx.save();
 			
 			var focus = World2Screen(World._cameraPosX, World._cameraPosY, World._cameraPosZ);
 
@@ -215,7 +215,7 @@ World.initEditor = function()
 				coords.x += 320-focus.x;
 				coords.y += 240-focus.y;
 			
-				Graphics.ctx.globalAlpha = 0.5;
+				World._ctx.globalAlpha = 0.5;
 			
 				
 				if(Key.get(MOUSE_LEFT) && we.selectedObject != null)
@@ -255,7 +255,7 @@ World.initEditor = function()
 			ctx.fillText  ('mx,my: ('+focus.x+', '+focus.y+')', 30, 120);
 			ctx.fillText  ('c.bx,by,bz: ('+JSON.stringify(c.size)+')', 30, 150);
 			*/
-			Graphics.ctx.restore();
+			World._ctx.restore();
 			if(wec.open)
 			{
 				we.drag.dragging = false;
@@ -699,7 +699,7 @@ World.initEditor = function()
 World.editorStep = function()
 {
 	var we = World._editor;
-	var ctx = Graphics.ctx;	
+	var ctx = World._ctx;	
 	
 	/* draw selection overlay .. */
 	

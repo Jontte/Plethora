@@ -8,7 +8,7 @@ function draw(opts)
 	// 
 	
 	// If no canvas context was specified, use the main canvas
-	if(typeof(opts.dest) == 'undefined')opts.dest = Graphics.ctx;
+	if(typeof(opts.dest) == 'undefined')opts.dest = World._ctx;
 	if(typeof(opts.tilew) == 'undefined')opts.tilew=32;
 	if(typeof(opts.tileh) == 'undefined')opts.tileh=32;
 	
@@ -28,7 +28,7 @@ World.drawBackground = function()
 		// Clears the screen with a suitable color, renders clouds, etc.			
 		// Update world sky color based on camera position
 		
-		var ctx = Graphics.ctx;
+		var ctx = World._ctx;
 		var h = World._cameraPosZ;
 		// Color at zero height
 		
@@ -87,7 +87,7 @@ World.drawObject = function(obj)
 World.drawHighlight = function(obj)
 {
 	// draw transparent coolish planes around the object to make it appear significant
-	var ctx = Graphics.ctx;
+	var ctx = World._ctx;
 	ctx.save();
 	
 	ctx.globalAlpha = 0.5;
@@ -195,7 +195,7 @@ World.drawSimpleObject = function(obj, transparency)
 	}
 
 	var focus = World2Screen(World._cameraPosX, World._cameraPosY, World._cameraPosZ);
-	var ctx = Graphics.ctx;
+	var ctx = World._ctx;
 	var coords = Cuboid2Screen(obj.x, obj.y, obj.z, Math.ceil(obj.bx), Math.ceil(obj.by), Math.ceil(obj.bz));
 
 	coords.x += 320-focus.x;
@@ -214,12 +214,12 @@ World.drawSimpleObject = function(obj, transparency)
 	
 	ctx.globalAlpha = 1;
 	
-/*	Graphics.ctx.strokeStyle = 'red';
+/*	World._ctx.strokeStyle = 'red';
 	
 	var rect = Cuboid2Screen(obj.x,obj.y,obj.z,obj.bx,obj.by,obj.bz);
 	rect.x += 320-focus.x;
 	rect.y += 240-focus.y;
-	Graphics.ctx.strokeRect(rect.x,rect.y,rect.w,rect.h);*/
+	World._ctx.strokeRect(rect.x,rect.y,rect.w,rect.h);*/
 };
 
 /*
