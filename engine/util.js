@@ -1,4 +1,30 @@
+function fillRightToLeft(/* target, source, ... */){
+	var args = Array.prototype.concat.apply([], arguments);
+	var first = args.shift() || {};
+	args.forEach(function(arg){
+		for ( var key in arg ){
+			if ( arg.hasOwnProperty(key) && first[key] === undefined )
+				first[key] = arg[key];
+		}
+	});
+	return first;
+}
 
+function debugWatch(obj, prop, breakOnSet){
+	var val = obj[prop];
+	delete obj[prop];
+	
+	obj.__defineGetter__(prop, function(){
+		return val;
+	});
+	obj.__defineSetter__(prop, function(newVal){
+		if ( breakOnSet )
+			debugger;
+		
+		val = newVal;
+		console.log(prop, 'set to', val);
+	});
+}
 
 function sign(x)
 {
@@ -276,23 +302,6 @@ $.extend({
   }
 });
 
-// wrap names to avoid code bloatage
-$.each(['showNoticeToast', 'showSuccessToast', 'showWarningToast', 'showErrorToast', 'showToast'], function(i, name){
-  window[name] = function(){
-	  $().toastmessage.apply(this, Array.prototype.concat.apply([name], arguments));
-  };
-});
-
-function createCaptcha(el, options){
-	if ( !options )
-		options = {};
-	if ( !options.theme )
-		options.theme = 'clean';
-	
-	el.empty();
-	Recaptcha.create(recaptchaPublicKey, el[0], options);
-}
-
 $.extend({
 	postJSON: function(a, b, c){
 		return $.post(a, b, c, 'json');
@@ -541,7 +550,3 @@ $.fn.dataTableExt.oApi.fnReloadAjax = function ( oSettings, sNewSource, fnCallba
 		}
 	}, oSettings );
 };
-
-function closeAllDialogs(){
-	$('.ui-dialog-content:visible').dialog('close');
-}

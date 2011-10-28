@@ -8,6 +8,17 @@ $compressorGroups = array(
 	'js' => array(
 		'type' => 'javascript',
 		'files' => array(
+			// Included directly
+			array(
+				'path' => 'js/third_party/excanvas.js',
+				'ignore' => true
+			),
+			array(
+				'path' => 'js/third_party/less-1.1.3.min.js',
+				'ignore' => true
+			),
+			
+			
 			'js/third_party/json2.js',
 			array(
 				'path' => 'js/third_party/recaptcha_ajax.js',
@@ -39,9 +50,14 @@ $compressorGroups = array(
 			'../engine/editor.js',
 			'../engine/physics.js',
 			'../engine/audio.js',
-			'../engine/main.js',
+
 			'../engine/modules/PlethoraOriginal.js',
-			'../engine/modules/TubeWorks.js'
+			'../engine/modules/TubeWorks.js',
+			
+			'js/main.js',
+			'js/dialogs.js',
+			'js/session.js',
+			'js/init.js'
 		)
 	),
 	'css' => array(
