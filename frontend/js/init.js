@@ -204,6 +204,32 @@ Frontend.init = function(dom){
 					})
 				)
 			)
+		).append(
+			$('<div>', {
+				'id': 'sidepanel-footer'
+			}).append(
+				(function(){
+					var els = [];
+					
+					[['about','About'], ['todo','TODO'], ['tech','Tech'], ['author','Author']].forEach(function(data){
+						els.push(
+							$('<span>', {
+								'text': data[1],
+								'click': function(){
+									var wasOpen = Frontend.dialogs[data[0]].isOpen();
+									
+									Frontend.dialogs.closeAll();
+									
+									if ( !wasOpen )
+										Frontend.dialogs[data[0]].open();
+								}
+							})[0]
+						);
+					});
+					
+					return els;
+				})()
+			)
 		)
 	).append(
 		Frontend.dom.gameArea =

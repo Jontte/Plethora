@@ -108,12 +108,14 @@ Frontend.Dialog.prototype.createDOM = function(){
 };
 
 Frontend.Dialog.prototype.open = function(){
-	var self = this;
+	if ( !this.dom )
+		this.createDOM();
 	
-	if ( !self.dom )
-		self.createDOM();
-	
-	return self.dom.dialog('open');
+	return this.dom.dialog('open');
+};
+
+Frontend.Dialog.prototype.isOpen = function(){
+	return this.dom && this.dom.dialog('isOpen');
 };
 
 
@@ -190,11 +192,11 @@ Frontend.dialogs = {
 	d.add('about', 'About', [
 		'Plethora is an isometric game engine written in pure Javascript. It utilizes the new HTML5 &lt;canvas&gt; tag that allows for pixel-perfect (and potentially hardware accelerated) drawing in the browser.',
 		'It was written as a proof of concept: With today\'s web browser JavaScript performance it is possible to perform simple dynamics simulation and collision detection.',
-		'Latest production version of Plethora can be found at <a href="http://github.com/Jontte/plethora">http://github.com/Jontte/plethora</a>. It is published under the three-clause BSD.'
+		'Latest production version of Plethora can be found at <a href="http://github.com/Jontte/plethora">its GitHub repository</a>. It is published under the three-clause BSD.'
 	]);
 	
 	d.add('tech', 'Technology', [
-		'Plethora utilizes a Bounding Interval Hierarchy for static object collision. An excellent implementation in Javascript can be found here: <a href="http://github.com/imbcmdth/jsBIH">http://github.com/imbcmdth/jsBIH</a>',
+		'Plethora utilizes a Bounding Interval Hierarchy for static object collision. An excellent implementation in Javascript can be found <a href="http://github.com/imbcmdth/jsBIH">here</a>.',
 		'Real time (WebSockets-powered) multiplayer features are planned.'
 	]);
 	

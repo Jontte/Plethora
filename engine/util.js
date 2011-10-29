@@ -22,7 +22,7 @@ function debugWatch(obj, prop, breakOnSet){
 			debugger;
 		
 		val = newVal;
-		console.log(prop, 'set to', val);
+		console.log(obj, '.'+prop, ' --> ', val);
 	});
 }
 

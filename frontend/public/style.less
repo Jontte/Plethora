@@ -206,6 +206,30 @@ html, body, #wrapper {
 			margin-right: 1em;
 		}
 	}
+	
+	#sidepanel-footer {
+		position: absolute;
+		bottom: 0.75em;
+		left: 0;
+		
+		width: 100%;
+		text-align: center;
+		font-size: 90%;
+		
+		> * {
+			.clickable;
+			
+			display: inline-block;
+			width: 25%;
+			
+			@color: darken(#2E6E9E, 15%);
+			color: @color;
+
+			&:hover {
+				color: lighten(@color, 15%);
+			}
+		}
+	}
 }
 
 #level-list_wrapper {
