@@ -2,16 +2,30 @@
 
 require_once('../php/compressor_config.php');
 
+$requestHeaders = function_exists('getallheaders') ? getallheaders() : null;
+
 // Allow pass through to enable inclusion of files outside wwwroot
 if ( !empty($_GET['passthru']) ){
 	foreach ( $compressorGroups as &$group ){
 		foreach ( $group['files'] as &$file ){
 			if ( $file['path'] == $_GET['passthru'] ){
 				header('Content-Type: text/'.$group['type']);
+				
+				$fileChanged = @filemtime('../'.$file['path']);
+				if ( $fileChanged ){
+					if ( $requestHeaders && is_array($requestHeaders) && array_key_exists('If-Modified-Since', $requestHeaders) && $fileChanged <= strtotime($requestHeaders['If-Modified-Since']) ){
+						header('Last-Modified: '.date('r', $fileChanged), true, 304); // 304 Not Modified
+						exit(0);
+					}
+					
+					header('Last-Modified: '.date('r', $fileChanged));
+				}
+				
 				if ( array_key_exists('preProcessor', $file) )
 					echo $file['preProcessor'](file_get_contents('../'.$file['path']));
 				else
 					readfile('../'.$file['path']);
+				
 				exit(0);
 			}
 		}
@@ -34,13 +48,32 @@ header('Content-Type: text/'.$group['type']);
 if ( $group['type'] == 'javascript' )
 	require_once('../php/third_party/JShrink-0.2.class.php');
 
+// Prepend ../ and remove ignored files
+foreach ( $group['files'] as $key => &$file ){
+	if ( $file['ignore'] )
+		unset($group['files'][$key]);
+	else
+		$file['path'] = '../'.$file['path'];
+}
+
+// Find newest modification time
+$newestChange = 0;
+foreach ( $group['files'] as &$file ){
+	$fileChanged = @filemtime($file['path']);
+	if ( $fileChanged > $newestChange )
+		$newestChange = $fileChanged;
+}
+
+// Send 304 if requested
+if ( $requestHeaders && is_array($requestHeaders) && array_key_exists('If-Modified-Since', $requestHeaders) && $newestChange <= strtotime($requestHeaders['If-Modified-Since']) ){
+	header('Last-Modified: '.date('r', $newestChange), true, 304); // 304 Not Modified
+	exit(0);
+}
+
+header('Last-Modified: '.date('r', $newestChange));
+
 // Go through files and compress the source
 foreach ( $group['files'] as &$file ){
-	if ( $file['ignore'] )
-		continue;
-	
-	$file['path'] = '../'.$file['path'];
-	
 	// Get file from cache if no changes were made since last time
 	$cacheChanged = @filemtime($file['cacheFile']);
 	$fileChanged = @filemtime($file['path']);
