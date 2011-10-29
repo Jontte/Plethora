@@ -6,7 +6,7 @@ require_once('../php/third_party/recaptchalib.php');
 if ( isset($_REQUEST['plaintext']) )
 	header('Content-type: text/plain');
 else
-	header('Content-type: text/json');
+	header('Content-type: application/json');
 
 function reqparam($key){
 	if ( isset($_REQUEST[$key]) )
