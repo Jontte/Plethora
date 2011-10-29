@@ -150,6 +150,14 @@ World = {
 
         // Register key manager
         Key.register(render_elem);
+				
+		// Start capturing mouse position...
+		$(render_elem).mousemove(function(e){
+			var x = e.pageX - this.offsetLeft;
+			var y = e.pageY - this.offsetTop;
+			World.mouseX = x;
+			World.mouseY = y;
+		}); 
 	},
 	reset : function()
 	{
@@ -326,6 +334,7 @@ World = {
 	},
 	removeObject : function(obj)
 	{
+		obj.zombie = true;
 		var idx = World._objects.indexOf(obj);
 		if(idx != -1)
 			World._objects.remove(idx);	
@@ -936,6 +945,7 @@ World.Entity.prototype.direction = 0;
 World.Entity.prototype.frame = 0; // current frame
 World.Entity.prototype.frameTick = 0; // current tick
 World.Entity.prototype.frameMaxTicks = 1; // ticks to reach until we switch to next frame (0 to disable animation)
+World.Entity.prototype.zombie = false; // whether this object is still managed by World or not. When zombie=true, all handles should be dropped..
 World.Entity.prototype.setPos = function(x,y,z)
 {
 	if(typeof(x)!='number')
