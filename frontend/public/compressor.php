@@ -2,7 +2,18 @@
 
 require_once('../php/compressor_config.php');
 
-$requestHeaders = function_exists('getallheaders') ? getallheaders() : null;
+if ( !function_exists('apache_request_headers') ){ 
+	function apache_request_headers(){
+		$out = array();
+		foreach ( $_SERVER as $key=>$value ){
+			if ( substr($key, 0, 5) == 'HTTP_' )
+				$key = str_replace(' ', '-', ucwords(strtolower(str_replace('_', ' ', substr($key, 5)))));
+			$out[$key] = $value;
+		}
+		return $out;
+	}
+}
+$requestHeaders = apache_request_headers();
 
 // Allow pass through to enable inclusion of files outside wwwroot
 if ( !empty($_GET['passthru']) ){
