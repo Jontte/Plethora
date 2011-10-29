@@ -521,7 +521,6 @@ $.fn.dataTableExt.oApi.fnReloadAjax = function ( oSettings, sNewSource, fnCallba
 	var iStart = oSettings._iDisplayStart;
 	
 	var dataProp = oSettings.sAjaxDataProp || 'aaData';
-	
 	oSettings.fnServerData( oSettings.sAjaxSource, [], function(json) {
 		/* Clear the old information from the table */
 		that.oApi._fnClearTable( oSettings );

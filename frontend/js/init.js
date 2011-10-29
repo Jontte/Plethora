@@ -61,6 +61,11 @@ Frontend.init = function(dom){
 						$(this).removeClass('list-open');
 					}
 					else{
+						// Reload level list, preserving open page
+						var settings = Frontend.dom.levelList.fnSettings();
+						Frontend.dom.levelList.oldPage = settings._iDisplayLength ? (settings._iDisplayStart/settings._iDisplayLength) : 0;
+						Frontend.dom.levelList.fnReloadAjax();
+						
 						Frontend.dom.levelListContainer.show('slide');
 						$(this).addClass('list-open');
 					}
@@ -320,9 +325,7 @@ Frontend.init = function(dom){
 						
 						setTimeout(function(){
 							Frontend.dom.levelList.dataTable({
-								'bProcessing': true,
 								'sAjaxSource': 'api.php?action=getLevelList',
-								'bJQueryUI': true,
 								'sPaginationType': 'full_numbers',
 								'sAjaxDataProp': 'levels',
 								'aoColumns': [
@@ -337,22 +340,51 @@ Frontend.init = function(dom){
 									{'mDataProp': 'user_id',	'bVisible': false},
 									{'mDataProp': 'username',	'sWidth': '15%'}
 								],
-								'bAutoWidth': false
+								
+								// Check for oldPage
+								'fnServerData': function(sSource, aoData, fnCallback){
+									$.ajax({
+										'dataType': 'json',
+										'type': 'GET',
+										'url': sSource,
+										'data': aoData,
+										'success': function(){
+											var retu = fnCallback ? fnCallback.apply(this, arguments) : undefined;
+											
+											try{
+												if ( Frontend.dom.levelList.oldPage ){
+													for ( var i=0; i<Frontend.dom.levelList.oldPage-1; ++i )
+														Frontend.dom.levelList.fnPageChange('next', false);
+													Frontend.dom.levelList.fnPageChange('next', true); // only redraw on last page change
+													Frontend.dom.levelList.oldPage = null;
+												}
+											}
+											finally{
+												return retu;
+											}
+										}
+									});
+								},
+								
+								'bAutoWidth': false,
+								'bDeferRender': true,
+								'bProcessing': true,
+								'bJQueryUI': true
 							});
 							
 							$('tbody', Frontend.dom.levelList).click(function(event){
-								Frontend.dom.levelList.fnGetNodes().forEach(function(el){
-									$(el).removeClass('selected');
+								Frontend.dom.levelList.fnSettings().aoData.forEach(function(el, i){
+									$(el.nTr).removeClass('selected');
 								});
 								$(event.target.parentNode).addClass('selected');
 								
-								Frontend.dom.levelList.fnGetNodes().forEach(function(el, i){
-									if ( $(el).hasClass('selected') ){
-										Frontend.loadLevel(Frontend.dom.levelList.fnGetData(i).id);
-										Frontend.dom.levelListButton.click();
-										return false;
-									}
-								});
+								var level = Frontend.dom.levelList.fnGetData(
+									Frontend.dom.levelList.fnGetPosition(event.target.parentNode)
+								);
+								if ( level )
+									Frontend.loadLevel(level.id);
+								
+								Frontend.dom.levelListButton.click();
 							});
 						}, 0);
 						
