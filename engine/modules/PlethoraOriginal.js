@@ -459,7 +459,7 @@ World.addModule('PlethoraOriginal',
 			flags: World.ANIMATED,
 			tiles: [[8,2],[9,2],[10,2],[11,2],[12,2],[13,2],[14,2],[15,2]],
 			defaults: {
-				mass: 1
+				mass: 3
 			},
 			init: function(params){this.hasGravity = false;}
 		});

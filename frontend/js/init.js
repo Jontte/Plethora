@@ -403,11 +403,16 @@ Frontend.init = function(dom){
 	$('.button, #gamemode-tabs > *, #level-list-button').attr('unselectable', 'on').live('mousedown selectstart', function(){
 		return false;
 	});
+    
+    // Disable context menu from the canvas
+    $(Frontend.dom.canvas[0]).bind('contextmenu', function(e){
+        return false;
+    });
 	
 	// Initialize canvas
 	Frontend.dom.canvas[0].focus();
 	Frontend.cache.canvasContext = Frontend.dom.canvas[0].getContext('2d');
-	
+
 	// Initialize game
 	Frontend.setGameMode('play');
 	World.init(Frontend.dom.canvas[0], Frontend.dom.cache[0]);
