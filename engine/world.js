@@ -151,13 +151,15 @@ World = {
         // Register key manager
         Key.register(render_elem);
 				
-		// Start capturing mouse position...
-		$(render_elem).mousemove(function(e){
-			var x = e.pageX - this.offsetLeft;
-			var y = e.pageY - this.offsetTop;
-			World.mouseX = x;
-			World.mouseY = y;
-		}); 
+        // Start capturing mouse position...
+        $(render_elem).mousemove(function(e){
+            var x = e.offsetX - this.offsetLeft;
+            var y = e.offsetY - this.offsetTop;
+            x *= this.width/this.clientWidth;
+            y *= this.height/this.clientHeight;
+            World.mouseX = x;
+            World.mouseY = y;
+        }); 
 	},
 	reset : function()
 	{
