@@ -153,12 +153,17 @@ World = {
 				
         // Start capturing mouse position...
         $(render_elem).mousemove(function(e){
-            var x = e.offsetX - this.offsetLeft;
-            var y = e.offsetY - this.offsetTop;
-            x *= this.width/this.clientWidth;
-            y *= this.height/this.clientHeight;
-            World.mouseX = x;
-            World.mouseY = y;
+            var x = (e.offsetX||e.layerX) - this.offsetLeft;
+            var y = (e.offsetY||e.layerY) - this.offsetTop;
+            if(this.clientWidth != 0 && this.clientHeight != 0)
+            {
+                x *= this.width/this.clientWidth;
+                y *= this.height/this.clientHeight;
+                World.mouseX = x;
+                World.mouseY = y;
+            }
+            else
+                debugger;
         }); 
 	},
 	reset : function()
