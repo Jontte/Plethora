@@ -65,7 +65,7 @@ Frontend.init = function(dom){
 						var settings = Frontend.dom.levelList.fnSettings();
 						Frontend.dom.levelList.oldPage = settings._iDisplayLength ? (settings._iDisplayStart/settings._iDisplayLength) : 0;
 						Frontend.dom.levelList.fnReloadAjax();
-						
+
 						Frontend.dom.levelListContainer.show('slide');
 						$(this).addClass('list-open');
 					}
@@ -157,53 +157,7 @@ Frontend.init = function(dom){
 						'class': 'button',
 						'text': 'Save',
 						'click': function(){
-							if ( !Frontend.session.user ){
-								Frontend.toast.show.error('You have to be logged in to save a level!');
-								return false;
-							}
-
-							var levelData = World.saveLevel();
-							var levelID = World.getLevelName();
-
-							var overwriting = Frontend.cache.levels[levelID] && Frontend.cache.levels[levelID].user_id == Frontend.session.user.id;
-							
-							var level = {
-								'id': overwriting ? levelID : (new Date).getTime(),
-								'name': $('#level-name').val(),
-								'desc': $('#level-desc').val(),
-								'updated': null,
-								'user_id': Frontend.session.user.id,
-								'username': Frontend.session.user.username,
-								'data': levelData
-							};
-							if ( overwriting )
-								Frontend.cache.levels[level.id] = level;
-
-							$.postJSON('api.php', {
-								'action': 'saveLevel', // sid, [id], name, [desc], data
-								'sid': Frontend.session.user.sid,
-								'id': overwriting ? level.id : undefined,
-								'name': level.name,
-								'desc': level.desc || undefined,
-								'data': JSON.stringify(level.data)
-							}, function(data){
-								if ( data.error )
-									Frontend.toast.show.error(data.error);
-								else{
-									if ( data.id != level.id ){
-										var oldID = level.id;
-										level.id = data.id;
-										Frontend.cache.levels[data.id] = level;
-										delete Frontend.cache.levels[oldID];
-										Frontend.loadLevel(level.id, function(){
-											Frontend.toast.show.success('Level saved!');
-										});
-									}
-									else
-										Frontend.toast.show.success('Level saved!');
-								}
-							});
-							
+							Frontend.saveLevel();
 							return false;
 						}
 					})
@@ -215,23 +169,23 @@ Frontend.init = function(dom){
 			}).append(
 				(function(){
 					var els = [];
-					
+
 					[['about','About'], ['todo','TODO'], ['tech','Tech'], ['author','Author']].forEach(function(data){
 						els.push(
 							$('<span>', {
 								'text': data[1],
 								'click': function(){
 									var wasOpen = Frontend.dialogs[data[0]].isOpen();
-									
+
 									Frontend.dialogs.closeAll();
-									
+
 									if ( !wasOpen )
 										Frontend.dialogs[data[0]].open();
 								}
 							})[0]
 						);
 					});
-					
+
 					return els;
 				})()
 			)
@@ -310,7 +264,7 @@ Frontend.init = function(dom){
 								})
 							);
 						});
-						
+
 						Frontend.dom.levelList =
 						$('<table>', {
 							'id': 'level-list',
@@ -322,7 +276,7 @@ Frontend.init = function(dom){
 						).append(
 							$('<tfoot />').append(thRow.clone())
 						);
-						
+
 						setTimeout(function(){
 							Frontend.dom.levelList.dataTable({
 								'sAjaxSource': 'api.php?action=getLevelList',
@@ -330,7 +284,7 @@ Frontend.init = function(dom){
 								'sAjaxDataProp': 'levels',
 								'aoColumns': [
 									{'mDataProp': 'id' ,		'bVisible' : false},
-									{'mDataProp': 'updated',	'sWidth': '20%', 
+									{'mDataProp': 'updated',	'sWidth': '20%',
 										'fnRender': function(oObj){
 											return relative_time(new Date(parseInt(oObj.aData.updated)*1000));
 										}
@@ -340,7 +294,7 @@ Frontend.init = function(dom){
 									{'mDataProp': 'user_id',	'bVisible': false},
 									{'mDataProp': 'username',	'sWidth': '15%'}
 								],
-								
+
 								// Check for oldPage
 								'fnServerData': function(sSource, aoData, fnCallback){
 									$.ajax({
@@ -350,7 +304,7 @@ Frontend.init = function(dom){
 										'data': aoData,
 										'success': function(){
 											var retu = fnCallback ? fnCallback.apply(this, arguments) : undefined;
-											
+
 											try{
 												if ( Frontend.dom.levelList.oldPage ){
 													for ( var i=0; i<Frontend.dom.levelList.oldPage-1; ++i )
@@ -365,29 +319,29 @@ Frontend.init = function(dom){
 										}
 									});
 								},
-								
+
 								'bAutoWidth': false,
 								'bDeferRender': true,
 								'bProcessing': true,
 								'bJQueryUI': true
 							});
-							
+
 							$('tbody', Frontend.dom.levelList).click(function(event){
 								Frontend.dom.levelList.fnSettings().aoData.forEach(function(el, i){
 									$(el.nTr).removeClass('selected');
 								});
 								$(event.target.parentNode).addClass('selected');
-								
+
 								var level = Frontend.dom.levelList.fnGetData(
 									Frontend.dom.levelList.fnGetPosition(event.target.parentNode)
 								);
 								if ( level )
 									Frontend.loadLevel(level.id);
-								
+
 								Frontend.dom.levelListButton.click();
 							});
 						}, 0);
-						
+
 						return Frontend.dom.levelList;
 					})()
 				)
@@ -430,17 +384,17 @@ Frontend.init = function(dom){
 			Frontend.dom.gameArea.css('margin-left', Frontend.dom.sidePanel.outerWidth());
 		}
 	}).resize();
-	
+
 	// Disable selection for certain UI elements
 	$('.button, #gamemode-tabs > *, #level-list-button').attr('unselectable', 'on').live('mousedown selectstart', function(){
 		return false;
 	});
-    
+
     // Disable context menu from the canvas
     $(Frontend.dom.canvas[0]).bind('contextmenu', function(e){
         return false;
     });
-	
+
 	// Initialize canvas
 	Frontend.dom.canvas[0].focus();
 	Frontend.cache.canvasContext = Frontend.dom.canvas[0].getContext('2d');

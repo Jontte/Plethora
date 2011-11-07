@@ -6,3 +6,6 @@ frontend/php/config.php
 /nbproject/
 project.xml
 project.properties
+
+# WebStorm IDE files
+/.idea
